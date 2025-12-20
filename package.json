@@ -1,0 +1,44 @@
+{
+  "name": "qbos-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "QuietBuild OS™ - Precision Infrastructure for Trust-Based Products",
+  "workspaces": [
+    "packages/sight-engine",
+    "packages/silent-engine/core",
+    "packages/adapters/nextjs",
+    "examples/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "build:sight": "npm run build --workspace=@qbos/sight-engine",
+    "build:silent": "npm run build --workspace=@qbos/silent-engine-core",
+    "build:adapters": "npm run build --workspace=@qbos/nextjs-adapter",
+    "dev": "npm run dev --workspaces",
+    "clean": "npm run clean --workspaces && rm -rf node_modules",
+    "install:all": "npm install",
+    "test": "echo \"Tests coming soon\" && exit 0"
+  },
+  "keywords": [
+    "quietbuild",
+    "qbos",
+    "sight-engine",
+    "silent-engine",
+    "ai-routing",
+    "visual-quality",
+    "infrastructure"
+  ],
+  "author": "QuietBuild OS",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rsemeah/QBos---Master-Founder-Repo.git"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

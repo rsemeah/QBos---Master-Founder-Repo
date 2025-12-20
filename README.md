@@ -131,24 +131,50 @@ Integration:
 
 ## 🚀 Getting Started
 
-### Install Dependencies
+### Quick Start (5 Minutes)
 
 ```bash
-# SightEngine
-cd packages/sight-engine
+# Clone and install
+git clone https://github.com/rsemeah/QBos---Master-Founder-Repo.git
+cd QBos---Master-Founder-Repo
 npm install
 
-# SilentEngine
-cd packages/silent-engine/core
+# Build all packages
+npm run build
+
+# Try the demo app
+cd examples/nextjs-demo
+cp .env.example .env.local
+# Add your API keys to .env.local
+npm run dev
+```
+
+Open http://localhost:3000 to see both engines in action!
+
+**📖 Full Guide:** [GETTING_STARTED.md](GETTING_STARTED.md)
+
+### Install Individual Packages
+
+```bash
+# Install from monorepo root
 npm install
+
+# Or individual packages
+cd packages/sight-engine && npm install
+cd packages/silent-engine/core && npm install
+cd packages/adapters/nextjs && npm install
 ```
 
 ### Build Packages
 
 ```bash
-# Build both engines
-cd packages/sight-engine && npm run build
-cd ../silent-engine/core && npm run build
+# Build all packages
+npm run build
+
+# Or build individually
+npm run build:sight
+npm run build:silent
+npm run build:adapters
 ```
 
 ### Use in Your Project
@@ -159,6 +185,10 @@ import { validateAsset, generatePromptHeader } from '@qbos/sight-engine';
 
 // AI routing
 import { SilentEngine } from '@qbos/silent-engine-core';
+import { AnthropicProvider } from '@qbos/silent-engine-core/dist/providers/anthropic-provider';
+
+// Next.js API adapters
+import { createSilentEngineRoute, createSightEngineValidateRoute } from '@qbos/nextjs-adapter';
 ```
 
 ---
@@ -261,12 +291,55 @@ AI routing should be deterministic, observable, and explainable. SilentEngine™
 
 - [x] SightEngine™ - Visual quality standards
 - [x] SilentEngine™ - AI routing engine
-- [ ] Supabase migrations for both engines
+- [x] Supabase migrations for both engines
+- [x] Provider implementations (Anthropic, OpenAI, Google)
+- [x] Next.js API adapters
+- [x] Full-featured demo application
+- [x] Monorepo setup with workspaces
 - [ ] CharterEngine™ integration (legal governance)
 - [ ] Multi-tenant support (org policies)
-- [ ] Provider implementations (Anthropic, OpenAI, Google)
-- [ ] Next.js API adapters
 - [ ] Real-time observability dashboard
+- [ ] Python SDK
+- [ ] Streaming support in providers
+
+---
+
+## 📁 What's New
+
+### ✨ Latest Additions
+
+**Provider Implementations**
+- Full Anthropic SDK integration (Claude 3.5, Opus, Haiku)
+- Complete OpenAI support (GPT-4, GPT-4o, GPT-3.5)
+- Google AI integration (Gemini 1.5 Pro/Flash)
+- Cost calculation and health checks
+
+**Next.js Adapters**
+- `@qbos/nextjs-adapter` package
+- Type-safe API route creators
+- Built-in auth support
+- Streaming responses
+- Automatic error handling
+
+**Database Migrations**
+- Complete Supabase schema for SightEngine
+- Complete Supabase schema for SilentEngine
+- Audit logging and metrics tables
+- Circuit breaker state tracking
+- RLS policies and indexes
+
+**Demo Application**
+- Full-featured Next.js 14 app
+- Interactive SilentEngine demo
+- Interactive SightEngine demo
+- Tailwind CSS UI
+- Real-time validation
+
+**Monorepo**
+- npm workspaces configuration
+- Unified build scripts
+- Shared dependencies
+- Examples directory
 
 ---
 

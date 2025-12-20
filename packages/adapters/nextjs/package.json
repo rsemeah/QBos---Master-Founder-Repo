@@ -1,7 +1,7 @@
 {
-  "name": "@qbos/silent-engine-core",
+  "name": "@qbos/nextjs-adapter",
   "version": "1.0.0",
-  "description": "Intelligent AI routing engine for QuietBuild OS",
+  "description": "Next.js API route adapters for QuietBuild OS engines",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -10,18 +10,21 @@
     "clean": "rm -rf dist"
   },
   "keywords": [
-    "ai-routing",
-    "silentengine",
+    "nextjs",
+    "adapter",
     "quietbuild",
-    "llm",
-    "provider-abstraction"
+    "silentengine",
+    "sightengine"
   ],
   "author": "QuietBuild OS",
   "license": "MIT",
+  "peerDependencies": {
+    "next": "^14.0.0 || ^15.0.0",
+    "@qbos/silent-engine-core": "^1.0.0",
+    "@qbos/sight-engine": "^1.0.0"
+  },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.27.0",
-    "openai": "^4.20.0",
-    "@google/generative-ai": "^0.19.0"
+    "zod": "^3.22.0"
   },
   "devDependencies": {
     "typescript": "^5.3.0",
