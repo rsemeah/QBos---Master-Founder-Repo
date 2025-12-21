@@ -3,3 +3,4 @@ packages:
   - 'packages/engines/*'
   - 'packages/engines/*/core'
   - 'packages/engines/*/supabase'
+  - 'apps/*'

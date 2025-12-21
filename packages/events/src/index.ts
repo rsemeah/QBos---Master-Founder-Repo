@@ -29,24 +29,28 @@
  */
 
 // Core interfaces and types
-export {
+export type {
   EventBus,
   Event,
   EventHandler,
   EventMetadata,
   EventBusOptions,
   EmitOptions,
+} from './event-bus';
+
+export {
   matchesPattern,
   generateEventId,
 } from './event-bus';
 
 // Adapters
 export { InMemoryEventBus } from './adapters/in-memory';
-export { DatabaseEventBus, DatabaseEventBusOptions } from './adapters/database';
+export { DatabaseEventBus } from './adapters/database';
+export type { DatabaseEventBusOptions } from './adapters/database';
 
 // Re-export useful database types
+export type { CoreEventName } from '@qbos/database';
 export {
   generateIdempotencyKey,
   CORE_EVENTS,
-  CoreEventName,
 } from '@qbos/database';
