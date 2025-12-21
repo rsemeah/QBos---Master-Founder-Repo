@@ -1,12 +1,150 @@
-# QuietBuild OS™ - Master Founder Repository
+# QuietBuild OS™ V3 - Master Founder Repository
 
-**Precision Infrastructure for Trust-Based Products**
+**Complete 8-Engine Platform for Building Trust-Based Products**
 
-QuietBuild OS™ is a multi-engine infrastructure platform that enforces world-class standards across visual quality and AI operations. Built for products where trust is non-negotiable.
+QuietBuild OS™ V3 is a production-ready infrastructure platform that guides founders through building serious applications step-by-step. Every engine enforces world-class standards, from visual quality to AI routing to user authentication.
 
-## 🧠 Core Engines
+Built for founders who need investor-grade demos, not prototypes.
 
-### 👁️ SightEngine™ - Visual Quality Standards
+---
+
+## 🎯 QBos V3 - Complete 8-Engine Suite
+
+### **ExecutionEngine™** - Interactive Build Command Center
+The product. Everything else is infrastructure.
+
+**What It Does:**
+- ✅ Guides non-technical founders through building apps step-by-step
+- ✅ Explains every action in child-readable language
+- ✅ Never loses state, never lies, never silently fails
+- ✅ Generates receipts proving what was built
+- ✅ Gracefully degrades if engines are missing
+
+```typescript
+import { ExecutionEngine } from '@qbos/execution-engine-core';
+
+const engine = new ExecutionEngine();
+const sessionId = await engine.createBuildSession('MyApp', ['auth', 'ai']);
+
+const nextStep = await engine.getNextStep(sessionId);
+console.log(nextStep.data.explanation); // Child-readable
+
+const result = await engine.executeStep(sessionId, nextStep.data.id);
+const receipts = await engine.getReceipts(sessionId); // Audit bundle
+```
+
+---
+
+### **IdentityEngine™** - Users, Organizations, Sessions, RBAC
+
+**What It Does:**
+- ✅ User management (create, authenticate, delete)
+- ✅ Organization management with membership roles
+- ✅ Session tokens with 24h expiry
+- ✅ Role-based access control (owner, admin, member, viewer)
+- ✅ Database migration with RLS policies
+
+```typescript
+import { IdentityEngine } from '@qbos/identity-engine-core';
+
+const engine = new IdentityEngine();
+const user = await engine.createUser({ email: 'founder@qbos.dev', name: 'Founder' });
+const session = await engine.createSession(user.id);
+console.log(session.token); // 24h session token
+```
+
+---
+
+### **CharterEngine™** - Consent Management & GDPR Compliance
+
+**What It Does:**
+- ✅ Track user consent by purpose (AI, analytics, marketing, essential)
+- ✅ Consent expiry and withdrawal
+- ✅ GDPR data rights (access, deletion, portability, rectification)
+- ✅ IP address and user agent logging
+
+```typescript
+import { CharterEngine } from '@qbos/charter-engine-core';
+
+const engine = new CharterEngine();
+const consent = await engine.grantConsent('user_123', 'ai', {
+  ipAddress: '127.0.0.1',
+  expiresInDays: 365
+});
+
+const check = await engine.checkConsent('user_123', 'ai');
+console.log(check.allowed); // true/false
+```
+
+---
+
+### **ConfigEngine™** - Feature Flags & Configuration
+
+**What It Does:**
+- ✅ Feature flags (enabled, disabled, conditional)
+- ✅ Conditional targeting (user, org, percentage, date)
+- ✅ Configuration values with scopes (global, user, org)
+- ✅ Type-safe config inference
+
+```typescript
+import { ConfigEngine } from '@qbos/config-engine-core';
+
+const engine = new ConfigEngine();
+await engine.setFlag('new_dashboard', 'conditional', {
+  conditions: [{ type: 'user', operator: 'in', value: ['beta_user_1', 'beta_user_2'] }]
+});
+
+const result = await engine.isEnabled('new_dashboard', { userId: 'beta_user_1' });
+console.log(result.enabled); // true
+```
+
+---
+
+### **PaywallEngine™** - Pricing, Entitlements, Billing
+
+**What It Does:**
+- ✅ Pricing plans with limits (maxUsers, maxProjects, maxAIRequests)
+- ✅ Subscription management with trials
+- ✅ Entitlement checks
+- ✅ Usage tracking and limit enforcement
+
+```typescript
+import { PaywallEngine } from '@qbos/paywall-engine-core';
+
+const engine = new PaywallEngine();
+const sub = await engine.createSubscription('user_123', 'pro', { trialDays: 14 });
+
+const check = await engine.checkEntitlement('user_123', 'priority_support');
+console.log(check.allowed); // true if in plan
+```
+
+---
+
+### **NotificationsEngine™** - Email, SMS, Push Queue
+
+**What It Does:**
+- ✅ Send notifications with priority and scheduling
+- ✅ Template system with variable substitution
+- ✅ User preferences per channel (email, sms, push)
+- ✅ Queue processing with retry logic
+
+```typescript
+import { NotificationsEngine } from '@qbos/notifications-engine-core';
+
+const engine = new NotificationsEngine();
+const notif = await engine.send({
+  userId: 'user_123',
+  channel: 'email',
+  subject: 'Welcome to QBos',
+  body: 'Your build is ready!'
+});
+
+console.log(notif.status); // 'queued' | 'sending' | 'sent'
+```
+
+---
+
+### **SightEngine™** - Visual Quality Standards
 
 Enforces investor-grade visual quality across all brand assets.
 
@@ -16,8 +154,6 @@ Enforces investor-grade visual quality across all brand assets.
 - ✅ Generates AI prompts with embedded quality standards
 - ✅ Enforces logo requirements (16px readable, 8K scalable)
 
-**Quick Example:**
-
 ```typescript
 import { validateAsset, generatePromptHeader } from '@qbos/sight-engine';
 
@@ -26,11 +162,9 @@ console.log(result.passed); // true/false
 console.log(result.score);  // 0-100
 ```
 
-**Read more:** [packages/sight-engine/README.md](packages/sight-engine/README.md)
-
 ---
 
-### 🧠 SilentEngine™ - Intelligent AI Routing
+### **SilentEngine™** - Intelligent AI Routing
 
 Routes AI requests to the best model based on capabilities, cost, latency, and availability.
 
@@ -40,8 +174,6 @@ Routes AI requests to the best model based on capabilities, cost, latency, and a
 - ✅ Safety checks (PII detection, jailbreak prevention)
 - ✅ Complete observability (events, audit logs)
 - ✅ Cost tracking and optimization
-
-**Quick Example:**
 
 ```typescript
 import { SilentEngine } from '@qbos/silent-engine-core';
@@ -65,37 +197,144 @@ console.log('Provider:', result.provider);
 ## 📦 Repository Structure
 
 ```
-QuietBuild OS™ Master Founder Repo/
+QBos V3 - Complete 8-Engine Platform/
+├── apps/
+│   └── proof-harness/              # Next.js demo app with 8 API routes
+│       ├── app/
+│       │   ├── api/
+│       │   │   ├── health/         # Health check endpoint
+│       │   │   ├── ai/invoke/      # ExecutionEngine endpoint
+│       │   │   ├── charter/consent/accept/  # CharterEngine endpoint
+│       │   │   ├── identity/session/create/ # IdentityEngine endpoint
+│       │   │   ├── config/evaluate/         # ConfigEngine endpoint
+│       │   │   ├── paywall/entitlements/    # PaywallEngine endpoint
+│       │   │   ├── notifications/enqueue/   # NotificationsEngine endpoint
+│       │   │   └── sight/track/             # SightEngine endpoint
+│       │   └── page.tsx            # Dashboard
+│       └── package.json
+│
 ├── packages/
-│   ├── sight-engine/              # Visual quality engine
+│   ├── engines/
+│   │   ├── execution-engine/core/  # ✨ NEW - Build command center
+│   │   │   ├── src/
+│   │   │   │   ├── ExecutionEngine.ts
+│   │   │   │   ├── BuildSession.ts
+│   │   │   │   ├── StepRegistry.ts
+│   │   │   │   ├── StateStore.ts
+│   │   │   │   ├── types.ts
+│   │   │   │   └── receipts/
+│   │   │   └── README.md
+│   │   │
+│   │   ├── identity-engine/core/   # ✨ NEW - Auth & RBAC
+│   │   │   ├── src/
+│   │   │   │   ├── identity.engine.ts
+│   │   │   │   └── types.ts
+│   │   │   └── supabase/migrations/
+│   │   │
+│   │   ├── charter-engine/core/    # ✨ NEW - Consent & GDPR
+│   │   │   ├── src/
+│   │   │   │   ├── charter.engine.ts
+│   │   │   │   └── types.ts
+│   │   │   └── package.json
+│   │   │
+│   │   ├── config-engine/core/     # ✨ NEW - Feature flags
+│   │   │   ├── src/
+│   │   │   │   ├── config.engine.ts
+│   │   │   │   └── types.ts
+│   │   │   └── package.json
+│   │   │
+│   │   ├── paywall-engine/core/    # ✨ NEW - Pricing & billing
+│   │   │   ├── src/
+│   │   │   │   ├── paywall.engine.ts
+│   │   │   │   └── types.ts
+│   │   │   └── package.json
+│   │   │
+│   │   └── notifications-engine/core/  # ✨ NEW - Email/SMS queue
+│   │       ├── src/
+│   │       │   ├── notifications.engine.ts
+│   │       │   └── types.ts
+│   │       └── package.json
+│   │
+│   ├── sight-engine/               # Visual quality standards
 │   │   ├── src/
-│   │   │   ├── types.ts           # Quality tiers, camera specs, validation types
-│   │   │   ├── validator.ts       # 11 validation functions
-│   │   │   └── index.ts           # Public API
-│   │   ├── package.json
-│   │   ├── tsconfig.json
+│   │   │   ├── types.ts
+│   │   │   ├── validator.ts
+│   │   │   └── index.ts
 │   │   └── README.md
 │   │
-│   └── silent-engine/             # AI routing engine
-│       └── core/
-│           ├── src/
-│           │   ├── types.ts       # Provider interfaces, routing policies
-│           │   ├── providers/     # Base provider abstraction
-│           │   ├── routing/       # Capability matching, constraint evaluation
-│           │   ├── fallback/      # Circuit breaker, fallback orchestrator
-│           │   ├── safety/        # Safety classifier, PII detector
-│           │   ├── observability/ # Event emitter, audit logger
-│           │   ├── silent-engine.ts # Main engine class
-│           │   └── index.ts       # Public API
-│           ├── package.json
-│           ├── tsconfig.json
-│           └── README.md
+│   └── silent-engine/core/         # AI routing engine
+│       ├── src/
+│       │   ├── silent-engine.ts
+│       │   ├── providers/
+│       │   ├── routing/
+│       │   ├── fallback/
+│       │   ├── safety/
+│       │   └── observability/
+│       └── README.md
 │
-├── supabase/                      # Shared Supabase configuration
-│   └── migrations/                # Database migrations (future)
+├── docs/
+│   ├── STATUS.md                   # Implementation truth table
+│   └── PROOF_GATES.md              # curl test commands
 │
-└── README.md                      # This file
+└── README.md                       # This file
 ```
+
+---
+
+## 🚀 Quick Start
+
+### 1. Clone & Install
+
+```bash
+git clone https://github.com/rsemeah/QBos---Master-Founder-Repo.git
+cd QBos---Master-Founder-Repo
+npm install
+```
+
+### 2. Run Proof Harness
+
+```bash
+cd apps/proof-harness
+npm run dev
+# Visit http://localhost:3000
+```
+
+### 3. Test All 8 Engines
+
+```bash
+# See docs/PROOF_GATES.md for complete curl tests
+
+# Test ExecutionEngine
+curl -X POST http://localhost:3000/api/ai/invoke \
+  -H "Content-Type: application/json" \
+  -d '{"action": "createBuildSession", "appName": "MyApp", "goals": ["auth"]}'
+
+# Test IdentityEngine
+curl -X POST http://localhost:3000/api/identity/session/create \
+  -H "Content-Type: application/json" \
+  -d '{"email": "founder@qbos.dev", "password": "demo"}'
+```
+
+Full test suite: [docs/PROOF_GATES.md](docs/PROOF_GATES.md)
+
+---
+
+## 📊 Implementation Status
+
+| Engine | Status | Lines | Production Code |
+|--------|--------|-------|----------------|
+| ExecutionEngine™ | ✅ COMPLETE | ~900 | ✅ Real |
+| IdentityEngine™ | ✅ COMPLETE | ~390 | ✅ Real |
+| CharterEngine™ | ✅ COMPLETE | ~200 | ✅ Real |
+| ConfigEngine™ | ✅ COMPLETE | ~240 | ✅ Real |
+| PaywallEngine™ | ✅ COMPLETE | ~270 | ✅ Real |
+| NotificationsEngine™ | ✅ COMPLETE | ~230 | ✅ Real |
+| SightEngine™ | ✅ COMPLETE | ~730 | ✅ Real |
+| SilentEngine™ | ✅ COMPLETE | ~2,100 | ✅ Real |
+
+**Total:** ~5,060 lines of production TypeScript
+
+See [docs/STATUS.md](docs/STATUS.md) for detailed truth table.
 
 ---
 
@@ -103,19 +342,21 @@ QuietBuild OS™ Master Founder Repo/
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                    QuietBuild OS™                            │
+│                  QuietBuild OS™ V3                           │
+│                  8-Engine Platform                           │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
-│  👁️ SightEngine™           🧠 SilentEngine™                 │
-│  Visual Standards           AI Routing                       │
+│  🏗️ ExecutionEngine™  (Command Center)                      │
+│    └─> Orchestrates all other engines                       │
 │                                                              │
-│  • Tier A: Investor-grade   • Capability-based routing      │
-│  • Tier B: Product-grade    • Circuit breaker + fallback    │
-│  • Tier C: Internal         • Cost & latency optimization   │
-│                                                              │
-│  Rejects:                   Supports:                        │
-│  ❌ Flat AI lighting        ✅ Anthropic, OpenAI, Google    │
-│  ❌ Over-saturation         ✅ Dynamic provider selection    │
+│  👤 IdentityEngine™   (Auth & RBAC)                         │
+│  📜 CharterEngine™    (Consent & GDPR)                      │
+│  ⚙️ ConfigEngine™     (Feature Flags)                       │
+│  💰 PaywallEngine™    (Pricing & Billing)                   │
+│  📬 NotificationsEngine™ (Email/SMS Queue)                  │
+│  👁️ SightEngine™      (Visual Quality)                      │
+│  🧠 SilentEngine™     (AI Routing)                          │
+│                                                              │    │
 │  ❌ Low-res upscales        ✅ Safety checks                 │
 │  ❌ "Midjourney mush"       ✅ Audit logging                 │
 │                                                              │
