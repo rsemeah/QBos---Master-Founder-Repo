@@ -1,0 +1,32 @@
+{
+  "name": "@qbos/vault-engine-core",
+  "version": "1.0.0",
+  "description": "File storage and CDN integration engine for QuietBuild OS",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "storage",
+    "files",
+    "cdn",
+    "s3",
+    "upload",
+    "quietbuild",
+    "qbos"
+  ],
+  "author": "QuietBuild OS",
+  "license": "MIT",
+  "dependencies": {
+    "@qbos/events": "workspace:*",
+    "@qbos/database": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "@types/node": "^20.0.0"
+  }
+}

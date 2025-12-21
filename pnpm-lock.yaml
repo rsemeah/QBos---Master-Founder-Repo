@@ -40,6 +40,22 @@ importers:
         specifier: ^5.3.3
         version: 5.9.3
 
+  packages/engines/charter-engine/core:
+    dependencies:
+      '@qbos/database':
+        specifier: workspace:*
+        version: link:../../../database
+      '@qbos/events':
+        specifier: workspace:*
+        version: link:../../../events
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.27
+      typescript:
+        specifier: ^5.3.0
+        version: 5.9.3
+
   packages/engines/config-engine/core:
     dependencies:
       '@qbos/database':
@@ -56,7 +72,39 @@ importers:
         specifier: ^5.3.0
         version: 5.9.3
 
+  packages/engines/content-engine/core:
+    dependencies:
+      '@qbos/database':
+        specifier: workspace:*
+        version: link:../../../database
+      '@qbos/events':
+        specifier: workspace:*
+        version: link:../../../events
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.27
+      typescript:
+        specifier: ^5.3.0
+        version: 5.9.3
+
   packages/engines/identity-engine/core:
+    dependencies:
+      '@qbos/database':
+        specifier: workspace:*
+        version: link:../../../database
+      '@qbos/events':
+        specifier: workspace:*
+        version: link:../../../events
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.27
+      typescript:
+        specifier: ^5.3.0
+        version: 5.9.3
+
+  packages/engines/notifications-engine/core:
     dependencies:
       '@qbos/database':
         specifier: workspace:*
@@ -89,6 +137,22 @@ importers:
         version: 20.19.27
       typescript:
         specifier: ^5.3.3
+        version: 5.9.3
+
+  packages/engines/vault-engine/core:
+    dependencies:
+      '@qbos/database':
+        specifier: workspace:*
+        version: link:../../../database
+      '@qbos/events':
+        specifier: workspace:*
+        version: link:../../../events
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.27
+      typescript:
+        specifier: ^5.3.0
         version: 5.9.3
 
   packages/events:
