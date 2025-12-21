@@ -7,6 +7,8 @@
     "packages/sight-engine",
     "packages/silent-engine/core",
     "packages/adapters/nextjs",
+    "packages/engines/*/core",
+    "apps/*",
     "examples/*"
   ],
   "scripts": {
