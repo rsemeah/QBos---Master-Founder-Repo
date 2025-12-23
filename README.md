@@ -1,10 +1,12 @@
 # QuietBuild OS™ V3 - Master Founder Repository
 
-**Complete 8-Engine Platform for Building Trust-Based Products**
+**Complete 8-Engine Platform + TruthSerum™ Verification System**
 
 QuietBuild OS™ V3 is a production-ready infrastructure platform that guides founders through building serious applications step-by-step. Every engine enforces world-class standards, from visual quality to AI routing to user authentication.
 
-Built for founders who need investor-grade demos, not prototypes.
+**TruthSerum™** ensures no claims without proof. Every operation generates receipts. Every state transition is auditable. No mock data passes as real.
+
+Built for founders who need investor-grade demos with proof artifacts, not promises.
 
 ## ⚡ Latest Updates (December 2025)
 
@@ -36,6 +38,37 @@ Automated truth enforcement across the entire codebase:
 - [Secrets & Auth Enforcement](docs/SECRETS_AND_AUTH_PROMPT.md) - Security rules
 - [Constitutional Audit](docs/CONSTITUTIONAL_ENFORCEMENT_AUDIT.md) - System compliance report
 - [Supabase Setup Steps](SUPABASE_SETUP_STEPS.md) - Database deployment guide
+
+---
+
+## 🧪 TruthSerum™ - Constitutional Proof System
+
+**What It Does:**
+- ✅ No claims accepted without receipts
+- ✅ All state transitions auditable
+- ✅ Every API response sanitized for unproven claims
+- ✅ CI enforcement via TruthGate
+- ✅ Investor truth sheet generated from actual receipts
+
+```typescript
+import { TruthSerum } from '@qbos/truthserum';
+import { ReceiptWriter } from '@qbos/truthserum';
+
+// Evaluate intent before proceeding
+const evaluation = await TruthSerum.evaluateIntent('deploy.ready', context);
+if (evaluation.truthState !== 'Verified') {
+  return { error: 'Cannot proceed without proof', missing: evaluation.missingProofs };
+}
+
+// Write receipt after operation
+await ReceiptWriter.write({
+  sessionId: 'session-123',
+  type: 'deploy.completed',
+  details: { timestamp: new Date().toISOString(), url: 'https://app.vercel.com' }
+});
+```
+
+**Read more:** [packages/truthserum/README.md](packages/truthserum/README.md)
 
 ---
 
@@ -245,6 +278,19 @@ QBos V3 - Complete 8-Engine Platform/
 │       └── package.json
 │
 ├── packages/
+│   ├── truthserum/                 # ✨ NEW - Proof verification system
+│   │   ├── src/
+│   │   │   ├── TruthSerum.ts       # Intent evaluation
+│   │   │   ├── ReceiptWriter.ts    # Supabase + local fallback
+│   │   │   ├── types.ts
+│   │   │   └── intents/
+│   │   │       └── registry.ts     # Intent definitions
+│   │   └── README.md
+│   │
+│   ├── runtime/
+│   │   ├── orchestrator.ts         # TruthSerum-first message processing
+│   │   └── context.ts              # Engine registry
+│   │
 │   ├── engines/
 │   │   ├── execution-engine/core/  # ✨ NEW - Build command center
 │   │   │   ├── src/
@@ -291,10 +337,25 @@ QBos V3 - Complete 8-Engine Platform/
 │   │   │   ├── types.ts
 │   │   │   ├── validator.ts
 │   │   │   └── index.ts
-│   │   └── README.md
-│   │
-│   └── silent-engine/core/         # AI routing engine
-│       ├── src/
+│   │   └── README.md        # Implementation truth table
+│   ├── PROOF_GATES.md                      # curl test commands
+│   ├── INVESTOR_TRUTH_SHEET.md             # ✨ NEW - Progress verification
+│   ├── FULL_INTEGRATION_GUIDE.md           # ✨ NEW - Deployment steps
+│   ├── SECRETS_AND_AUTH_PROMPT.md          # ✨ NEW - Security enforcement
+│   └── SUPABASE_INTEGRATION_STEPS.md       # ✨ NEW - Database setup
+│
+├── proof/                                  # ✨ NEW - Proof artifacts
+│   ├── 00_env.txt through 08_ui_manual_steps.md
+│   └── local_receipts.jsonl                # Local receipt fallback
+│
+├── scripts/
+│   ├── verify-supabase.sh                  # ✨ NEW - Supabase verification
+│   └── truthgate.ts                        # ✨ NEW - CI enforcement
+│
+├── .github/workflows/
+│   └── truthgate.yml                       # ✨ NEW - TruthGate CI
+│
+└── README.md        rc/
 │       │   ├── silent-engine.ts
 │       │   ├── providers/
 │       │   ├── routing/
@@ -322,66 +383,97 @@ cd QBos---Master-Founder-Repo
 npm install
 ```
 
-### 2. Run Proof Harness
+### 2. Run Proof Harness (Local Mode)
 
 ```bash
 cd apps/proof-harness
 npm run dev
-# Visit http://localhost:3000
+# Visit http://localhost:3000/rob
 ```
 
-### 3. Test All 8 Engines
+**Local mode** generates receipts to `proof/local_receipts.jsonl` without requiring Supabase.
+
+### 3. Test TruthSerum System
 
 ```bash
-# See docs/PROOF_GATES.md for complete curl tests
-
-# Test ExecutionEngine
-curl -X POST http://localhost:3000/api/ai/invoke \
+# Test intent evaluation
+curl -X POST http://localhost:3000/api/truth/evaluate \
   -H "Content-Type: application/json" \
-  -d '{"action": "createBuildSession", "appName": "MyApp", "goals": ["auth"]}'
+  -d '{"intent": "session.ready", "context": {}}'
 
-# Test IdentityEngine
-curl -X POST http://localhost:3000/api/identity/session/create \
+# Read receipts
+curl http://localhost:3000/api/receipts?sessionId=YOUR_SESSION_ID | jq '.'
+
+# Test Rob chat (TruthSerum-filtered responses)
+curl -X POST http://localhost:3000/api/chat \
   -H "Content-Type: application/json" \
-  -d '{"email": "founder@qbos.dev", "password": "demo"}'
+  -d '{"message": "I am ready to deploy", "sessionId": "test-123"}'
 ```
 
 Full test suite: [docs/PROOF_GATES.md](docs/PROOF_GATES.md)
 
----
+### 4. Full Production Setup
 
-## 📊 Implementation Status
+**Follow the integration guide:** [docs/FULL_INTEGRATION_GUIDE.md](docs/FULL_INTEGRATION_GUIDE.md)
+
+Steps:
+1. **Supabase** - Database + auth (see [docs/SUPABASE_INTEGRATION_STEPS.md](docs/SUPABASE_INTEGRATION_STEPS.md))
+2. **Vercel** - Deployment with env vars
+3. **AI Providers** - OpenAI or Anthropic API keys
+4. **Verification** - Run `bash scripts/verify-supabase.sh`
+
+**Time:** ~30 minutes for full setup
+| **ConfigEngine™** | ✅ COMPLETE | ~240 | ✅ Real |
+| **PaywallEngine™** | ✅ COMPLETE | ~270 | ✅ Real |
+| **NotificationsEngine™** | ✅ COMPLETE | ~230 | ✅ Real |
+| **SightEngine™** | ✅ COMPLETE | ~730 | ✅ Real |
+| **SilentEngine™** | ✅ COMPLETE | ~2,100 | ✅ Real |
+
+**Total:** ~8,103 lines of production TypeScript (74 files changed, +9,314 lines including docs)
+
+**Live Demo:** Rob builder at `/rob` with real-time receipt tracking
+
+See [docs/INVESTOR_TRUTH_SHEET.md](docs/INVESTOR_TRUTH_SHEET.md) for verified status of all engines
 
 | Engine | Status | Lines | Production Code |
 |--------|--------|-------|----------------|
-| ExecutionEngine™ | ✅ COMPLETE | ~900 | ✅ Real |
-| IdentityEngine™ | ✅ COMPLETE | ~390 | ✅ Real |
-| CharterEngine™ | ✅ COMPLETE | ~200 | ✅ Real |
-| ConfigEngine™ | ✅ COMPLETE | ~240 | ✅ Real |
-| PaywallEngine™ | ✅ COMPLETE | ~270 | ✅ Real |
-| NotificationsEngine™ | ✅ COMPLETE | ~230 | ✅ Real |
-| SightEngine™ | ✅ COMPLETE | ~730 | ✅ Real |
-| SilentEngine™ | ✅ COMPLETE | ~2,100 | ✅ Real |
-
-**Total:** ~5,060 lines of production TypeScript
-
-See [docs/STATUS.md](docs/STATUS.md) for detailed truth table.
-
----
-
-## 🎯 How the Engines Work Together
+| ExecutionEngSystem Works
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                  QuietBuild OS™ V3                           │
-│                  8-Engine Platform                           │
+│             TruthSerum™-First Architecture                   │
 ├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  🧪 TruthSerum™ (Constitutional Layer)                      │
+│    └─> Evaluates intents, sanitizes claims, emits receipts  │
+│         ├─> Blocks unproven operations                      │
+│         ├─> Generates proof artifacts                       │
+│         └─> Enforces stop conditions                        │
 │                                                              │
 │  🏗️ ExecutionEngine™  (Command Center)                      │
 │    └─> Orchestrates all other engines                       │
 │                                                              │
 │  👤 IdentityEngine™   (Auth & RBAC)                         │
 │  📜 CharterEngine™    (Consent & GDPR)                      │
+│  ⚙️ ConfigEngine™     (Feature Flags)                       │
+│  💰 PaywallEngine™    (Pricing & Billing)                   │
+│  📬 NotificationsEngine™ (Email/SMS Queue)                  │
+│  👁️ SightEngine™      (Visual Quality)                      │
+│  🧠 SilentEngine™     (AI Routing)                          │
+│                                                              │
+│  ❌ Unproven claims         ✅ Receipt-backed operations     │
+│  ❌ Mock data as real       ✅ Auditable state transitions   │
+│  ❌ "Trust me" responses    ✅ Constitutional enforcement    │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+
+TruthSerum-First Flow:
+1. User sends message → TruthSerum evaluates intent
+2. If Verified → Execute operation
+3. If Unknown → Return sanitized "cannot verify" response
+4. After operation → Emit receipt with proof
+5. CI enforces: No claims without receipts (TruthGate)                  │
 │  ⚙️ ConfigEngine™     (Feature Flags)                       │
 │  💰 PaywallEngine™    (Pricing & Billing)                   │
 │  📬 NotificationsEngine™ (Email/SMS Queue)                  │
@@ -665,4 +757,22 @@ MIT
 
 QuietBuild OS™ determines whether your product is **average** or **inevitable**.
 
-**This is inevitable.** 🧠👁️
+**TruthSerum™** determines whether your claims are **believable** or **provable**.
+
+**This is inevitable.** 🧠👁️🧪
+
+---
+
+## 🎯 Key Differentiators
+
+**What makes QBos + TruthSerum unique:**
+
+1. **Constitutional Enforcement** - No operation proceeds without proof. No claims accepted without receipts.
+2. **Local-First Development** - Works without Supabase (local receipt fallback). Connect database only for production.
+3. **Investor-Grade Truth** - Every progress claim backed by proof artifacts. Truth sheet distinguishes Verified vs Unknown.
+4. **CI Enforcement** - TruthGate blocks merges without receipts. Constitutional rules enforced at build time.
+5. **Rotatable Secrets** - Architecture locked, credentials rotatable. Truth rules cannot change.
+
+**For founders:** Build with confidence. Every step verified.
+**For investors:** See real progress, not promises.
+**For engineers:** No lies, no mocks, no "trust me."
