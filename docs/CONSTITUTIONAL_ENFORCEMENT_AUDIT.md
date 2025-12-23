@@ -182,26 +182,40 @@
 
 ---
 
-### 1. Rob as User-Facing Mediator — ⚠️ UNKNOWN
+### 1. Rob as User-Facing Mediator — ✅ SHAPED (Not Production-Ready)
 
 **Current State:**
 
-* "rob" exists as an actor in receipts
-* ExecutionEngine exposes read-only observation hooks
-* No user-facing Rob interface
+* ✅ ROB_SPECIFICATION.md created (371 lines)
+* ✅ RobEngine state machine implemented (429 lines, 13 states)
+* ✅ SupabaseRobPersistence adapter (330 lines)
+* ✅ Database schema (9 tables + RLS)
+* ✅ Chat UI route: /build (237 lines)
+* ✅ API routes: /api/rob/session, /api/rob/chat
+* ✅ TruthSerum integrated in chat pipeline
 
-**Missing:**
+**Still Missing (Unknowns):**
 
-* Rob chat UI route
-* Rob state machine (INIT → DONE)
-* User-visible messaging
-* Artifact generation surface
+* Database migration not applied
+* Real auth (using mock user ID)
+* Billing enforcement (TODO in code)
+* Templates + code generation
+* GitHub + Vercel deploy
+* Tests
+
+**Readiness:** SHAPED
+
+Rob can create sessions, chat with users, emit receipts, validate with TruthSerum, and track state/progress/readiness. Not yet production-ready due to external integrations (auth, billing, deploy) not wired.
 
 **Next Safe Action:**
 
-* Create `/docs/ROB_SPECIFICATION.md`
-* Implement Rob UI route
-* Bind Rob state to ExecutionEngine
+* Apply database migration: `supabase migration up`
+* Add Supabase Auth integration
+* Implement billing enforcement middleware
+* Create first template (SaaS starter)
+* Add unit tests
+
+**Evidence:** [docs/ROB_IMPLEMENTATION_RECEIPTS.md](ROB_IMPLEMENTATION_RECEIPTS.md)
 
 ---
 
