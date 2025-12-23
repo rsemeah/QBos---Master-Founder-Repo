@@ -95,52 +95,64 @@ This document is **generated from actual TruthSerum evaluation outputs and proof
 ## ⚠️ UNKNOWN (Missing Proof)
 
 ### 1. Production Deployment
-**State:** `Unknown`  
+**State:** `Unknown → In Progress`  
 **Missing Proofs:**
 - `vercel.deploy_success`
 - `vercel.healthcheck_ok`
-- `github.repo_created` (for deployed repo)
+
+**Progress:**
+- ✅ Local dev server operational (http://localhost:3000)
+- ✅ Health check endpoint responding
+- ✅ API routes functional
+- ⏳ Vercel deployment pending (requires `vercel login`)
 
 **Next Actions:**
-1. Deploy proof-harness to Vercel
-2. Run health check and capture response
-3. Write receipts for deployment success
+1. Complete Vercel authentication: `vercel login`
+2. Deploy proof-harness: `vercel deploy apps/proof-harness --prod`
+3. Write deployment receipts
 4. Re-evaluate `deploy.completed` intent
 
 ---
 
 ### 2. Supabase Integration
-**State:** `Unknown`  
+**State:** `Unknown → Local Fallback Active`  
 **Missing Proofs:**
 - `supabase.connected` receipt
-- Database migrations applied
-- Production credentials configured
+- Database migrations applied in production
+
+**Progress:**
+- ✅ ReceiptWriter using local fallback (`proof/local_receipts.jsonl`)
+- ✅ Receipt operations functional without Supabase
+- ✅ Migration files exist in `supabase/migrations/`
+- ⏳ Production Supabase project needed
 
 **Next Actions:**
-1. Set `SUPABASE_URL` and `SUPABASE_KEY` in environment
-2. Run migrations in `supabase/migrations/`
-3. Write `supabase.connected` receipt
+1. Create Supabase project at https://supabase.com/dashboard
+2. Set `SUPABASE_URL` and `SUPABASE_ANON_KEY` environment variables
+3. Run migrations via Supabase dashboard or CLI
 4. Verify ReceiptWriter switches from local to DB
 
 ---
 
 ### 3. Silent Engine (AI Provider Integration)
-**State:** `Unknown`  
+**State:** `Unknown → Mock Active`  
 **Missing Proofs:**
-- `silent.generated` receipts with real provider (OpenAI/Anthropic/etc.)
-- Failover behavior validated
-- Cost optimization active
+- `silent.generated` receipts with real provider (OpenAI/Anthropic)
+- Token usage tracking with real providers
+- Cost optimization validation
 
-**What Exists:**
-- Mock generation in `/api/chat`
-- SilentEngine package structure
-- Receipt type defined
+**Progress:**
+- ✅ Mock AI generation responding in `/api/chat`
+- ✅ Chat endpoint processes messages through TruthSerum
+- ✅ SilentEngine package structure complete
+- ✅ Receipt types defined and writable
+- ⏳ Real AI provider keys needed
 
 **Next Actions:**
-1. Configure AI provider API keys
-2. Integrate SilentEngine into OrchestrationEngine
-3. Generate real completions and emit receipts
-4. Run cost optimization tests
+1. Set `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` in environment
+2. Update OrchestrationEngine to use real SilentEngine provider
+3. Generate completions and emit receipts with token counts
+4. Test failover between providers
 
 ---
 
@@ -190,7 +202,8 @@ This document is **generated from actual TruthSerum evaluation outputs and proof
 | API receipts spec | `proof/05_api_receipts.json` | ✅ Exists |
 | API truth spec | `proof/06_api_truth.json` | ✅ Exists |
 | Routes map | `proof/07_routes_map.txt` | ✅ Exists |
-| Manual UI steps | `proof/08_ui_manual_steps.md` | ✅ Exists |
+| Local receipts | `proof/local_receipts.jsonl` | ✅ Active - receipts being written |
+| Receipt summary | `proof/10_receipt_summary.json` | ✅ Generated from test session |
 | TruthGate run | `proof/09_truthgate_run.txt` | ⚠️ Pending (needs TypeScript build) |
 | Local receipts | `proof/local_receipts.jsonl` | ✅ Will exist after dev server runs |
 
