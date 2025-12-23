@@ -44,6 +44,12 @@ export const ROUTES: Record<string, RouteDefinition> = {
     description: 'Rob the QuietBuilder chat interface',
     category: 'page',
   },
+  robVerticalSlice: {
+    path: '/rob',
+    pageFile: 'app/rob/page.tsx',
+    description: 'Rob minimal vertical slice (deterministic, real DB)',
+    category: 'page',
+  },
   notFound: {
     path: '/not-found',
     pageFile: 'app/not-found.tsx',
@@ -160,6 +166,18 @@ export const ROUTES: Record<string, RouteDefinition> = {
     path: '/api/rob/chat',
     pageFile: 'app/api/rob/chat/route.ts',
     description: 'Rob chat endpoint with TruthSerum',
+    category: 'api',
+  },
+  apiRobInit: {
+    path: '/api/rob/init',
+    pageFile: 'app/api/rob/init/route.ts',
+    description: 'Rob vertical slice session init',
+    category: 'api',
+  },
+  apiRobMessage: {
+    path: '/api/rob/message',
+    pageFile: 'app/api/rob/message/route.ts',
+    description: 'Rob vertical slice message handler',
     category: 'api',
   },
 };
