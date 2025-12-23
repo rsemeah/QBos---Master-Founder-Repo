@@ -6,6 +6,37 @@ QuietBuild OS™ V3 is a production-ready infrastructure platform that guides fo
 
 Built for founders who need investor-grade demos, not prototypes.
 
+## ⚡ Latest Updates (December 2025)
+
+### 🤖 Rob the QuietBuilder - Vertical Slice Complete
+**Status:** SHAPED (Code complete, awaiting external services)
+
+Rob is the AI coding assistant that builds real applications:
+- ✅ Constitutional state machine (13 states)
+- ✅ CharterEngine consent enforcement  
+- ✅ Receipt persistence to Supabase
+- ✅ Deterministic responses (no mocks in critical path)
+- ✅ API routes: `/api/rob/init`, `/api/rob/message`
+
+**Next:** Supabase deployment → VERIFIED status
+
+### 🔒 TruthSerum & Constitutional Enforcement
+**Status:** OPERATIONAL
+
+Automated truth enforcement across the entire codebase:
+- ✅ No unverified claims allowed
+- ✅ CI TruthGate validates every push (5 validation scripts)
+- ✅ Receipt system with parent-child chaining
+- ✅ Route manifest alignment (21/21 routes validated)
+- ✅ Engine page coverage (8/8 engines verified)
+
+### 📚 Documentation
+- [Rob Vertical Slice Execution](docs/ROB_VERTICAL_SLICE_EXECUTION.md) - Complete deployment guide
+- [Rob Production Deployment](docs/ROB_PRODUCTION_DEPLOYMENT.md) - 4-phase production checklist
+- [Secrets & Auth Enforcement](docs/SECRETS_AND_AUTH_PROMPT.md) - Security rules
+- [Constitutional Audit](docs/CONSTITUTIONAL_ENFORCEMENT_AUDIT.md) - System compliance report
+- [Supabase Setup Steps](SUPABASE_SETUP_STEPS.md) - Database deployment guide
+
 ---
 
 ## 🎯 QBos V3 - Complete 8-Engine Suite
@@ -530,6 +561,7 @@ AI routing should be deterministic, observable, and explainable. SilentEngine™
 
 ## 🔮 Roadmap
 
+### Completed ✅
 - [x] SightEngine™ - Visual quality standards
 - [x] SilentEngine™ - AI routing engine
 - [x] Supabase migrations for both engines
@@ -537,17 +569,55 @@ AI routing should be deterministic, observable, and explainable. SilentEngine™
 - [x] Next.js API adapters
 - [x] Full-featured demo application
 - [x] Monorepo setup with workspaces
-- [ ] CharterEngine™ integration (legal governance)
-- [ ] Multi-tenant support (org policies)
-- [ ] Real-time observability dashboard
+- [x] **Rob the QuietBuilder** - State machine + API routes
+- [x] **TruthSerum** - Constitutional enforcement system
+- [x] **CI TruthGate** - Automated validation (5 scripts)
+- [x] **Receipt System** - Immutable audit trail
+- [x] **CharterEngine™** - Consent enforcement (integrated in Rob)
+
+### In Progress 🔄
+- [ ] Supabase production deployment
+- [ ] Real authentication (Supabase Auth)
+- [ ] Billing enforcement (schema ready, API wiring needed)
+
+### Upcoming 📋
+- [ ] AI generation integration (Rob + SilentEngine)
+- [ ] GitHub integration (code push)
+- [ ] Vercel deployment automation
+- [ ] Multi-engine orchestration dashboard
+- [ ] Real-time observability
 - [ ] Python SDK
-- [ ] Streaming support in providers
+- [ ] Streaming support
 
 ---
 
 ## 📁 What's New
 
-### ✨ Latest Additions
+### ✨ December 2025 - Constitutional Infrastructure
+
+**Rob the QuietBuilder (Vertical Slice)**
+- Complete state machine with 13 states
+- API routes: session init + message handler with consent gate
+- Supabase-ready with mock mode fallback
+- Receipt emission on every action
+- Deterministic responses (AI integration pending)
+- Database schema: 9 tables with RLS policies
+
+**TruthSerum & Constitutional Enforcement**
+- Automated CI validation (GitHub Actions)
+- 5 validation scripts: routes, engine pages, dead-ends, receipts, TypeScript
+- Receipt system with parent-child chaining
+- No unverified claims allowed in code
+- Comprehensive audit documentation
+
+**Database & Infrastructure**
+- Rob tables migration ready (408 lines SQL)
+- Supabase client integration (`@supabase/supabase-js`)
+- CharterEngine consent gate operational
+- Environment variable support with placeholder enforcement
+- Complete deployment guides (Supabase + Vercel)
+
+### ✨ Previous Additions
 
 **Provider Implementations**
 - Full Anthropic SDK integration (Claude 3.5, Opus, Haiku)
@@ -565,12 +635,13 @@ AI routing should be deterministic, observable, and explainable. SilentEngine™
 **Database Migrations**
 - Complete Supabase schema for SightEngine
 - Complete Supabase schema for SilentEngine
+- Rob tables with RLS and helper functions
 - Audit logging and metrics tables
 - Circuit breaker state tracking
-- RLS policies and indexes
 
 **Demo Application**
 - Full-featured Next.js 14 app
+- Rob vertical slice at `/rob`
 - Interactive SilentEngine demo
 - Interactive SightEngine demo
 - Tailwind CSS UI
