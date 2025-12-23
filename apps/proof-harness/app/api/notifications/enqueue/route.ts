@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { NotificationsEngine } from '@qbos/notifications-engine-core';
+
+const notificationsEngine = new NotificationsEngine();
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,13 +15,13 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // TODO: Implement NotificationsEngine queue
+    await notificationsEngine.enqueue({ type, to, payload });
+    const queueSize = await notificationsEngine.getQueueSize();
 
     return NextResponse.json({
       ok: true,
-      status: 'NOT_IMPLEMENTED',
-      message: 'NotificationsEngine not yet implemented',
-      receivedParams: { type, to, payload },
+      data: { queueSize },
+      message: 'Notification enqueued via NotificationsEngine',
     });
   } catch (error) {
     return NextResponse.json({

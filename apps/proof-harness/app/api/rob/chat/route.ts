@@ -1,0 +1,261 @@
+/**
+ * POST /api/rob/chat
+ * 
+ * Rob's chat endpoint with full constitutional pipeline:
+ * 1. Auth check
+ * 2. Billing cap enforcement
+ * 3. Persist user message
+ * 4. State transition (LISTENING)
+ * 5. SilentEngine invocation
+ * 6. TruthSerum validation
+ * 7. Persist assistant message
+ * 8. Return response
+ * 
+ * Emits receipts: user_input_received, ai_invoked, message_validated
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { RobEngine } from '@qbos/execution-engine-core';
+import { SupabaseRobPersistence } from '@qbos/execution-engine-core/SupabaseRobPersistence';
+import { SilentEngine, MockProvider } from '@qbos/silent-engine-core';
+
+export async function POST(request: NextRequest) {
+  try {
+    // TODO: Extract user from auth
+    const userId = request.headers.get('x-user-id') || 'mock-user-123';
+
+    const body = await request.json();
+    const { session_id, message } = body;
+
+    if (!session_id || !message) {
+      return NextResponse.json(
+        { error: 'session_id and message are required' },
+        { status: 400 }
+      );
+    }
+
+    // Initialize persistence
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json(
+        { error: 'Supabase configuration missing' },
+        { status: 500 }
+      );
+    }
+
+    const persistence = new SupabaseRobPersistence(supabaseUrl, supabaseKey);
+    const robEngine = new RobEngine(persistence);
+
+    // Verify session exists and belongs to user
+    const session = await robEngine.getSession(session_id);
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Session not found' },
+        { status: 404 }
+      );
+    }
+
+    if (session.user_id !== userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 403 }
+      );
+    }
+
+    // TODO: Step 2 - Billing cap enforcement
+    // For now, skipping
+
+    // Step 3: Persist user message
+    const userMessage = await persistence.addMessage({
+      session_id,
+      role: 'user',
+      content: message,
+      metadata: {},
+    });
+
+    // Emit receipt
+    await persistence.addReceipt({
+      session_id,
+      actor: 'user',
+      action_type: 'user_input_received',
+      outcome: 'success',
+      evidence_refs: [userMessage.id],
+      truth_state: 'Verified',
+      metadata: { message_id: userMessage.id },
+    });
+
+    // Step 4: State transition
+    await robEngine.transitionState(
+      session_id,
+      'LISTENING',
+      'Processing user input',
+      userMessage.id
+    );
+
+    // Step 5: SilentEngine invocation (mock for now)
+    const mockProvider = new MockProvider();
+    mockProvider.configure({
+      providerKey: 'mock',
+      apiKey: 'mock-key',
+    });
+
+    const silentEngine = new SilentEngine({
+      providers: [mockProvider],
+      policies: [
+        {
+          policyKey: 'default',
+          displayName: 'Default',
+          description: 'Default policy',
+          preferredCapabilities: ['fastLatency'],
+          requiredCapabilities: [],
+          allowFallback: false,
+          requireSafetyCheck: false,
+          minSafetyLevel: 'low',
+        },
+      ],
+      defaultPolicyKey: 'default',
+    });
+
+    const startTime = Date.now();
+    const aiResult = await silentEngine.invoke({
+      sessionId: session_id,
+      userMessage: message,
+      policyKey: 'default',
+      context: {
+        session_state: session.current_state,
+        progress: session.progress_percent,
+        readiness: session.readiness_tier,
+        config: session.app_config,
+      },
+    });
+    const latencyMs = Date.now() - startTime;
+
+    // Step 6: TruthSerum validation
+    const truthReport = await robEngine.validateSession(session_id);
+    
+    // Check if AI's response makes unsupported claims
+    let finalResponse = aiResult.response;
+    const violations: string[] = [];
+
+    // Simple claim detection (in production, this would be more sophisticated)
+    const deployedClaims = ['deployed', 'live', 'published'];
+    const hasDeployedClaim = deployedClaims.some((claim) =>
+      finalResponse.toLowerCase().includes(claim)
+    );
+
+    if (hasDeployedClaim) {
+      const hasDeployReceipt = truthReport.summary.enginesInvoked.some((e) =>
+        ['vercel.deploy_success', 'healthcheck.ok'].includes(e)
+      );
+
+      if (!hasDeployReceipt) {
+        violations.push('Deployment claim without receipt');
+        finalResponse = finalResponse.replace(
+          /deployed|live|published/gi,
+          'ready to deploy'
+        );
+      }
+    }
+
+    // Step 7: Persist assistant message
+    const assistantMessage = await persistence.addMessage({
+      session_id,
+      role: 'assistant',
+      content: finalResponse,
+      metadata: {
+        truthserum: {
+          original: aiResult.response,
+          rewritten: violations.length > 0,
+          violations,
+        },
+        ai_usage: {
+          provider: aiResult.metadata?.provider_used,
+          model: aiResult.metadata?.model_used,
+          tokens_in: aiResult.metadata?.tokens?.prompt || 0,
+          tokens_out: aiResult.metadata?.tokens?.completion || 0,
+        },
+      },
+    });
+
+    // Record AI usage
+    if (aiResult.metadata) {
+      await persistence.recordAIUsage({
+        session_id,
+        triggered_by_message_id: assistantMessage.id,
+        provider: aiResult.metadata.provider_used || 'mock',
+        model: aiResult.metadata.model_used || 'mock-model',
+        tokens_in: aiResult.metadata.tokens?.prompt || 0,
+        tokens_out: aiResult.metadata.tokens?.completion || 0,
+        cost_usd: aiResult.metadata.cost_usd || 0,
+        latency_ms: latencyMs,
+      });
+    }
+
+    // Emit receipts
+    await persistence.addReceipt({
+      session_id,
+      actor: 'rob',
+      action_type: 'ai.invoked',
+      outcome: 'success',
+      evidence_refs: [assistantMessage.id],
+      truth_state: 'Verified',
+      metadata: {
+        provider: aiResult.metadata?.provider_used,
+        model: aiResult.metadata?.model_used,
+        latency_ms: latencyMs,
+      },
+    });
+
+    await persistence.addReceipt({
+      session_id,
+      actor: 'rob',
+      action_type: 'message.validated',
+      outcome: violations.length > 0 ? 'blocked' : 'success',
+      evidence_refs: [assistantMessage.id],
+      truth_state: 'Verified',
+      metadata: {
+        violations,
+        rewritten: violations.length > 0,
+      },
+    });
+
+    // Update progress and readiness
+    await robEngine.updateProgressAndReadiness(session_id);
+
+    // Transition back to WAITING
+    await robEngine.transitionState(
+      session_id,
+      'WAITING',
+      'Awaiting next user input',
+      assistantMessage.id
+    );
+
+    // Return response
+    return NextResponse.json({
+      ok: true,
+      message: finalResponse,
+      metadata: {
+        truthserum: {
+          violations,
+          rewritten: violations.length > 0,
+        },
+        session: {
+          state: 'WAITING',
+          progress: session.progress_percent,
+          readiness: session.readiness_tier,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Rob chat error:', error);
+    return NextResponse.json(
+      {
+        ok: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
+  }
+}

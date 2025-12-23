@@ -1,24 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { EngineOrchestrator } from '@qbos/execution-engine-core';
+
+let orchestrator: EngineOrchestrator | null = null;
+
+async function getOrchestrator(): Promise<EngineOrchestrator> {
+  if (!orchestrator) {
+    orchestrator = new EngineOrchestrator();
+    await orchestrator.init();
+  }
+  return orchestrator;
+}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, orgId } = body;
+    const { email, orgId } = body;
 
-    if (!userId) {
+    if (!email) {
       return NextResponse.json({
         ok: false,
-        error: 'userId required',
+        error: 'email required',
       }, { status: 400 });
     }
 
-    // TODO: Implement IdentityEngine session creation
+    const orch = await getOrchestrator();
+    const result = await orch.createSession(email, orgId);
+
+    // Get receipts
+    const receiptSystem = orch.getReceiptSystem();
+    const receipts = result.data?.sessionId
+      ? receiptSystem.getReceiptsForSession(result.data.sessionId)
+      : [];
 
     return NextResponse.json({
-      ok: true,
-      status: 'NOT_IMPLEMENTED',
-      message: 'IdentityEngine not yet implemented',
-      receivedParams: { userId, orgId },
+      ok: result.ok,
+      data: result.data,
+      error: result.error,
+      receipts: result.receipts,
+      receiptDetails: receipts.map((r) => ({
+        id: r.receipt_id,
+        actor: r.actor,
+        action: r.action_type,
+        outcome: r.outcome,
+      })),
     });
   } catch (error) {
     return NextResponse.json({

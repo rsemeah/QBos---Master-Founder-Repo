@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ConfigEngine } from '@qbos/config-engine-core';
+
+const configEngine = new ConfigEngine();
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,13 +15,12 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // TODO: Implement ConfigEngine flag evaluation
+    const evaluation = await configEngine.isEnabled(flagKey, { userId, ...context });
 
     return NextResponse.json({
       ok: true,
-      status: 'NOT_IMPLEMENTED',
-      message: 'ConfigEngine not yet implemented',
-      receivedParams: { flagKey, userId, context },
+      data: evaluation,
+      message: 'Feature flag evaluated via ConfigEngine',
     });
   } catch (error) {
     return NextResponse.json({

@@ -1,24 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { CharterEngine } from '@qbos/charter-engine-core';
+
+const charterEngine = new CharterEngine();
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, documentType, version } = body;
+    const { userId, purpose } = body;
 
-    if (!userId || !documentType || !version) {
+    if (!userId || !purpose) {
       return NextResponse.json({
         ok: false,
-        error: 'userId, documentType, and version required',
+        error: 'userId and purpose required',
       }, { status: 400 });
     }
 
-    // TODO: Implement CharterEngine consent acceptance
+    const record = await charterEngine.grantConsent(userId, purpose as any, {
+      ipAddress: request.ip || 'unknown',
+      userAgent: request.headers.get('user-agent') || 'unknown',
+    });
 
     return NextResponse.json({
       ok: true,
-      status: 'NOT_IMPLEMENTED',
-      message: 'CharterEngine not yet implemented',
-      receivedParams: { userId, documentType, version },
+      data: record,
+      message: 'Consent granted via CharterEngine',
     });
   } catch (error) {
     return NextResponse.json({

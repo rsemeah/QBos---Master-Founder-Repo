@@ -19,7 +19,9 @@
     "dev": "npm run dev --workspaces",
     "clean": "npm run clean --workspaces && rm -rf node_modules",
     "install:all": "npm install",
-    "test": "echo \"Tests coming soon\" && exit 0"
+    "test": "echo \"Tests coming soon\" && exit 0",
+    "truthgate": "ts-node scripts/truthgate.ts",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [
     "quietbuild",

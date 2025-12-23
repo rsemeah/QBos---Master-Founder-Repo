@@ -115,6 +115,30 @@ export class NotificationsEngine {
   }
 
   /**
+   * Enqueue notification (simplified for orchestration)
+   */
+  async enqueue(params: {
+    type: string;
+    to: string;
+    payload: Record<string, unknown>;
+  }): Promise<void> {
+    // Simple queueing without sending
+    const notification: Notification = {
+      id: `notif_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      userId: params.to,
+      channel: 'email',
+      status: 'queued',
+      priority: 'normal',
+      body: JSON.stringify(params.payload),
+      metadata: { type: params.type },
+      queuedAt: new Date().toISOString(),
+    };
+
+    this.notifications.set(notification.id, notification);
+    this.queue.push(notification.id);
+  }
+
+  /**
    * Get queue size
    */
   async getQueueSize(): Promise<number> {

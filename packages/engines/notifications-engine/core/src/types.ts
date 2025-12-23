@@ -21,7 +21,8 @@ export interface Notification {
   failedAt?: string;
   error?: string;
   metadata?: Record<string, unknown>;
-  createdAt: string;
+  createdAt?: string;
+  queuedAt?: string;
 }
 
 export interface NotificationTemplate {

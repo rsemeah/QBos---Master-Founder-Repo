@@ -243,6 +243,36 @@ export class PaywallEngine {
     return summary;
   }
 
+  /**
+   * Get entitlements (features list) for user/org
+   */
+  async getEntitlements(
+    userId: string,
+    orgId?: string
+  ): Promise<{ features: string[]; plan?: PricingPlan }> {
+    const targetId = orgId || userId;
+    const subscription = this.subscriptions.get(targetId);
+
+    if (!subscription || subscription.status !== 'active') {
+      // Default to free plan features
+      const freePlan = this.plans.get('free');
+      return {
+        features: freePlan?.features || [],
+        plan: freePlan,
+      };
+    }
+
+    const plan = this.plans.get(subscription.planId);
+    if (!plan) {
+      return { features: [] };
+    }
+
+    return {
+      features: plan.features,
+      plan,
+    };
+  }
+
   // Private helper methods
 
   private initializeDefaultPlans(): void {

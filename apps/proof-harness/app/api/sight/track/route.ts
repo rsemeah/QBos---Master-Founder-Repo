@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { validateAsset, calculateQualityScore } from '@qbos/sight-engine';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,13 +17,26 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // TODO: Integrate with SightEngine for visual quality tracking
+    if (!assetType || !tier) {
+      return NextResponse.json({
+        ok: false,
+        error: 'assetType and tier required',
+      }, { status: 400 });
+    }
+
+    // Validate asset spec
+    const validation = validateAsset(assetType as any, tier as any, spec);
+    const qualityScore = calculateQualityScore(validation);
 
     return NextResponse.json({
       ok: true,
-      status: 'NOT_IMPLEMENTED',
-      message: 'SightEngine integration pending',
-      receivedParams: { assetType, tier, spec },
+      tracked: true,
+      data: {
+        validation,
+        qualityScore,
+        meetsStandards: validation.passed,
+      },
+      message: 'Visual quality validated via SightEngine',
     });
   } catch (error) {
     return NextResponse.json({

@@ -12,6 +12,7 @@ export * from './types';
 
 // Providers
 export { BaseProvider } from './providers/base-provider';
+export { MockProvider } from './providers/mock-provider';
 
 // Routing
 export { RoutingEngine } from './routing/routing-engine';

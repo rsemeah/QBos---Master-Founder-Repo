@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { PaywallEngine } from '@qbos/paywall-engine-core';
+
+const paywallEngine = new PaywallEngine();
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,13 +15,12 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // TODO: Implement PaywallEngine entitlements check
+    const entitlements = await paywallEngine.getEntitlements(userId, orgId);
 
     return NextResponse.json({
       ok: true,
-      status: 'NOT_IMPLEMENTED',
-      message: 'PaywallEngine not yet implemented',
-      receivedParams: { userId, orgId },
+      data: entitlements,
+      message: 'Entitlements retrieved via PaywallEngine',
     });
   } catch (error) {
     return NextResponse.json({

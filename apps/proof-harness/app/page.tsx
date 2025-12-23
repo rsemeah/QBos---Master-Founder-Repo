@@ -1,3 +1,16 @@
+import Link from 'next/link';
+
+const ENGINES = [
+  { name: 'SilentEngine™', key: 'silent', status: 'operational', desc: 'AI routing & orchestration' },
+  { name: 'SightEngine™', key: 'sight', status: 'operational', desc: 'Visual quality standards' },
+  { name: 'ExecutionEngine™', key: 'execution', status: 'pending', desc: 'Workflow orchestration' },
+  { name: 'CharterEngine™', key: 'charter', status: 'pending', desc: 'Consent & GDPR' },
+  { name: 'IdentityEngine™', key: 'identity', status: 'pending', desc: 'Auth & RBAC' },
+  { name: 'ConfigEngine™', key: 'config', status: 'pending', desc: 'Feature flags' },
+  { name: 'PaywallEngine™', key: 'paywall', status: 'pending', desc: 'Entitlements' },
+  { name: 'NotificationsEngine™', key: 'notifications', status: 'pending', desc: 'Email/SMS queue' },
+];
+
 export default function Home() {
   return (
     <main style={{ fontFamily: 'system-ui', padding: '3rem', maxWidth: '1200px', margin: '0 auto' }}>
@@ -6,41 +19,87 @@ export default function Home() {
         Engine validation and API testing platform
       </p>
 
-      <h2>Available Engines</h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
-        {[
-          { name: 'SilentEngine™', status: 'operational', desc: 'AI routing & orchestration' },
-          { name: 'SightEngine™', status: 'operational', desc: 'Visual quality standards' },
-          { name: 'SafetyEngine™', status: 'pending', desc: 'Content moderation' },
-          { name: 'CharterEngine™', status: 'pending', desc: 'Consent & GDPR' },
-          { name: 'IdentityEngine™', status: 'pending', desc: 'Auth & RBAC' },
-          { name: 'ConfigEngine™', status: 'pending', desc: 'Feature flags' },
-          { name: 'PaywallEngine™', status: 'pending', desc: 'Entitlements' },
-          { name: 'NotificationsEngine™', status: 'pending', desc: 'Email/SMS queue' },
-        ].map((engine) => (
-          <div
-            key={engine.name}
+      {/* Rob QuietBuilder Card */}
+      <div style={{ marginBottom: '2rem', padding: '2rem', border: '2px solid #3b82f6', borderRadius: '12px', backgroundColor: '#eff6ff' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ margin: '0 0 0.5rem 0', color: '#1e40af' }}>👷 Rob the QuietBuilder</h2>
+            <p style={{ margin: 0, fontSize: '1rem', color: '#3730a3' }}>
+              Your AI coding assistant with constitutional guarantees. Build real apps with receipts and truth.
+            </p>
+          </div>
+          <Link
+            href="/build"
             style={{
-              border: '1px solid #ddd',
-              padding: '1rem',
+              padding: '1rem 2rem',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              textDecoration: 'none',
               borderRadius: '8px',
-              backgroundColor: engine.status === 'operational' ? '#f0f9ff' : '#f9fafb',
+              fontWeight: 'bold',
+              fontSize: '1.1rem',
+              whiteSpace: 'nowrap',
             }}
           >
-            <h3 style={{ margin: '0 0 0.5rem 0' }}>{engine.name}</h3>
-            <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: '#666' }}>{engine.desc}</p>
-            <span
+            Start Building →
+          </Link>
+        </div>
+      </div>
+
+      <h2>Available Engines</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+        {ENGINES.map((engine) => (
+          <Link
+            key={engine.key}
+            href={`/engines/${engine.key}`}
+            style={{
+              textDecoration: 'none',
+              color: 'inherit',
+              display: 'block',
+              border: '2px solid transparent',
+              borderRadius: '8px',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#3b82f6';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'transparent';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            <div
               style={{
-                fontSize: '0.8rem',
-                padding: '0.25rem 0.5rem',
-                borderRadius: '4px',
-                backgroundColor: engine.status === 'operational' ? '#22c55e' : '#f59e0b',
-                color: 'white',
+                border: '1px solid #ddd',
+                padding: '1rem',
+                borderRadius: '8px',
+                backgroundColor: engine.status === 'operational' ? '#f0f9ff' : '#f9fafb',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
               }}
             >
-              {engine.status}
-            </span>
-          </div>
+              <h3 style={{ margin: '0 0 0.5rem 0' }}>{engine.name}</h3>
+              <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: '#666', flex: 1 }}>{engine.desc}</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span
+                  style={{
+                    fontSize: '0.8rem',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '4px',
+                    backgroundColor: engine.status === 'operational' ? '#22c55e' : '#f59e0b',
+                    color: 'white',
+                  }}
+                >
+                  {engine.status}
+                </span>
+                <span style={{ fontSize: '0.9rem', color: '#3b82f6', fontWeight: 'bold' }}>
+                  Open Engine →
+                </span>
+              </div>
+            </div>
+          </Link>
         ))}
       </div>
 

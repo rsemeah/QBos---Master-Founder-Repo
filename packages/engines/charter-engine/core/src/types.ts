@@ -2,7 +2,7 @@
  * CharterEngine™ Types
  */
 
-export type ConsentPurpose = 'ai' | 'analytics' | 'marketing' | 'essential';
+export type ConsentPurpose = 'ai' | 'analytics' | 'marketing' | 'essential' | 'ai_processing';
 export type ConsentStatus = 'granted' | 'denied' | 'withdrawn';
 
 export interface ConsentRecord {
