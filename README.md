@@ -8,19 +8,26 @@ QuietBuild OS™ V3 is a production-ready infrastructure platform that guides fo
 
 Built for founders who need investor-grade demos with proof artifacts, not promises.
 
-## ⚡ Latest Updates (December 2025)
+## ⚡ Latest Updates (December 24, 2025)
 
-### 🤖 Rob the QuietBuilder - Vertical Slice Complete
-**Status:** SHAPED (Code complete, awaiting external services)
+### 🎉 Rob the QuietBuilder - Complete UI + Backend Infrastructure
+**Status:** PRODUCTION INFRASTRUCTURE READY (Awaiting AI wiring)
 
-Rob is the AI coding assistant that builds real applications:
-- ✅ Constitutional state machine (13 states)
-- ✅ CharterEngine consent enforcement  
-- ✅ Receipt persistence to Supabase
-- ✅ Deterministic responses (no mocks in critical path)
-- ✅ API routes: `/api/rob/init`, `/api/rob/message`
+**What's Actually Running:**
+- ✅ Complete Vite React UI (14 files, 162 packages) running on port 3001
+- ✅ Next.js Backend API (2 routes) running on port 3000
+- ✅ Constitutional state machine (13 states) fully operational
+- ✅ CharterEngine consent enforcement working end-to-end
+- ✅ Supabase database (9 tables, 17 indexes, 9 RLS policies) deployed
+- ✅ Receipt persistence to Supabase (with mock fallback)
+- ✅ Full UI/UX flow verified: session init → consent → messages → state transitions
 
-**Next:** Supabase deployment → VERIFIED status
+**What's Infrastructure-Only (Needs Wiring):**
+- ⚠️ AI code generation (keys configured, not connected to build logic yet)
+- ⚠️ GitHub OAuth (no repository creation yet)
+- ⚠️ Vercel deployment (no API integration yet)
+
+**See:** [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) for honest assessment
 
 ### 🔒 TruthSerum & Constitutional Enforcement
 **Status:** OPERATIONAL
@@ -747,7 +754,46 @@ AI routing should be deterministic, observable, and explainable. SilentEngine™
 
 ---
 
-## 📄 License
+## � Quick Start - Run Rob UI Locally
+
+### Prerequisites
+- Node.js 18+
+- npm or yarn
+- Git
+
+### 1. Clone & Install
+```bash
+git clone https://github.com/rsemeah/QBos---Master-Founder-Repo.git
+cd QBos---Master-Founder-Repo
+npm install
+```
+
+### 2. Start Backend (Terminal 1)
+```bash
+cd apps/proof-harness
+npm run dev
+```
+Wait for: `ready started server on 0.0.0.0:3000`
+
+### 3. Start UI (Terminal 2)
+```bash
+cd apps/rob-ui
+npm install  # First time only
+npm run dev
+```
+Wait for: `Local: http://localhost:3001/`
+
+### 4. Test Rob
+1. Visit http://localhost:3001/rob
+2. Type: `I consent`
+3. Type: `help`
+4. See state machine in action!
+
+**See:** [apps/rob-ui/README.md](apps/rob-ui/README.md) for full setup guide
+
+---
+
+## �📄 License
 
 MIT
 
