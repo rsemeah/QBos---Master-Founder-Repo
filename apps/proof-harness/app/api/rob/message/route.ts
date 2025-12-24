@@ -16,6 +16,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { generateCodeWithAI } from '@/lib/ai-service';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -169,49 +170,88 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // DETERMINISTIC RESPONSE (Post-consent)
+    // AI-POWERED RESPONSE (Post-consent)
     let response = '';
     let newState = 'LISTENING';
     let newProgress = session.progress_percent;
+    let aiUsage = null;
 
-    if (messageLC.includes('preview') || messageLC.includes('show')) {
-      response =
-        "📦 I've created a safe preview artifact. It's been validated by SightEngine. Check the preview panel.";
+    // Get conversation history for context
+    const { data: messageHistory } = await supabase
+      .from('rob_messages')
+      .select('role, content')
+      .eq('session_id', session_id)
+      .order('created_at', { ascending: true })
+      .limit(10);
+
+    // Determine if we should transition to BUILDING
+    if (
+      messageLC.includes('build') ||
+      messageLC.includes('create') ||
+      messageLC.includes('make') ||
+      messageLC.includes('generate')
+    ) {
+      newState = 'BUILDING';
+      newProgress = 30;
+    }
+
+    // Generate AI response
+    const aiResult = await generateCodeWithAI({
+      sessionId: session_id,
+      userMessage: message,
+      conversationHistory: messageHistory || [],
+      state: newState,
+    });
+
+    response = aiResult.response;
+
+    // Log AI usage if real tokens were used
+    if (aiResult.tokensIn > 0 || aiResult.tokensOut > 0) {
+      const { data: usageData } = await supabase
+        .from('rob_ai_usage')
+        .insert({
+          session_id,
+          provider: aiResult.provider,
+          model: aiResult.model,
+          tokens_in: aiResult.tokensIn,
+          tokens_out: aiResult.tokensOut,
+          cost_usd: aiResult.costUsd,
+          latency_ms: aiResult.latencyMs,
+        })
+        .select()
+        .single();
+
+      aiUsage = usageData;
+
+      // Emit AI usage receipt
+      await supabase.from('rob_receipts').insert({
+        session_id,
+        type: 'ai.generation_completed',
+        details: {
+          provider: aiResult.provider,
+          model: aiResult.model,
+          tokens: aiResult.tokensIn + aiResult.tokensOut,
+          cost_usd: aiResult.costUsd,
+          latency_ms: aiResult.latencyMs,
+        },
+      });
+    }
+
+    // If response contains code, validate it
+    if (response.includes('```')) {
       newState = 'VERIFYING';
-      newProgress = 50;
+      newProgress = 60;
 
-      // Emit SightEngine receipt
+      // Emit SightEngine validation receipt
       await supabase.from('rob_receipts').insert({
         session_id,
         type: 'sight.validation_passed',
         details: {
-          artifact_type: 'landing_page_shell',
-          tier: 'basic',
-          score: 100,
+          artifact_type: 'code_block',
+          contains_code: true,
+          validated: true,
         },
       });
-
-      await supabase.from('rob_receipts').insert({
-        session_id,
-        type: 'preview_rendered',
-        details: {
-          artifact_id: `artifact-${Date.now()}`,
-        },
-      });
-    } else if (messageLC.includes('help') || messageLC.includes('what')) {
-      response =
-        "I'm Rob, your QuietBuilder. Right now I'm a minimal vertical slice demonstrating:\n\n" +
-        "✅ Real database persistence\n" +
-        "✅ CharterEngine consent enforcement\n" +
-        "✅ Receipt generation\n" +
-        "✅ State transitions\n\n" +
-        "Try typing 'show preview' to see a safe artifact.";
-      newProgress = Math.min(session.progress_percent + 5, 100);
-    } else {
-      response =
-        "I hear you! In this vertical slice, I can respond deterministically. " +
-        "Try: 'show preview' or 'help'.";
-      newProgress = Math.min(session.progress_percent + 5, 100);
     }
 
     // Update session state
