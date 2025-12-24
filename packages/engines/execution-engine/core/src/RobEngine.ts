@@ -5,10 +5,14 @@
  * All state transitions emit receipts. Progress ≠ Readiness.
  * 
  * Constitutional Compliance: Required
+ * Intelligence Enforcement: MANDATORY
  */
 
 import { ReceiptSystem, Receipt } from './receipts/ReceiptSystem';
 import { TruthSerumValidator } from './receipts/TruthSerumValidator';
+import { IntelligenceGuard, IntelligenceViolationError } from './intelligence/IntelligenceGuard';
+import { IdeaDecomposer } from './intelligence/IdeaDecomposer';
+import type { IntelligenceReceipt } from './intelligence/IntelligenceContract';
 
 // ============================================================================
 // TYPES
@@ -121,11 +125,13 @@ export interface RobEnginePersistence {
 export class RobEngine {
   private receiptSystem: ReceiptSystem;
   private truthSerum: TruthSerumValidator;
+  private ideaDecomposer: IdeaDecomposer;
   private persistence?: RobEnginePersistence;
 
   constructor(persistence?: RobEnginePersistence) {
     this.receiptSystem = new ReceiptSystem();
     this.truthSerum = new TruthSerumValidator();
+    this.ideaDecomposer = new IdeaDecomposer();
     this.persistence = persistence;
   }
 
@@ -494,6 +500,175 @@ export class RobEngine {
       : this.receiptSystem.getSessionReceipts(sessionId);
 
     return this.truthSerum.validate(sessionId, receipts);
+  }
+
+  // ==========================================================================
+  // INTELLIGENCE ENFORCEMENT (MECHANICAL LAW)
+  // ==========================================================================
+
+  /**
+   * STEP 1: Decompose user prompt into intelligence receipts
+   * 
+   * This is the FIRST step when processing any build request.
+   * Generates the required intelligence receipts that prove Rob is thinking.
+   */
+  async decomposeIdea(
+    sessionId: string,
+    messageId: string,
+    userPrompt: string
+  ): Promise<IntelligenceReceipt[]> {
+    const result = await this.ideaDecomposer.decompose(sessionId, messageId, userPrompt);
+
+    // Store receipts
+    if (this.persistence) {
+      for (const receipt of result.receipts) {
+        await this.persistence.addReceipt(receipt as any);
+      }
+    }
+
+    // Emit progress update
+    const progressReceipt = this.receiptSystem.emit({
+      session_id: sessionId,
+      actor: 'rob',
+      action_type: 'intelligence.generated',
+      outcome: 'success',
+      evidence_refs: result.receipts.map((r) => r.type),
+      truth_state: 'Verified',
+      metadata: {
+        receiptsGenerated: result.receipts.length,
+        domain: result.summary.domain,
+        recommendedPath: result.summary.recommendedPath,
+      },
+    });
+
+    if (this.persistence) {
+      await this.persistence.addReceipt(progressReceipt);
+    }
+
+    return result.receipts;
+  }
+
+  /**
+   * STEP 2: Process Build Request (with intelligence receipts)
+   * 
+   * MECHANICAL LAW: This operation REQUIRES intelligence receipts.
+   * - idea.decomposed
+   * - concept.inferred
+   * - direction.recommended
+   * 
+   * Failure to provide these receipts = BLOCKED state
+   */
+   * 
+   * Failure to provide these receipts = BLOCKED state
+   */
+  async processBuildRequest(
+    sessionId: string,
+    userPrompt: string,
+    intelligenceReceipts: IntelligenceReceipt[]
+  ): Promise<{ success: boolean; message: string; state: RobState }> {
+    // GUARD: Enforce intelligence requirements
+    const result = await IntelligenceGuard.guard(
+      {
+        sessionId,
+        operation: 'processBuildRequest',
+        receipts: intelligenceReceipts,
+      },
+      async () => {
+        // Intelligence requirements met - proceed with build
+        return this.executeBuild(sessionId, userPrompt, intelligenceReceipts);
+      }
+    );
+
+    if (!result.allowed) {
+      // BLOCKED: Intelligence requirements not met
+      await this.transitionState(
+        sessionId,
+        'BLOCKED',
+        `Intelligence violation: ${result.error?.message}`
+      );
+
+      // Emit violation receipt
+      if (result.violationReceipt && this.persistence) {
+        await this.persistence.addReceipt(result.violationReceipt);
+      }
+
+      return {
+        success: false,
+        message: result.error?.message || 'Intelligence requirements not met',
+        state: 'BLOCKED',
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Build request processed with verified intelligence',
+      state: result.data?.state || 'BUILDING',
+    };
+  }
+
+  /**
+   * Execute build (internal - only called after intelligence guard passes)
+   */
+  private async executeBuild(
+    sessionId: string,
+    userPrompt: string,
+    intelligenceReceipts: IntelligenceReceipt[]
+  ): Promise<{ state: RobState }> {
+    // Transition to BUILDING
+    await this.transitionState(sessionId, 'BUILDING', 'Intelligence verified, building...');
+
+    // Store intelligence receipts
+    if (this.persistence) {
+      for (const receipt of intelligenceReceipts) {
+        await this.persistence.addReceipt(receipt as any);
+      }
+    }
+
+    // TODO: Actual build logic here (Phase 2)
+    // For now, just transition to VERIFYING
+    await this.transitionState(sessionId, 'VERIFYING', 'Build complete, verifying...');
+
+    return { state: 'VERIFYING' };
+  }
+
+  /**
+   * FORBIDDEN: Update session without intelligence
+   * 
+   * Title-only updates are BLOCKED by mechanical law
+   */
+  async updateSessionMetadata(
+    sessionId: string,
+    updates: Partial<Pick<RobSession, 'app_name' | 'template_id'>>,
+    intelligenceReceipts: IntelligenceReceipt[]
+  ): Promise<void> {
+    // Check if this is a title-only update (FORBIDDEN)
+    if (updates.app_name && !updates.template_id && intelligenceReceipts.length === 0) {
+      IntelligenceGuard.blockTitleOnlyUpdate(sessionId, 'updateSessionMetadata');
+    }
+
+    // GUARD: Require intelligence if making structural changes
+    const requiresIntelligence = Object.keys(updates).length > 0;
+
+    if (requiresIntelligence) {
+      await IntelligenceGuard.guard(
+        {
+          sessionId,
+          operation: 'updateSessionMetadata',
+          receipts: intelligenceReceipts,
+        },
+        async () => {
+          // Update allowed
+          if (this.persistence) {
+            await this.persistence.updateSession(sessionId, updates as any);
+          }
+        }
+      );
+    } else {
+      // No-op update
+      if (this.persistence) {
+        await this.persistence.updateSession(sessionId, updates as any);
+      }
+    }
   }
 
   // ==========================================================================

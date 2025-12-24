@@ -13,3 +13,4 @@ export { SupabaseRobPersistence } from './SupabaseRobPersistence';
 export * from './types';
 export * from './BuildSession';
 export * from './receipts/generateReceipts';
+export * from './intelligence';

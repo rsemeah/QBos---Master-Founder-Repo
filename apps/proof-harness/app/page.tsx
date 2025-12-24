@@ -106,6 +106,51 @@ export default function Home() {
         ))}
       </div>
 
+      <h2>📊 Transparency & Audit</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+        <Link
+          href="/truthlog"
+          style={{
+            display: 'block',
+            padding: '1.5rem',
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            textDecoration: 'none',
+            color: 'inherit',
+            border: '2px solid transparent',
+            transition: 'all 0.2s',
+          }}
+        >
+          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📜</div>
+          <h3 style={{ margin: '0.5rem 0', color: '#1e40af' }}>TruthLog</h3>
+          <p style={{ fontSize: '0.9rem', color: '#6b7280', margin: 0 }}>
+            Immutable audit trail. Every operation receipted - the source of truth.
+          </p>
+        </Link>
+
+        <Link
+          href="/whathappened"
+          style={{
+            display: 'block',
+            padding: '1.5rem',
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            textDecoration: 'none',
+            color: 'inherit',
+            border: '2px solid transparent',
+            transition: 'all 0.2s',
+          }}
+        >
+          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📖</div>
+          <h3 style={{ margin: '0.5rem 0', color: '#1e40af' }}>What Happened</h3>
+          <p style={{ fontSize: '0.9rem', color: '#6b7280', margin: 0 }}>
+            Human-readable timeline. See Rob's "quiet" work behind the scenes.
+          </p>
+        </Link>
+      </div>
+
       <h2>API Endpoints</h2>
       <ul style={{ lineHeight: '2' }}>
         <li><code>GET /api/health</code> - System health check</li>
