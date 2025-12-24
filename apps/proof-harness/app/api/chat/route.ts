@@ -4,10 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { TruthSerum } from '@/packages/truthserum/src/TruthSerum';
-import { ReceiptWriter } from '@/packages/truthserum/src/ReceiptWriter';
-import { IntentsRegistry } from '@/packages/truthserum/src/intents/registry';
-import { Receipt } from '@/packages/truthserum/src/types';
+import { TruthSerum, ReceiptWriter, IntentsRegistry, Receipt } from '@qbos/truthserum';
 
 const receiptWriter = new ReceiptWriter({
   localFallbackPath: './proof/local_receipts.jsonl',

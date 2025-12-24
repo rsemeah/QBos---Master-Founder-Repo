@@ -39,7 +39,7 @@ export default function RobBuildPage() {
 
   async function initSession() {
     try {
-      const res = await fetch('/api/rob/session', {
+      const res = await fetch('/api/rob/init', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ template_id: 'saas-starter' }),
@@ -82,7 +82,7 @@ export default function RobBuildPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/rob/chat', {
+      const res = await fetch('/api/rob/message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

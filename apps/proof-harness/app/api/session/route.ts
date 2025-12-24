@@ -3,7 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { ReceiptWriter } from '@/packages/truthserum/src/ReceiptWriter';
+import { ReceiptWriter } from '@qbos/truthserum';
 
 const receiptWriter = new ReceiptWriter({
   localFallbackPath: './proof/local_receipts.jsonl',
