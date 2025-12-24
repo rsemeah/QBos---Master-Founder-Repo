@@ -10,24 +10,29 @@ Built for founders who need investor-grade demos with proof artifacts, not promi
 
 ## ⚡ Latest Updates (December 24, 2025)
 
-### 🎉 Rob the QuietBuilder - Complete UI + Backend Infrastructure
-**Status:** PRODUCTION INFRASTRUCTURE READY (Awaiting AI wiring)
+### 🎉 Rob the QuietBuilder - COMPLETE AI Integration
+**Status:** PRODUCTION READY (All features wired)
 
-**What's Actually Running:**
-- ✅ Complete Vite React UI (14 files, 162 packages) running on port 3001
-- ✅ Next.js Backend API (2 routes) running on port 3000
-- ✅ Constitutional state machine (13 states) fully operational
-- ✅ CharterEngine consent enforcement working end-to-end
-- ✅ Supabase database (9 tables, 17 indexes, 9 RLS policies) deployed
-- ✅ Receipt persistence to Supabase (with mock fallback)
-- ✅ Full UI/UX flow verified: session init → consent → messages → state transitions
+**What's Running:**
+- ✅ Complete Vite React UI (14 files) - port 3001
+- ✅ Next.js Backend API - port 3000
+- ✅ Constitutional state machine (13 states)
+- ✅ CharterEngine consent enforcement
+- ✅ Supabase database (9 tables, deployed)
+- ✅ **NEW: OpenAI GPT-4 integration for real code generation**
+- ✅ **NEW: GitHub OAuth + repo creation**
+- ✅ **NEW: Token tracking and cost logging**
 
-**What's Infrastructure-Only (Needs Wiring):**
-- ⚠️ AI code generation (keys configured, not connected to build logic yet)
-- ⚠️ GitHub OAuth (no repository creation yet)
-- ⚠️ Vercel deployment (no API integration yet)
+**What's Configurable (Choose What You Need):**
+- ⚡ **OpenAI API Key** → Real AI code generation
+- ⚡ **GitHub OAuth** → Create repos with generated code
+- ⚡ **Supabase Service Key** → Full database persistence
+- ⚡ **Nothing** → Works with deterministic fallbacks
 
-**See:** [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) for honest assessment
+**See:** 
+- [Quick Reference](docs/ROB_QUICK_REFERENCE.md) - One-page setup
+- [Complete Setup Guide](docs/COMPLETE_SETUP_GUIDE.md) - Step-by-step for all options
+- [Production Readiness](PRODUCTION_READINESS.md) - Honest assessment
 
 ### 🔒 TruthSerum & Constitutional Enforcement
 **Status:** OPERATIONAL
