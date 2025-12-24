@@ -13,6 +13,7 @@ const VALID_ENGINE_KEYS = [
   'notifications',
   'sight',
   'silent',
+  'rob',
   'truthserum',
 ] as const;
 
@@ -135,6 +136,22 @@ const ENGINE_METADATA: Record<EngineKey, EngineMetadata> = {
     ],
     apiEndpoints: ['/api/truth/evaluate', '/api/receipts'],
   },
+  rob: {
+    name: 'RobEngine™',
+    description: 'Rob the QuietBuilder - AI-powered code generation assistant',
+    status: 'operational',
+    capabilities: [
+      'AI code generation (OpenAI GPT-4)',
+      'Conversational app building',
+      'CharterEngine consent enforcement',
+      'State machine management (13 states)',
+      'Session persistence',
+      'GitHub repository creation',
+      'Receipt emission for all operations',
+      'Multi-AI provider support',
+    ],
+    apiEndpoints: ['/api/rob/init', '/api/rob/message', '/api/github/create-repo'],
+  },
 };
 
 export default function EnginePage({ params }: { params: { engineKey: string } }) {
@@ -181,6 +198,7 @@ export default function EnginePage({ params }: { params: { engineKey: string } }
       notifications: ['notification.'],
       sight: ['preview.', 'visual.'],
       silent: ['silent.', 'ai.'],
+      rob: ['rob.'],
       truthserum: ['claim.', 'truth.'],
     };
     return typeMap[key] || [];

@@ -56,6 +56,12 @@ const ENGINES = [
     status: 'operational' as const,
   },
   {
+    key: 'rob',
+    name: 'RobEngine',
+    description: 'Rob the QuietBuilder - AI-powered code generation',
+    status: 'operational' as const,
+  },
+  {
     key: 'truthserum',
     name: 'TruthSerum',
     description: 'Proof verification & claim sanitization',

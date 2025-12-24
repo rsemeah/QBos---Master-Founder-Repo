@@ -14,6 +14,8 @@ import { MockProvider } from '@qbos/silent-engine-core';
 import { NotificationsEngine } from '@qbos/notifications-engine-core';
 import { ExecutionEngine } from './ExecutionEngine';
 import { ReceiptSystem } from './receipts/ReceiptSystem';
+import { RobEngine } from './RobEngine';
+import { RobEngine } from './RobEngine';
 
 export interface OrchestrationContext {
   sessionId: string;
@@ -37,6 +39,7 @@ export class EngineOrchestrator {
   private silentEngine: SilentEngine;
   private executionEngine: ExecutionEngine;
   private notificationsEngine: NotificationsEngine;
+  private robEngine: RobEngine;
   private receiptSystem: ReceiptSystem;
 
   constructor() {
@@ -47,6 +50,7 @@ export class EngineOrchestrator {
     this.paywallEngine = new PaywallEngine();
     this.notificationsEngine = new NotificationsEngine();
     this.receiptSystem = new ReceiptSystem();
+    this.robEngine = new RobEngine(this.receiptSystem);
 
     // Initialize SilentEngine with Mock Provider for proof-of-concept
     const mockProvider = new MockProvider();

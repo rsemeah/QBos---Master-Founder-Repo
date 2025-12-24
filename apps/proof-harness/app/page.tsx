@@ -5,6 +5,7 @@ import Link from 'next/link';
 const ENGINES = [
   { name: 'SilentEngine™', key: 'silent', status: 'operational', desc: 'AI routing & orchestration' },
   { name: 'SightEngine™', key: 'sight', status: 'operational', desc: 'Visual quality standards' },
+  { name: 'RobEngine™', key: 'rob', status: 'operational', desc: 'Rob the QuietBuilder - AI code generation' },
   { name: 'ExecutionEngine™', key: 'execution', status: 'pending', desc: 'Workflow orchestration' },
   { name: 'CharterEngine™', key: 'charter', status: 'pending', desc: 'Consent & GDPR' },
   { name: 'IdentityEngine™', key: 'identity', status: 'pending', desc: 'Auth & RBAC' },

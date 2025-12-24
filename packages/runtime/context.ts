@@ -111,6 +111,24 @@ export const EngineRegistry: Record<string, EngineDefinition> = {
       "vercel.healthcheck_ok",
     ],
   },
+  rob: {
+    key: "rob",
+    name: "RobEngine",
+    description: "Rob the QuietBuilder - AI-powered code generation and app building assistant",
+    status: "active",
+    receiptTypes: [
+      "rob.session.created",
+      "rob.session.updated",
+      "rob.state.transition",
+      "rob.message.sent",
+      "rob.message.received",
+      "rob.ai.invoked",
+      "rob.code.generated",
+      "rob.repo.created",
+      "rob.consent.granted",
+      "rob.config.changed",
+    ],
+  },
 };
 
 export function getEngine(key: string): EngineDefinition | undefined {
