@@ -12,6 +12,7 @@ import { ReceiptSystem, Receipt } from './receipts/ReceiptSystem';
 import { TruthSerumValidator } from './receipts/TruthSerumValidator';
 import { IntelligenceGuard, IntelligenceViolationError } from './intelligence/IntelligenceGuard';
 import { IdeaDecomposer } from './intelligence/IdeaDecomposer';
+import { PreviewGenerator, type PreviewResult } from './intelligence/PreviewGenerator';
 import type { IntelligenceReceipt } from './intelligence/IntelligenceContract';
 
 // ============================================================================
@@ -126,12 +127,14 @@ export class RobEngine {
   private receiptSystem: ReceiptSystem;
   private truthSerum: TruthSerumValidator;
   private ideaDecomposer: IdeaDecomposer;
+  private previewGenerator: PreviewGenerator;
   private persistence?: RobEnginePersistence;
 
   constructor(persistence?: RobEnginePersistence) {
     this.receiptSystem = new ReceiptSystem();
     this.truthSerum = new TruthSerumValidator();
     this.ideaDecomposer = new IdeaDecomposer();
+    this.previewGenerator = new PreviewGenerator();
     this.persistence = persistence;
   }
 
@@ -545,6 +548,20 @@ export class RobEngine {
       await this.persistence.addReceipt(progressReceipt);
     }
 
+    return result;
+  }
+
+  /**
+   * STEP 1.5: Generate living preview (optional standalone call)
+   */
+  async generatePreview(
+    sessionId: string,
+    messageId: string,
+    intelligenceReceipts: IntelligenceReceipt[]
+  ): Promise<PreviewResult> {
+    return this.previewGenerator.generate(sessionId, messageId, intelligenceReceipts);
+  }
+
     return result.receipts;
   }
 
@@ -565,7 +582,7 @@ export class RobEngine {
     sessionId: string,
     userPrompt: string,
     intelligenceReceipts: IntelligenceReceipt[]
-  ): Promise<{ success: boolean; message: string; state: RobState }> {
+  ): Promise<{ success: boolean; message: string; state: RobState; preview?: PreviewResult }> {
     // GUARD: Enforce intelligence requirements
     const result = await IntelligenceGuard.guard(
       {
@@ -603,6 +620,7 @@ export class RobEngine {
       success: true,
       message: 'Build request processed with verified intelligence',
       state: result.data?.state || 'BUILDING',
+      preview: result.data?.preview,
     };
   }
 
@@ -613,7 +631,7 @@ export class RobEngine {
     sessionId: string,
     userPrompt: string,
     intelligenceReceipts: IntelligenceReceipt[]
-  ): Promise<{ state: RobState }> {
+  ): Promise<{ state: RobState; preview?: PreviewResult }> {
     // Transition to BUILDING
     await this.transitionState(sessionId, 'BUILDING', 'Intelligence verified, building...');
 
@@ -624,11 +642,46 @@ export class RobEngine {
       }
     }
 
-    // TODO: Actual build logic here (Phase 2)
-    // For now, just transition to VERIFYING
+    // Generate living preview (Phase 3)
+    let previewResult: PreviewResult | undefined;
+    try {
+      const messageId = `msg_${Date.now()}`;
+      previewResult = await this.previewGenerator.generate(
+        sessionId,
+        messageId,
+        intelligenceReceipts
+      );
+
+      // Store preview receipt
+      if (this.persistence && previewResult.receipt) {
+        await this.persistence.addReceipt(previewResult.receipt as any);
+      }
+
+      // Emit preview success
+      this.receiptSystem.emit({
+        type: 'preview.ready',
+        sessionId,
+        metadata: {
+          componentName: previewResult.componentName,
+          linesOfCode: previewResult.linesOfCode,
+          interactivityLevel: previewResult.interactivityLevel,
+        },
+      });
+    } catch (error) {
+      // Preview generation failed - emit failure receipt but continue
+      this.receiptSystem.emit({
+        type: 'preview.failed',
+        sessionId,
+        metadata: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+    }
+
+    // Transition to VERIFYING
     await this.transitionState(sessionId, 'VERIFYING', 'Build complete, verifying...');
 
-    return { state: 'VERIFYING' };
+    return { state: 'VERIFYING', preview: previewResult };
   }
 
   /**

@@ -7,3 +7,4 @@
 export * from './IntelligenceContract';
 export * from './IntelligenceGuard';
 export * from './IdeaDecomposer';
+export { PreviewGenerator, type PreviewResult } from './PreviewGenerator';
