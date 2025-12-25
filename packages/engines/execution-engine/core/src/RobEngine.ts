@@ -562,20 +562,14 @@ export class RobEngine {
     return this.previewGenerator.generate(sessionId, messageId, intelligenceReceipts);
   }
 
-    return result.receipts;
-  }
-
   /**
    * STEP 2: Process Build Request (with intelligence receipts)
-   * 
+   *
    * MECHANICAL LAW: This operation REQUIRES intelligence receipts.
    * - idea.decomposed
    * - concept.inferred
    * - direction.recommended
-   * 
-   * Failure to provide these receipts = BLOCKED state
-   */
-   * 
+   *
    * Failure to provide these receipts = BLOCKED state
    */
   async processBuildRequest(
