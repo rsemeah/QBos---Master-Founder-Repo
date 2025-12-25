@@ -4,6 +4,8 @@
  */
 
 import { Receipt, ProofType } from "./types";
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import * as crypto from 'crypto';
 import * as fs from "fs";
 import * as path from "path";
 
@@ -13,16 +15,96 @@ export interface ReceiptWriterConfig {
   localFallbackPath?: string;
 }
 
+export interface ReceiptData {
+  sessionId: string;
+  type: string;
+  details: Record<string, any>;
+  parentReceiptId?: string;
+}
+
 export class ReceiptWriter {
   private config: ReceiptWriterConfig;
   private useSupabase: boolean;
+  private supabase: SupabaseClient | null = null;
+  private fallbackPath: string;
 
-  constructor(config: ReceiptWriterConfig = {}) {
-    this.config = {
-      localFallbackPath: config.localFallbackPath || "./proof/local_receipts.jsonl",
-      ...config,
-    };
-    this.useSupabase = Boolean(config.supabaseUrl && config.supabaseKey);
+  constructor(supabaseUrlOrConfig?: string | ReceiptWriterConfig, supabaseKey?: string) {
+    // Support both constructor signatures:
+    // new ReceiptWriter(url, key) - for spec compliance
+    // new ReceiptWriter(config) - for backward compatibility
+    if (typeof supabaseUrlOrConfig === 'string') {
+      this.config = {
+        supabaseUrl: supabaseUrlOrConfig,
+        supabaseKey: supabaseKey,
+        localFallbackPath: "./proof/local_receipts.jsonl"
+      };
+    } else {
+      this.config = {
+        localFallbackPath: "./proof/local_receipts.jsonl",
+        ...(supabaseUrlOrConfig || {})
+      };
+    }
+
+    this.fallbackPath = this.config.localFallbackPath!;
+    this.useSupabase = Boolean(this.config.supabaseUrl && this.config.supabaseKey);
+
+    if (this.useSupabase) {
+      this.supabase = createClient(this.config.supabaseUrl!, this.config.supabaseKey!);
+    }
+  }
+
+  /**
+   * Write a receipt (new simplified interface for build system)
+   */
+  async write(data: ReceiptData): Promise<{ id: string; hash: string }> {
+    const hash = crypto.createHash('sha256')
+      .update(JSON.stringify(data.details))
+      .digest('hex');
+
+    try {
+      if (!this.supabase) {
+        throw new Error('Supabase not configured');
+      }
+
+      const { data: receipt, error } = await this.supabase
+        .from('build_receipts')
+        .insert({
+          session_id: data.sessionId,
+          type: data.type,
+          details: data.details,
+          verification_hash: hash,
+          parent_receipt_id: data.parentReceiptId || null
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return { id: receipt.id, hash };
+
+    } catch (error) {
+      console.error('[ReceiptWriter] Supabase failed, using fallback:', error);
+
+      // Fallback to local file
+      const fallbackReceipt = {
+        id: crypto.randomUUID(),
+        ...data,
+        verification_hash: hash,
+        created_at: new Date().toISOString()
+      };
+
+      const dir = path.dirname(this.fallbackPath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+
+      fs.appendFileSync(
+        this.fallbackPath,
+        JSON.stringify(fallbackReceipt) + '\n'
+      );
+
+      return { id: fallbackReceipt.id, hash };
+    }
   }
 
   /**
