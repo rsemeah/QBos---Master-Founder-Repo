@@ -175,6 +175,20 @@ export default function RobBuildPage() {
           <h1 style={{ margin: '0.5rem 0 0 0', fontSize: '1.5rem' }}>Rob the QuietBuilder</h1>
         </div>
 
+        <Link
+          href="/build/new"
+          style={{
+            padding: '0.5rem 1rem',
+            borderRadius: '999px',
+            border: '1px solid #bfdbfe',
+            color: '#1d4ed8',
+            textDecoration: 'none',
+            fontWeight: 600,
+          }}
+        >
+          New build
+        </Link>
+
         {/* Status Bar */}
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <div>
