@@ -10,6 +10,7 @@ export { ReceiptSystem } from './receipts/ReceiptSystem';
 export { TruthSerumValidator } from './receipts/TruthSerumValidator';
 export { RobEngine } from './RobEngine';
 export { SupabaseRobPersistence } from './SupabaseRobPersistence';
+export { BuildSession } from './BuildSessionManager';
 export * from './types';
 export * from './BuildSession';
 export * from './receipts/generateReceipts';
