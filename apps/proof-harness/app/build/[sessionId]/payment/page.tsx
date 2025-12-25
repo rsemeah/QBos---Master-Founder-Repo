@@ -1,20 +1,26 @@
 /**
- * Payment Page - Stripe payment integration
+ * Payment Page - Stripe Elements Integration
  */
 
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
 import { createPaymentIntent, getBuildSession, BuildSession } from '../../../lib/api';
+import PaymentForm from '../../../components/PaymentForm';
 import Link from 'next/link';
+
+// Initialize Stripe with your publishable key
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
 export default function PaymentPage({ params }: { params: { sessionId: string } }) {
   const router = useRouter();
   const [session, setSession] = useState<BuildSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [clientSecret, setClientSecret] = useState('');
 
   useEffect(() => {
     loadSession();
@@ -31,6 +37,10 @@ export default function PaymentPage({ params }: { params: { sessionId: string } 
         return;
       }
 
+      // Create payment intent
+      const paymentIntent = await createPaymentIntent(params.sessionId);
+      setClientSecret(paymentIntent.clientSecret);
+
       setLoading(false);
     } catch (err: any) {
       setError(err.message || 'Failed to load session');
@@ -38,27 +48,9 @@ export default function PaymentPage({ params }: { params: { sessionId: string } 
     }
   };
 
-  const handlePayment = async () => {
-    setPaymentLoading(true);
-    setError('');
-
-    try {
-      // In a real implementation, this would integrate with Stripe Elements
-      // For now, we'll just create the payment intent and show instructions
-      const paymentIntent = await createPaymentIntent(params.sessionId);
-
-      // TODO: Integrate Stripe Elements to actually process payment
-      // For MVP, we can skip to next step or show manual payment instructions
-
-      alert('Payment integration coming soon! For now, this is a placeholder.');
-
-      // Redirect back to progress page
-      router.push(`/build/${params.sessionId}`);
-    } catch (err: any) {
-      setError(err.message || 'Failed to process payment');
-    } finally {
-      setPaymentLoading(false);
-    }
+  const handlePaymentSuccess = () => {
+    // Redirect to build progress page
+    router.push(`/build/${params.sessionId}`);
   };
 
   if (loading) {
@@ -66,7 +58,7 @@ export default function PaymentPage({ params }: { params: { sessionId: string } 
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">Loading payment...</p>
         </div>
       </div>
     );
@@ -140,38 +132,35 @@ export default function PaymentPage({ params }: { params: { sessionId: string } 
             </div>
           </div>
 
-          {/* Payment Form Placeholder */}
-          <div className="mb-6">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-6">
-              <p className="text-sm text-yellow-800">
-                <strong>Note:</strong> Stripe Elements integration pending. This is a placeholder payment page.
-              </p>
-            </div>
-
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
-                {error}
-              </div>
-            )}
-
-            {/* Placeholder for Stripe Elements */}
-            <div className="border border-gray-300 rounded-md p-8 text-center text-gray-400 mb-6">
-              [Stripe Payment Form Will Appear Here]
-              <div className="mt-4 text-sm">
-                Card Number, Expiry, CVC fields
-              </div>
-            </div>
-
-            <button
-              onClick={handlePayment}
-              disabled={paymentLoading}
-              className="w-full bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+          {/* Stripe Elements Payment Form */}
+          {clientSecret && (
+            <Elements
+              stripe={stripePromise}
+              options={{
+                clientSecret,
+                appearance: {
+                  theme: 'stripe',
+                  variables: {
+                    colorPrimary: '#2563eb',
+                  },
+                },
+              }}
             >
-              {paymentLoading ? 'Processing...' : 'Pay $49.00'}
-            </button>
-          </div>
+              <PaymentForm
+                sessionId={params.sessionId}
+                onSuccess={handlePaymentSuccess}
+              />
+            </Elements>
+          )}
 
-          <div className="text-center text-sm text-gray-500">
+          {!clientSecret && !error && (
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-600"></div>
+              <p className="mt-4 text-gray-600">Preparing payment form...</p>
+            </div>
+          )}
+
+          <div className="mt-6 text-center text-sm text-gray-500">
             <p>🔒 Secure payment powered by Stripe</p>
           </div>
         </div>
