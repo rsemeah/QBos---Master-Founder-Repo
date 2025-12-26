@@ -16,15 +16,14 @@ jest.mock('stripe', () => {
 });
 
 // Mock Supabase
-const mockSupabaseFrom = jest.fn();
-const mockSupabaseRpc = jest.fn();
-
 jest.mock('@supabase/supabase-js', () => ({
   createClient: jest.fn(() => ({
-    from: mockSupabaseFrom,
-    rpc: mockSupabaseRpc,
+    from: jest.fn(),
+    rpc: jest.fn(),
   })),
 }));
+
+const mockSupabaseRpc = jest.fn();
 
 // Mock ReceiptWriter
 jest.mock('@/../../../packages/truthserum/src/ReceiptWriter', () => ({

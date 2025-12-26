@@ -6,15 +6,15 @@ import { NextRequest } from 'next/server';
 import { POST } from '@/app/api/jobs/process/route';
 
 // Mock Supabase
+jest.mock('@supabase/supabase-js', () => ({
+  createClient: jest.fn(() => ({
+    from: jest.fn(),
+  })),
+}));
+
 const mockFrom = jest.fn();
 const mockUpdate = jest.fn();
 const mockSelect = jest.fn();
-
-jest.mock('@supabase/supabase-js', () => ({
-  createClient: jest.fn(() => ({
-    from: mockFrom,
-  })),
-}));
 
 describe('/api/jobs/process', () => {
   beforeEach(() => {
