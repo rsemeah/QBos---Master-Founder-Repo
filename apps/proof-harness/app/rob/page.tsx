@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { ChatPanel } from './components/ChatPanel';
+import { GuidedSetupPanel } from './components/GuidedSetupPanel';
 import { PreviewPanel } from './components/PreviewPanel';
 import { TruthStatusPanel } from './components/TruthStatusPanel';
 import { ReceiptsViewer } from './components/ReceiptsViewer';
@@ -16,6 +17,8 @@ export default function RobBuilderPage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [receipts, setReceipts] = useState<any[]>([]);
   const [truthState, setTruthState] = useState<any>(null);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [selectedPaletteId, setSelectedPaletteId] = useState<string | null>(null);
 
   useEffect(() => {
     // Create session on mount
@@ -31,6 +34,66 @@ export default function RobBuilderPage() {
 
     return () => clearInterval(interval);
   }, [sessionId]);
+
+  const promptOptions = [
+    {
+      id: 'sports',
+      label: 'Pickup basketball in cities',
+      message:
+        'I want an app that helps people schedule pickup basketball games in major US cities.',
+    },
+    {
+      id: 'booking',
+      label: 'Book appointments',
+      message: 'I want an app for booking appointments with local professionals.',
+    },
+    {
+      id: 'community',
+      label: 'Neighborhood community',
+      message: 'I want a community app for neighbors to share updates and events.',
+    },
+  ];
+
+  const templateOptions = [
+    {
+      id: 'saas-starter',
+      name: 'SaaS Starter',
+      description: 'Best for dashboards and subscriptions.',
+    },
+    {
+      id: 'booking',
+      name: 'Booking & Scheduling',
+      description: 'Calendars, slots, and reservations.',
+    },
+    {
+      id: 'marketplace',
+      name: 'Marketplace',
+      description: 'Listings, search, and checkout.',
+    },
+    {
+      id: 'community',
+      name: 'Community',
+      description: 'Profiles, posts, and messages.',
+    },
+  ];
+
+  const paletteOptions = [
+    {
+      id: 'ocean',
+      name: 'Ocean',
+      swatches: ['#0F172A', '#2563EB', '#38BDF8', '#F8FAFC'],
+    },
+    {
+      id: 'sunset',
+      name: 'Sunset',
+      swatches: ['#7C2D12', '#EA580C', '#FDBA74', '#FFF7ED'],
+    },
+    {
+      id: 'forest',
+      name: 'Forest',
+      swatches: ['#14532D', '#16A34A', '#4ADE80', '#F0FDF4'],
+    },
+  ];
 
   async function createSession() {
     try {
@@ -64,6 +127,9 @@ export default function RobBuilderPage() {
         type: 'billing.cap_not_exceeded',
         details: { usage: 0, limit: 100 },
       });
+
+      setSelectedTemplateId('saas-starter');
+      setSelectedPaletteId('ocean');
     } catch (error) {
       console.error('Session creation failed:', error);
     }
@@ -151,6 +217,36 @@ export default function RobBuilderPage() {
     }
   }
 
+  async function handleTemplateSelect(templateId: string) {
+    setSelectedTemplateId(templateId);
+    if (!sessionId) return;
+    await writeReceipt({
+      sessionId,
+      type: 'template.selected',
+      details: { templateId },
+    });
+  }
+
+  async function handlePaletteSelect(paletteId: string) {
+    setSelectedPaletteId(paletteId);
+    if (!sessionId) return;
+    await writeReceipt({
+      sessionId,
+      type: 'palette.selected',
+      details: { paletteId },
+    });
+  }
+
+  async function handlePromptSend(message: string) {
+    await sendMessage(message);
+    if (!sessionId) return;
+    await writeReceipt({
+      sessionId,
+      type: 'idea.captured',
+      details: { message },
+    });
+  }
+
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
@@ -178,6 +274,16 @@ export default function RobBuilderPage() {
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Chat */}
         <div className="w-1/2 border-r border-gray-200 flex flex-col">
+          <GuidedSetupPanel
+            prompts={promptOptions}
+            templates={templateOptions}
+            palettes={paletteOptions}
+            selectedTemplateId={selectedTemplateId}
+            selectedPaletteId={selectedPaletteId}
+            onSelectTemplate={handleTemplateSelect}
+            onSelectPalette={handlePaletteSelect}
+            onSendPrompt={handlePromptSend}
+          />
           <ChatPanel
             messages={messages}
             onSendMessage={sendMessage}
