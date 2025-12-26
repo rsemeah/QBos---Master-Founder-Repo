@@ -12,6 +12,9 @@ import {
 } from "@qbos/truthserum";
 import { RuntimeContext } from "./context";
 import { ReceiptWriter } from "@qbos/truthserum";
+import { SilentEngine, MockProvider } from "@qbos/silent-engine-core";
+
+type ReceiptWriterLike = Pick<ReceiptWriter, "writeReceipt" | "readReceipts">;
 
 export interface AIMessage {
   role: "user" | "assistant" | "system";
@@ -28,10 +31,12 @@ export interface ProcessResult {
 }
 
 export class OrchestrationEngine {
-  private receiptWriter: ReceiptWriter;
+  private receiptWriter: ReceiptWriterLike;
+  private silentEngine: SilentEngine;
 
-  constructor(receiptWriter: ReceiptWriter) {
+  constructor(receiptWriter: ReceiptWriterLike, silentEngine?: SilentEngine) {
     this.receiptWriter = receiptWriter;
+    this.silentEngine = silentEngine ?? this.createDefaultSilentEngine();
   }
 
   /**
@@ -120,7 +125,8 @@ export class OrchestrationEngine {
     }
 
     // Step 6: Generate draft response (silent.generate emission happens here)
-    const draftResponse = await this.generateDraftResponse(message, context);
+    const draftGeneration = await this.generateDraftResponse(message, context);
+    const draftResponse = draftGeneration.text;
 
     const genReceipt = await this.receiptWriter.writeReceipt({
       sessionId: context.sessionId,
@@ -128,10 +134,13 @@ export class OrchestrationEngine {
       details: { 
         prompt: message.content, 
         response: draftResponse,
-        provider: "mock", // Replace with actual provider
-        model: "mock-model",
-        tokensIn: 100,
-        tokensOut: 200,
+        provider: draftGeneration.provider,
+        model: draftGeneration.model,
+        tokensIn: draftGeneration.tokensIn,
+        tokensOut: draftGeneration.tokensOut,
+        requestId: draftGeneration.requestId,
+        latencyMs: draftGeneration.latencyMs,
+        costUsd: draftGeneration.cost,
       },
     });
     newReceipts.push(genReceipt);
@@ -191,15 +200,71 @@ export class OrchestrationEngine {
   }
 
   /**
-   * Generate draft AI response (placeholder - integrate SilentEngine here)
+   * Generate draft AI response using SilentEngine routing
    */
   private async generateDraftResponse(
     message: AIMessage,
     context: RuntimeContext
-  ): Promise<string> {
-    // TODO: Integrate SilentEngine for real AI generation
-    // For now, return a mock response
-    return `Thanks for your message! I'm here to help you build. Your session is ${context.sessionId}.`;
+  ): Promise<{
+    text: string;
+    provider: string;
+    model: string;
+    tokensIn: number;
+    tokensOut: number;
+    requestId: string;
+    latencyMs: number;
+    cost: number;
+  }> {
+    const result = await this.silentEngine.generate({
+      messages: [
+        {
+          role: message.role,
+          content: message.content,
+        },
+      ],
+      userId: context.userId,
+      orgId: context.appConfig?.orgId,
+      maxCost: context.appConfig?.maxCost,
+      preferredCapabilities: context.appConfig?.preferredCapabilities,
+      systemPrompt: context.appConfig?.systemPrompt,
+      requireSafetyCheck: context.appConfig?.requireSafetyCheck,
+    });
+
+    return {
+      text: result.response.text,
+      provider: result.provider,
+      model: result.model,
+      tokensIn: result.response.tokensInput,
+      tokensOut: result.response.tokensOutput,
+      requestId: result.requestId,
+      latencyMs: result.totalLatencyMs,
+      cost: result.actualCost,
+    };
+  }
+
+  private createDefaultSilentEngine(): SilentEngine {
+    const mockProvider = new MockProvider();
+    mockProvider.configure({
+      providerKey: "mock",
+      apiKey: "mock-key-for-testing",
+    });
+
+    return new SilentEngine({
+      providers: [mockProvider],
+      policies: [
+        {
+          policyKey: "default",
+          displayName: "Runtime Default Policy",
+          description: "Default routing policy for orchestration",
+          preferredCapabilities: ["fastLatency", "lowCost"],
+          requiredCapabilities: [],
+          allowFallback: false,
+          requireSafetyCheck: false,
+          minSafetyLevel: "low",
+        },
+      ],
+      defaultPolicyKey: "default",
+    });
   }
 
   /**

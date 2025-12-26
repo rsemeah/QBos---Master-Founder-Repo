@@ -1,0 +1,7 @@
+{
+  "statements_pct": null,
+  "branches_pct": null,
+  "functions_pct": null,
+  "lines_pct": null,
+  "notes": "jest --coverage failed (registry 403 prevented install)"
+}

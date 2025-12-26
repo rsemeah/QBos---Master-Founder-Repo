@@ -3,6 +3,8 @@
  */
 
 import type { StepDefinition, BuildSession, StepResult } from './types';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class StepRegistry {
   private steps: Map<string, StepDefinition> = new Map();
@@ -96,6 +98,18 @@ export class StepRegistry {
         "Let's look at what we built together and make sure it all makes sense before we finish.",
       actionType: 'confirm',
       execute: async (session) => this.confirmCompletion(session),
+    });
+
+    // Architecture freeze
+    this.registerStep({
+      id: 'architecture.freeze',
+      version: 'v1',
+      goalTags: ['*'],
+      title: 'Freeze Architecture',
+      explanation:
+        "We'll lock in the architecture decisions and record them in an ADR before we build any code.",
+      actionType: 'confirm',
+      execute: async (session) => this.freezeArchitecture(session),
     });
   }
 
@@ -194,5 +208,73 @@ export class StepRegistry {
       ok: true,
       summary: `We completed ${successCount} out of ${totalCount} steps together! Your app "${session.appName}" now has: ${session.enginesTouched.join(', ') || 'basic structure'}. You can see detailed receipts that explain everything we did.`,
     };
+  }
+
+  private async freezeArchitecture(session: BuildSession): Promise<StepResult> {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const slug = session.appName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const adrDir = path.resolve(process.cwd(), 'docs', 'ADR');
+    const adrPath = path.join(adrDir, `${timestamp}-${slug || 'app'}.md`);
+
+    if (!fs.existsSync(adrDir)) {
+      fs.mkdirSync(adrDir, { recursive: true });
+    }
+
+    const adrContent = `# Architecture Freeze: ${session.appName}\n\n` +
+      `- Session: ${session.id}\n` +
+      `- Goals: ${session.goals.join(', ')}\n` +
+      `- Frozen At: ${new Date().toISOString()}\n\n` +
+      `## Decisions\n` +
+      `- Frontend: Next.js\n` +
+      `- Backend: Node.js\n` +
+      `- Database: Supabase\n` +
+      `- Deployment: Vercel\n\n` +
+      `## Notes\n` +
+      `Architecture is now frozen. Any changes require a new ADR.\n`;
+
+    fs.writeFileSync(adrPath, adrContent, 'utf-8');
+
+    this.writeLocalReceipt({
+      sessionId: session.id,
+      type: 'architecture.frozen',
+      details: {
+        appName: session.appName,
+        adrPath: path.relative(process.cwd(), adrPath),
+      },
+    });
+
+    return {
+      ok: true,
+      summary: `Architecture frozen and recorded in ${path.relative(process.cwd(), adrPath)}.`,
+      evidence: [
+        {
+          type: 'file',
+          description: 'Architecture Decision Record',
+          reference: path.relative(process.cwd(), adrPath),
+        },
+      ],
+    };
+  }
+
+  private writeLocalReceipt(receipt: {
+    sessionId: string;
+    type: string;
+    details: Record<string, unknown>;
+  }): void {
+    const receiptRecord = {
+      id: `receipt_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      createdAt: new Date().toISOString(),
+      sessionId: receipt.sessionId,
+      type: receipt.type,
+      details: receipt.details,
+    };
+
+    const receiptPath = path.resolve(process.cwd(), 'proof', 'local_receipts.jsonl');
+    const receiptDir = path.dirname(receiptPath);
+    if (!fs.existsSync(receiptDir)) {
+      fs.mkdirSync(receiptDir, { recursive: true });
+    }
+
+    fs.appendFileSync(receiptPath, `${JSON.stringify(receiptRecord)}\n`, 'utf-8');
   }
 }
