@@ -42,13 +42,22 @@ export async function GET() {
     billing: hasStripe,
   };
 
-  const warnings = [
-    !persistenceConfigured && 'Supabase persistence is not configured.',
-    !aiConfigured && 'No AI provider keys configured; SilentEngine is in mock mode.',
-    !hasGitHub && 'GitHub token is missing; repo creation will be unavailable.',
-    !hasVercel && 'Vercel token is missing; deployments will be unavailable.',
-    !hasStripe && 'Stripe secret key missing; billing will be unavailable.',
-  ].filter(Boolean);
+  const warnings: string[] = [];
+  if (!persistenceConfigured) {
+    warnings.push('Supabase persistence is not configured.');
+  }
+  if (!aiConfigured) {
+    warnings.push('No AI provider keys configured; SilentEngine is in mock mode.');
+  }
+  if (!hasGitHub) {
+    warnings.push('GitHub token is missing; repo creation will be unavailable.');
+  }
+  if (!hasVercel) {
+    warnings.push('Vercel token is missing; deployments will be unavailable.');
+  }
+  if (!hasStripe) {
+    warnings.push('Stripe secret key missing; billing will be unavailable.');
+  }
 
   return NextResponse.json({
     ok: true,
