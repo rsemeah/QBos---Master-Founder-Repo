@@ -1,0 +1,11 @@
+{
+  "key": "booking",
+  "label": "Booking",
+  "requiredCapabilities": ["auth", "payments", "calendar"],
+  "defaultStack": {
+    "frontend": "nextjs",
+    "backend": "node",
+    "database": "postgres"
+  },
+  "deploymentTargets": ["vercel", "railway"]
+}

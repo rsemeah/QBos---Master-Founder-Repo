@@ -1,0 +1,11 @@
+{
+  "key": "crm-lite",
+  "label": "CRM Lite",
+  "requiredCapabilities": ["auth", "contacts", "automation"],
+  "defaultStack": {
+    "frontend": "nextjs",
+    "backend": "node",
+    "database": "supabase"
+  },
+  "deploymentTargets": ["vercel", "supabase"]
+}

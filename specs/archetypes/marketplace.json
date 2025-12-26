@@ -1,0 +1,11 @@
+{
+  "key": "marketplace",
+  "label": "Marketplace",
+  "requiredCapabilities": ["auth", "payments", "search", "moderation"],
+  "defaultStack": {
+    "frontend": "nextjs",
+    "backend": "node",
+    "database": "postgres"
+  },
+  "deploymentTargets": ["vercel", "render"]
+}
