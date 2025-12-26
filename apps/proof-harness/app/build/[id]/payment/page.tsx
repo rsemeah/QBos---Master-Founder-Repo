@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
+import Link from 'next/link';
 
 interface BuildPaymentPageProps {
   params: { id: string };
@@ -114,6 +115,7 @@ export default function BuildPaymentPage({ params }: BuildPaymentPageProps) {
     createPaymentIntent();
   }, [params.id]);
 
+export default function BuildPaymentPage({ params }: BuildPaymentPageProps) {
   return (
     <main style={{ fontFamily: 'system-ui', padding: '3rem', maxWidth: '720px', margin: '0 auto' }}>
       <header style={{ marginBottom: '2rem' }}>
@@ -173,6 +175,28 @@ export default function BuildPaymentPage({ params }: BuildPaymentPageProps) {
             <PaymentForm returnUrl={returnUrl} />
           </Elements>
         )}
+          <h2 style={{ marginTop: 0 }}>Payment setup</h2>
+          <p style={{ color: '#64748b' }}>
+            Stripe Elements integration will live here. For now, complete payment via the admin flow and return
+            to this page.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => alert('Payment placeholder: integrate Stripe Elements here.')}
+          style={{
+            padding: '0.85rem 1.75rem',
+            borderRadius: '999px',
+            border: 'none',
+            backgroundColor: '#1d4ed8',
+            color: 'white',
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+        >
+          Simulate payment
+        </button>
       </section>
     </main>
   );
