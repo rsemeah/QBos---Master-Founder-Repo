@@ -1,0 +1,11 @@
+{
+  "key": "content_app",
+  "label": "Content App",
+  "requiredCapabilities": ["auth", "cms", "seo"],
+  "defaultStack": {
+    "frontend": "nextjs",
+    "backend": "node",
+    "database": "supabase"
+  },
+  "deploymentTargets": ["vercel"]
+}

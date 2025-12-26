@@ -1,0 +1,11 @@
+{
+  "key": "saas_dashboard",
+  "label": "SaaS Dashboard",
+  "requiredCapabilities": ["auth", "billing", "analytics"],
+  "defaultStack": {
+    "frontend": "nextjs",
+    "backend": "node",
+    "database": "supabase"
+  },
+  "deploymentTargets": ["vercel", "supabase"]
+}

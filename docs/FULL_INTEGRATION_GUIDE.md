@@ -119,22 +119,42 @@ OPENAI_API_KEY=sk-proj-...
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-**Step 3: Update SilentEngine to use real provider**
+**Step 3: Configure SilentEngine providers**
 
 Edit: `packages/runtime/orchestrator.ts`
 
-Replace mock generation with:
-```typescript
-import { SilentEngine } from '@qbos/silent-engine-core';
+The runtime orchestrator now instantiates SilentEngine with a mock provider by default.
+Swap in a real provider by replacing the `MockProvider` configuration in
+`createDefaultSilentEngine()` with your provider implementation and policy rules.
+The SilentEngine core already includes provider implementations under
+`packages/silent-engine/core/src/providers/` that you can export and configure
+once API keys are available.
 
-// In generateDraftResponse():
-const silent = new SilentEngine({
-  openaiApiKey: process.env.OPENAI_API_KEY,
+Example (replace the mock provider with your own implementation):
+```typescript
+import { SilentEngine, MockProvider } from '@qbos/silent-engine-core';
+
+const provider = new MockProvider();
+provider.configure({
+  providerKey: 'mock',
+  apiKey: 'mock-key-for-testing',
 });
 
-const draftResponse = await silent.generate({
-  prompt: message.content,
-  maxTokens: 500,
+const silent = new SilentEngine({
+  providers: [provider],
+  policies: [
+    {
+      policyKey: 'default',
+      displayName: 'Default Policy',
+      description: 'Standard routing policy',
+      preferredCapabilities: ['fastLatency', 'highQuality'],
+      requiredCapabilities: [],
+      allowFallback: true,
+      requireSafetyCheck: true,
+      minSafetyLevel: 'medium',
+    },
+  ],
+  defaultPolicyKey: 'default',
 });
 ```
 

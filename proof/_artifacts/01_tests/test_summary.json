@@ -1,0 +1,8 @@
+{
+  "total_suites": 0,
+  "total_tests": 0,
+  "failed_suites": 0,
+  "failed_tests": 0,
+  "duration_seconds": 0,
+  "notes": "npm test only echoes placeholder; jest list failed due to registry 403"
+}
