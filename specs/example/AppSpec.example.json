@@ -1,0 +1,15 @@
+{
+  "appName": "QuietCRM",
+  "description": "Lightweight CRM for small teams",
+  "archetype": "crm-lite",
+  "goals": ["auth", "config", "consent"],
+  "stack": {
+    "frontend": "nextjs",
+    "backend": "node",
+    "database": "supabase"
+  },
+  "deployment": {
+    "targets": ["vercel", "supabase"]
+  },
+  "capabilities": ["ai_assist", "audit_logs"]
+}
