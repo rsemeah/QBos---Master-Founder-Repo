@@ -146,11 +146,12 @@ This document is **generated from actual TruthSerum evaluation outputs and proof
 - ✅ Chat endpoint processes messages through TruthSerum
 - ✅ SilentEngine package structure complete
 - ✅ Receipt types defined and writable
+- ✅ OrchestrationEngine routes through SilentEngine (mock provider)
 - ⏳ Real AI provider keys needed
 
 **Next Actions:**
 1. Set `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` in environment
-2. Update OrchestrationEngine to use real SilentEngine provider
+2. Configure SilentEngine providers for real API calls
 3. Generate completions and emit receipts with token counts
 4. Test failover between providers
 
