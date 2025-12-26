@@ -11,6 +11,7 @@ import { StateStore } from './stateStore';
 import { StepRegistry } from './stepRegistry';
 import { createNewSession, addStepToSession, updateStepResult, markSessionComplete } from './BuildSession';
 import { generateReceipts } from './receipts/generateReceipts';
+import { AppSpec, validateAppSpec } from './appSpec';
 
 export class ExecutionEngine {
   private stateStore: StateStore;
@@ -26,7 +27,26 @@ export class ExecutionEngine {
    * Creates a new build session
    * @returns sessionId
    */
-  async createBuildSession(appName: string, goals: string[]): Promise<string> {
+  async createBuildSession(
+    appName: string,
+    goals: string[],
+    appSpec?: AppSpec
+  ): Promise<string> {
+    if (appSpec) {
+      const validation = validateAppSpec(appSpec);
+      if (!validation.ok) {
+        throw new Error(`AppSpec validation failed: ${validation.errors.join(' ')}`);
+      }
+
+      if (appSpec.appName !== appName) {
+        throw new Error('AppSpec appName must match createBuildSession appName.');
+      }
+
+      if (appSpec.goals.join('|') !== goals.join('|')) {
+        throw new Error('AppSpec goals must match createBuildSession goals.');
+      }
+    }
+
     const sessionId = `build_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
     let session = createNewSession(sessionId, appName, goals);
 
@@ -41,6 +61,17 @@ export class ExecutionEngine {
         title: universalStep.title,
         explanation: universalStep.explanation,
         actionType: universalStep.actionType,
+        status: 'pending',
+      });
+    }
+
+    const architectureFreezeStep = this.stepRegistry.getStep('architecture.freeze');
+    if (architectureFreezeStep) {
+      session = addStepToSession(session, {
+        id: architectureFreezeStep.id,
+        title: architectureFreezeStep.title,
+        explanation: architectureFreezeStep.explanation,
+        actionType: architectureFreezeStep.actionType,
         status: 'pending',
       });
     }
