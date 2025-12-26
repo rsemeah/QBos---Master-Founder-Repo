@@ -12,6 +12,8 @@ out/
 # Next.js app routes (do not ignore)
 !apps/proof-harness/app/build/
 !apps/proof-harness/app/build/**
+!apps/proof-harness/app/api/build/
+!apps/proof-harness/app/api/build/**
 
 # TypeScript
 *.tsbuildinfo

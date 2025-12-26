@@ -33,3 +33,21 @@ export async function getBuildSession(sessionId: string): Promise<BuildSession |
   const payload = await apiFetch<{ session: BuildSession | null }>(`/api/build/sessions?id=${sessionId}`);
   return payload.session;
 }
+
+export async function createBuildSession(idea: string): Promise<BuildSession> {
+  const response = await fetch('/api/build/start', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ idea }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error ?? 'Failed to start build');
+  }
+
+  return data.session as BuildSession;
+}

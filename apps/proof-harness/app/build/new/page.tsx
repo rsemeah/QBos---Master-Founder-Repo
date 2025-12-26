@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBuildSession } from '../../lib/api';
 
 const EXAMPLES = [
   'A morning routine habit tracker for parents.',
@@ -15,6 +17,9 @@ import Link from 'next/link';
 export default function NewBuildPage() {
   const [idea, setIdea] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const supabase = createClientComponentClient();
   const router = useRouter();
 
   const remaining = Math.max(0, 10 - idea.trim().length);
@@ -23,6 +28,26 @@ export default function NewBuildPage() {
     setIdea(example);
   }
 
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (idea.trim().length < 10) return;
+    setSubmitting(true);
+    setError(null);
+
+    const { data: authData } = await supabase.auth.getUser();
+
+    if (!authData.user) {
+      router.push('/login?redirectTo=/build/new');
+      return;
+    }
+
+    try {
+      const session = await createBuildSession(idea);
+      router.push(`/build/${session.id}`);
+    } catch (err) {
+      setError((err as Error).message);
+      setSubmitting(false);
+    }
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (idea.trim().length < 10) return;
@@ -90,6 +115,12 @@ export default function NewBuildPage() {
           <span>{remaining > 0 ? `${remaining} more characters to start` : 'Looks good'}</span>
           <span>{idea.trim().length} characters</span>
         </div>
+
+        {error && (
+          <div style={{ padding: '0.85rem', borderRadius: '12px', backgroundColor: '#fee2e2', color: '#b91c1c' }}>
+            {error}
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           {EXAMPLES.map((example) => (
