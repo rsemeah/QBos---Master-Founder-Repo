@@ -1,0 +1,3 @@
+TODO count: 2
+app/api/rob/chat/route.ts:    // TODO: Extract user from auth
+app/api/rob/chat/route.ts:    // TODO: Step 2 - Billing cap enforcement
