@@ -54,3 +54,7 @@ Thumbs.db
 # Temp
 tmp/
 temp/
+
+# TruthSerum artifacts
+proof/_artifacts/
+proof/local_receipts.jsonl
