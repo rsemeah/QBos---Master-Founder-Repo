@@ -271,6 +271,9 @@ export default function RobBuilderPage() {
       </header>
 
       {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col">
+          <ChatPanel messages={messages} onSendMessage={sendMessage} disabled={!sessionId} />
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Chat */}
         <div className="w-1/2 border-r border-gray-200 flex flex-col">
@@ -290,15 +293,8 @@ export default function RobBuilderPage() {
             disabled={!sessionId}
           />
         </div>
-
-        {/* Right: Preview + Status */}
-        <div className="w-1/2 flex flex-col">
-          <div className="flex-1 overflow-auto">
-            <PreviewPanel />
-          </div>
-          <div className="border-t border-gray-200">
-            <TruthStatusPanel truthState={truthState} />
-          </div>
+        <div className="border-t border-gray-200">
+          <TruthStatusPanel truthState={truthState} />
         </div>
       </div>
 

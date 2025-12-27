@@ -7,6 +7,8 @@
     "packages/sight-engine",
     "packages/silent-engine/core",
     "packages/adapters/nextjs",
+    "packages/truthserum",
+    "packages/runtime",
     "packages/engines/*/core",
     "apps/*",
     "examples/*"
