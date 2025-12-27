@@ -4,7 +4,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { TruthSerum, ReceiptWriter, IntentsRegistry, Receipt } from '@qbos/truthserum';
+import { TruthSerum, ReceiptWriter, IntentsRegistry } from '@qbos/truthserum';
+import {
+  detectTemplateSelection,
+  listTemplates,
+  suggestTemplate,
+} from './templateRouter';
 
 const receiptWriter = new ReceiptWriter({
   localFallbackPath: './proof/local_receipts.jsonl',
@@ -54,8 +59,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(response);
     }
 
+    const suggestedTemplate = suggestTemplate(message);
+    const selectedTemplate = detectTemplateSelection(message);
+
+    if (suggestedTemplate) {
+      await receiptWriter.writeReceipt({
+        sessionId,
+        type: 'template.suggested' as any,
+        details: suggestedTemplate,
+      });
+    }
+
+    if (selectedTemplate) {
+      await receiptWriter.writeReceipt({
+        sessionId,
+        type: 'template.selected' as any,
+        details: selectedTemplate,
+      });
+    }
+
+    const templateList = listTemplates()
+      .map((template) => `- ${template.name}`)
+      .join('\n');
+
     // Step 5: Generate AI response (mock for now - integrate SilentEngine)
-    const draftResponse = `I'll help you with that. Let me ${message.toLowerCase().includes('build') ? 'start building' : 'assist you'}.`;
+    const draftResponse = `${buildAcknowledgement(message)}${buildTemplateNote(
+      suggestedTemplate,
+      selectedTemplate,
+    )}\n\nAvailable templates:\n${templateList}`;
 
     // Step 6: Sanitize with TruthSerum
     const verdict = TruthSerum.sanitizeClaims(draftResponse, receipts, 'Unknown');
@@ -91,6 +122,23 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+function buildAcknowledgement(message: string) {
+  return `Thanks! I can help with that. You said:\n"${message.trim()}"\n`;
+}
+
+function buildTemplateNote(
+  suggestedTemplate: { templateName: string } | null,
+  selectedTemplate: { templateName: string } | null,
+) {
+  if (selectedTemplate) {
+    return `\nTemplate locked in: ${selectedTemplate.templateName}.`;
+  }
+  if (suggestedTemplate) {
+    return `\nSuggested template: ${suggestedTemplate.templateName}. Reply “use ${suggestedTemplate.templateName}” to confirm.`;
+  }
+  return `\nTell me which template you want to use, or describe the app and I will suggest one.`;
 }
 
 function buildNotReadyResponse(evaluation: any) {
