@@ -1,0 +1,4 @@
+AppSpec validation is implemented in packages/engines/execution-engine/core/src/appSpec.ts
+and called in ExecutionEngine.createBuildSession().
+
+Demo execution not run (no TS runtime available in this environment).

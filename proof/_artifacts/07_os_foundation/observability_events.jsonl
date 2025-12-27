@@ -1,0 +1,3 @@
+{"type":"app.built","timestamp":"2025-01-01T00:00:00.000Z","sessionId":"demo-session","metadata":{"status":"simulated"}}
+{"type":"deploy.attempted","timestamp":"2025-01-01T00:01:00.000Z","sessionId":"demo-session","metadata":{"status":"simulated"}}
+{"type":"verify.passed","timestamp":"2025-01-01T00:02:00.000Z","sessionId":"demo-session","metadata":{"status":"simulated"}}
