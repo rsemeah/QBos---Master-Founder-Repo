@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
-import { robClient, RobSession, RobMessage } from '../lib/rob-client';
-import { Send, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, Loader2, Send, XCircle } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { robClient, RobMessage, RobSession } from '../lib/rob-client';
 
 export default function RobPage() {
   const [session, setSession] = useState<RobSession | null>(null);
@@ -25,6 +25,16 @@ export default function RobPage() {
       const data = await robClient.initSession();
       setSession(data.session);
       setMessages(data.messages || []);
+      // Emit session.created receipt
+      try {
+        await robClient.writeReceipt({
+          sessionId: data.session.id,
+          type: 'session.created',
+          details: { template: 'minimal-vertical-slice' },
+        });
+      } catch (e) {
+        // non-fatal
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
@@ -48,7 +58,7 @@ export default function RobPage() {
 
     try {
       const data = await robClient.sendMessage(session.id, input);
-      
+
       setSession(data.session);
 
       const assistantMessage: RobMessage = {
@@ -65,6 +75,22 @@ export default function RobPage() {
           timestamp: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, systemMessage]);
+      }
+      // Emit receipts for the user message and assistant response
+      try {
+        await robClient.writeReceipt({
+          sessionId: session.id,
+          type: 'chat.message',
+          details: { role: 'user', content: userMessage.content },
+        });
+
+        await robClient.writeReceipt({
+          sessionId: session.id,
+          type: 'chat.response',
+          details: { role: 'assistant', content: data.response },
+        });
+      } catch (e) {
+        // non-fatal
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -128,9 +154,8 @@ export default function RobPage() {
                   <XCircle className="w-4 h-4 text-yellow-600" />
                 )}
                 <span
-                  className={`font-semibold ${
-                    session.consent_granted ? 'text-green-600' : 'text-yellow-600'
-                  }`}
+                  className={`font-semibold ${session.consent_granted ? 'text-green-600' : 'text-yellow-600'
+                    }`}
                 >
                   {session.consent_granted ? 'Granted' : 'Pending'}
                 </span>
@@ -146,13 +171,12 @@ export default function RobPage() {
           {messages.map((msg, idx) => (
             <div
               key={idx}
-              className={`p-4 rounded-lg ${
-                msg.role === 'user'
+              className={`p-4 rounded-lg ${msg.role === 'user'
                   ? 'bg-blue-100 ml-12'
                   : msg.role === 'system'
-                  ? 'bg-yellow-50 border border-yellow-200'
-                  : 'bg-white border border-gray-200 mr-12'
-              }`}
+                    ? 'bg-yellow-50 border border-yellow-200'
+                    : 'bg-white border border-gray-200 mr-12'
+                }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold text-gray-600 uppercase">
