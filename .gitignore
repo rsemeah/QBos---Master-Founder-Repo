@@ -58,3 +58,4 @@ temp/
 # TruthSerum artifacts
 proof/_artifacts/
 proof/local_receipts.jsonl
+apps/proof-harness/.env.local
