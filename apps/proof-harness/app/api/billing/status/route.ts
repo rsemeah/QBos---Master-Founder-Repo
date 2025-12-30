@@ -6,6 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ReceiptWriter, TruthState } from '@qbos/truthserum';
 
+export const dynamic = 'force-dynamic';
+
 const receiptWriter = new ReceiptWriter({
   localFallbackPath: './proof/local_receipts.jsonl',
 });

@@ -25,7 +25,9 @@ export async function POST(request: NextRequest) {
     // Check authentication
     const session = await getServerSession(authOptions);
     
-    if (!session || !session.accessToken) {
+    const accessToken = (session as { accessToken?: string } | null)?.accessToken;
+
+    if (!session || !accessToken) {
       return NextResponse.json(
         { error: 'GitHub authentication required. Sign in first.' },
         { status: 401 }
@@ -44,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     // Initialize Octokit with user's access token
     const octokit = new Octokit({
-      auth: session.accessToken,
+      auth: accessToken,
     });
 
     // Get authenticated user

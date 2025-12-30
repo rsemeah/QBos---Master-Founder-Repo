@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SilentEngine, GenerationRequest } from '@qbos/silent-engine-core';
+import { SilentEngine } from '@qbos/silent-engine-core';
 import { z } from 'zod';
 
 // Request validation schema
@@ -10,11 +10,8 @@ const generateRequestSchema = z.object({
   })),
   maxCost: z.number().optional(),
   maxLatency: z.number().optional(),
-  maxTokens: z.number().optional(),
-  temperature: z.number().min(0).max(2).optional(),
   preferredCapabilities: z.array(z.string()).optional(),
   requiredCapabilities: z.array(z.string()).optional(),
-  excludedProviders: z.array(z.string()).optional(),
   policyKey: z.string().optional(),
 });
 
@@ -82,11 +79,8 @@ export function createSilentEngineRoute(config: SilentEngineRouteConfig) {
         messages: request.messages,
         maxCost: request.maxCost,
         maxLatency: request.maxLatency,
-        maxTokens: request.maxTokens,
-        temperature: request.temperature,
         preferredCapabilities: request.preferredCapabilities,
         requiredCapabilities: request.requiredCapabilities,
-        excludedProviders: request.excludedProviders,
         policyKey: request.policyKey,
       });
       
@@ -103,8 +97,11 @@ export function createSilentEngineRoute(config: SilentEngineRouteConfig) {
           provider: result.provider,
           model: result.model,
           cost: result.actualCost,
-          latency: result.actualLatency,
-          tokenUsage: result.response.usage,
+          latency: result.totalLatencyMs,
+          tokenUsage: {
+            input: result.response.tokensInput,
+            output: result.response.tokensOutput,
+          },
           requestId: result.requestId,
         }
       });
@@ -203,11 +200,8 @@ export function createSilentEngineStreamRoute(config: SilentEngineRouteConfig) {
               messages: request.messages,
               maxCost: request.maxCost,
               maxLatency: request.maxLatency,
-              maxTokens: request.maxTokens,
-              temperature: request.temperature,
               preferredCapabilities: request.preferredCapabilities,
               requiredCapabilities: request.requiredCapabilities,
-              excludedProviders: request.excludedProviders,
               policyKey: request.policyKey,
             });
             
@@ -231,8 +225,11 @@ export function createSilentEngineStreamRoute(config: SilentEngineRouteConfig) {
             const completion = {
               type: 'done',
               cost: result.actualCost,
-              latency: result.actualLatency,
-              tokenUsage: result.response.usage,
+              latency: result.totalLatencyMs,
+              tokenUsage: {
+                input: result.response.tokensInput,
+                output: result.response.tokensOutput,
+              },
             };
             controller.enqueue(`data: ${JSON.stringify(completion)}\n\n`);
             

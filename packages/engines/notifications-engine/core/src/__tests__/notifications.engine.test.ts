@@ -35,6 +35,7 @@ describe('NotificationsEngine', () => {
         channel: 'email',
         subject: 'Welcome {{userName}}',
         body: 'Hello {{userName}}, welcome to the app!',
+        variables: ['userName'],
       });
 
       const notification = await engine.send({
@@ -42,9 +43,10 @@ describe('NotificationsEngine', () => {
         channel: 'email',
         templateId: 'welcome',
         templateData: { userName: 'John' },
+        body: 'Welcome!',
       });
 
-      expect(notification.subject).toBe('Welcome {{userName}}'); // Simplified template, not fully replaced
+      expect(notification.subject).toBe('Welcome John');
       expect(notification.body).toContain('welcome');
     });
 
@@ -122,6 +124,7 @@ describe('NotificationsEngine', () => {
         channel: 'email',
         subject: 'Reset your password',
         body: 'Click here to reset: {{resetLink}}',
+        variables: ['resetLink'],
       });
 
       expect(template.id).toBe('password-reset');
@@ -137,6 +140,7 @@ describe('NotificationsEngine', () => {
         name: 'Test',
         channel: 'email',
         body: 'Test body',
+        variables: [],
       });
 
       const template = await engine.getTemplate('test-template');
@@ -238,8 +242,11 @@ describe('NotificationsEngine', () => {
       });
 
       // Manually mark as failed
-      const notifications = new Map((engine as any).notifications);
-      notifications.get(notification.id).status = 'failed';
+      const notifications = (engine as any).notifications as Map<string, import('../types').Notification>;
+      const entry = notifications.get(notification.id);
+      if (entry) {
+        entry.status = 'failed';
+      }
 
       const retried = await engine.retry(notification.id);
 

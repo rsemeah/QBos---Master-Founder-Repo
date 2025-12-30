@@ -13,6 +13,13 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@qbos/charter-engine-core": "*",
+    "@qbos/config-engine-core": "*",
+    "@qbos/execution-engine-core": "*",
+    "@qbos/notifications-engine-core": "*",
+    "@qbos/paywall-engine-core": "*",
+    "@qbos/silent-engine-core": "*",
+    "@qbos/sight-engine": "*",
     "@qbos/truthserum": "*",
     "@octokit/rest": "^22.0.1",
     "@stripe/react-stripe-js": "^2.8.1",

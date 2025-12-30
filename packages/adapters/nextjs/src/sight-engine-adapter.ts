@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateAsset, generatePromptHeader, AssetSpec } from '@qbos/sight-engine';
+import {
+  validateAsset,
+  generatePromptHeader,
+  AssetSpec,
+  STANDARD_RESOLUTIONS,
+} from '@qbos/sight-engine';
 import { z } from 'zod';
 
 // Validation request schema
@@ -10,9 +15,18 @@ const validateRequestSchema = z.object({
     cameraModel: z.string().optional(),
     lensType: z.string().optional(),
     aperture: z.number().optional(),
-    colorSpace: z.string().optional(),
+    colorSpace: z.enum([
+      'ACEScg',
+      'Display-P3',
+      'sRGB',
+      'Rec-709',
+      'Rec-2020',
+      'DCI-P3',
+    ]).optional(),
     bitDepth: z.number().optional(),
     lightingStyle: z.string().optional(),
+    colorTemperature: z.number().optional(),
+    contrast: z.enum(['low', 'medium', 'high']).optional(),
     hasAIArtifacts: z.boolean().optional(),
     hasFlatLighting: z.boolean().optional(),
     hasOversaturation: z.boolean().optional(),
@@ -20,13 +34,12 @@ const validateRequestSchema = z.object({
   }),
   assetType: z.enum([
     'hero-image',
-    'product-shot',
-    'brand-visual',
     'logo',
+    'screenshot',
+    'diagram',
+    'video',
+    'thumbnail',
     'icon',
-    'background',
-    'character',
-    'environment'
   ]),
   tier: z.enum(['A', 'B', 'C']),
 });
@@ -36,15 +49,67 @@ const promptRequestSchema = z.object({
   tier: z.enum(['A', 'B', 'C']),
   assetType: z.enum([
     'hero-image',
-    'product-shot',
-    'brand-visual',
     'logo',
+    'screenshot',
+    'diagram',
+    'video',
+    'thumbnail',
     'icon',
-    'background',
-    'character',
-    'environment'
   ]).optional(),
 });
+
+const aspectRatioOptions: Array<{ label: AssetSpec['aspectRatio']; ratio: number }> = [
+  { label: '16:9', ratio: 16 / 9 },
+  { label: '21:9', ratio: 21 / 9 },
+  { label: '4:3', ratio: 4 / 3 },
+  { label: '1:1', ratio: 1 },
+  { label: '9:16', ratio: 9 / 16 },
+  { label: '2.39:1', ratio: 2.39 },
+];
+
+const resolveAspectRatio = (width: number, height: number): AssetSpec['aspectRatio'] => {
+  const ratio = width / height;
+  const closest = aspectRatioOptions.reduce((best, option) => {
+    const diff = Math.abs(option.ratio - ratio);
+    if (!best || diff < best.diff) {
+      return { label: option.label, diff };
+    }
+    return best;
+  }, null as null | { label: AssetSpec['aspectRatio']; diff: number });
+
+  return closest ? closest.label : '16:9';
+};
+
+const resolveResolution = (width: number, height: number) => {
+  const entries = Object.values(STANDARD_RESOLUTIONS);
+  const closest = entries.reduce((best, option) => {
+    const diff = Math.abs(option.width - width) + Math.abs(option.height - height);
+    if (!best || diff < best.diff) {
+      return { value: option, diff };
+    }
+    return best;
+  }, null as null | { value: (typeof entries)[number]; diff: number });
+
+  return closest ? closest.value : STANDARD_RESOLUTIONS['HD'];
+};
+
+const resolveLightingSetup = (style?: string): AssetSpec['lighting']['setup'] => {
+  const normalized = style?.toLowerCase() ?? '';
+  if (normalized.includes('natural')) return 'natural-window';
+  if (normalized.includes('rembrandt')) return 'rembrandt';
+  if (normalized.includes('butterfly')) return 'butterfly';
+  if (normalized.includes('broad')) return 'broad';
+  if (normalized.includes('dramatic')) return 'hard-dramatic';
+  return 'three-point';
+};
+
+const resolveBitDepth = (bitDepth?: number): AssetSpec['bitDepth'] => {
+  const allowed: AssetSpec['bitDepth'][] = [8, 10, 12, 16, 32];
+  if (bitDepth && allowed.includes(bitDepth as AssetSpec['bitDepth'])) {
+    return bitDepth as AssetSpec['bitDepth'];
+  }
+  return 8;
+};
 
 export type SightEngineRouteConfig = {
   requireAuth?: boolean;
@@ -100,9 +165,35 @@ export function createSightEngineValidateRoute(config: SightEngineRouteConfig = 
       }
       
       const { assetSpec, assetType, tier } = validationResult.data;
+
+      const resolvedResolution = resolveResolution(
+        assetSpec.resolutionWidth,
+        assetSpec.resolutionHeight
+      );
+
+      const resolvedSpec: AssetSpec = {
+        resolution: resolvedResolution,
+        aspectRatio: resolveAspectRatio(
+          assetSpec.resolutionWidth,
+          assetSpec.resolutionHeight
+        ),
+        camera: {
+          model: (assetSpec.cameraModel as AssetSpec['camera']['model']) ?? 'simulated-cinematic',
+          lens: (assetSpec.lensType as AssetSpec['camera']['lens']) ?? '50mm-prime',
+          aperture: assetSpec.aperture ?? 2.8,
+        },
+        colorSpace: assetSpec.colorSpace ?? 'sRGB',
+        bitDepth: resolveBitDepth(assetSpec.bitDepth),
+        lighting: {
+          setup: resolveLightingSetup(assetSpec.lightingStyle),
+          keyLight: { type: 'key', intensity: 70, softness: 'medium' },
+          colorTemperature: assetSpec.colorTemperature ?? 5600,
+          contrast: assetSpec.contrast ?? 'medium',
+        },
+      };
       
       // Validate asset using SightEngine
-      const result = validateAsset(assetSpec as AssetSpec, assetType, tier);
+      const result = validateAsset(resolvedSpec, assetType, tier);
       
       // Callback
       if (config.onValidation) {
@@ -170,7 +261,7 @@ export function createSightEnginePromptRoute(config: SightEngineRouteConfig = {}
       const { tier, assetType } = validationResult.data;
       
       // Generate prompt header using SightEngine
-      const promptHeader = generatePromptHeader(tier, assetType);
+      const promptHeader = generatePromptHeader(tier);
       
       // Return response
       return NextResponse.json({
@@ -237,7 +328,33 @@ export function createSightEngineValidateAndSuggestRoute(config: SightEngineRout
       const { assetSpec, assetType, tier } = validationResult.data;
       
       // Validate asset
-      const validation = validateAsset(assetSpec as AssetSpec, assetType, tier);
+      const resolvedResolution = resolveResolution(
+        assetSpec.resolutionWidth,
+        assetSpec.resolutionHeight
+      );
+
+      const resolvedSpec: AssetSpec = {
+        resolution: resolvedResolution,
+        aspectRatio: resolveAspectRatio(
+          assetSpec.resolutionWidth,
+          assetSpec.resolutionHeight
+        ),
+        camera: {
+          model: (assetSpec.cameraModel as AssetSpec['camera']['model']) ?? 'simulated-cinematic',
+          lens: (assetSpec.lensType as AssetSpec['camera']['lens']) ?? '50mm-prime',
+          aperture: assetSpec.aperture ?? 2.8,
+        },
+        colorSpace: assetSpec.colorSpace ?? 'sRGB',
+        bitDepth: resolveBitDepth(assetSpec.bitDepth),
+        lighting: {
+          setup: resolveLightingSetup(assetSpec.lightingStyle),
+          keyLight: { type: 'key', intensity: 70, softness: 'medium' },
+          colorTemperature: assetSpec.colorTemperature ?? 5600,
+          contrast: assetSpec.contrast ?? 'medium',
+        },
+      };
+
+      const validation = validateAsset(resolvedSpec, assetType, tier);
       
       // Callback
       if (config.onValidation) {
@@ -248,10 +365,11 @@ export function createSightEngineValidateAndSuggestRoute(config: SightEngineRout
       
       // If validation failed, generate a suggestion prompt
       if (!validation.passed) {
-        const promptHeader = generatePromptHeader(tier, assetType);
+        const promptHeader = generatePromptHeader(tier);
         
         // Create improvement suggestions based on issues
-        const improvements = validation.issues.map(issue => {
+        const issues = [...validation.errors, ...validation.warnings];
+        const improvements = issues.map(issue => {
           if (issue.includes('resolution')) {
             return 'Increase resolution to meet tier requirements';
           }

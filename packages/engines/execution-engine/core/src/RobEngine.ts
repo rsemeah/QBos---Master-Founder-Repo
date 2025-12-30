@@ -10,10 +10,11 @@
 
 import { ReceiptSystem, Receipt } from './receipts/ReceiptSystem';
 import { TruthSerumValidator } from './receipts/TruthSerumValidator';
-import { IntelligenceGuard, IntelligenceViolationError } from './intelligence/IntelligenceGuard';
+import { IntelligenceGuard } from './intelligence/IntelligenceGuard';
 import { IdeaDecomposer } from './intelligence/IdeaDecomposer';
 import { PreviewGenerator, type PreviewResult } from './intelligence/PreviewGenerator';
 import type { IntelligenceReceipt } from './intelligence/IntelligenceContract';
+import { IntelligenceViolationError } from './intelligence/IntelligenceContract';
 
 // ============================================================================
 // TYPES
@@ -249,7 +250,7 @@ export class RobEngine {
       outcome: 'success',
       evidence_refs: [],
       truth_state: 'Verified',
-      metadata: transition,
+      metadata: transition as unknown as Record<string, unknown>,
     });
 
     if (this.persistence) {
@@ -322,7 +323,7 @@ export class RobEngine {
       outcome: 'success',
       evidence_refs: [],
       truth_state: 'Verified',
-      metadata: change,
+      metadata: change as unknown as Record<string, unknown>,
     });
 
     if (this.persistence) {
@@ -344,7 +345,7 @@ export class RobEngine {
 
     const receipts = this.persistence
       ? await this.persistence.getReceipts(sessionId)
-      : this.receiptSystem.getSessionReceipts(sessionId);
+      : this.receiptSystem.getReceiptsForSession(sessionId);
 
     // Define required steps and their weights
     const steps = [
@@ -376,7 +377,7 @@ export class RobEngine {
   async computeReadiness(sessionId: string): Promise<ReadinessTier> {
     const receipts = this.persistence
       ? await this.persistence.getReceipts(sessionId)
-      : this.receiptSystem.getSessionReceipts(sessionId);
+      : this.receiptSystem.getReceiptsForSession(sessionId);
 
     const hasReceipt = (type: string) => receipts.some((r) => r.action_type === type);
 
@@ -500,7 +501,7 @@ export class RobEngine {
   async validateSession(sessionId: string) {
     const receipts = this.persistence
       ? await this.persistence.getReceipts(sessionId)
-      : this.receiptSystem.getSessionReceipts(sessionId);
+      : this.receiptSystem.getReceiptsForSession(sessionId);
 
     return this.truthSerum.validate(sessionId, receipts);
   }
@@ -548,7 +549,7 @@ export class RobEngine {
       await this.persistence.addReceipt(progressReceipt);
     }
 
-    return result;
+    return result.receipts;
   }
 
   /**
@@ -653,8 +654,12 @@ export class RobEngine {
 
       // Emit preview success
       this.receiptSystem.emit({
-        type: 'preview.ready',
-        sessionId,
+        session_id: sessionId,
+        actor: 'rob',
+        action_type: 'preview.ready',
+        outcome: 'success',
+        evidence_refs: [],
+        truth_state: 'Verified',
         metadata: {
           componentName: previewResult.componentName,
           linesOfCode: previewResult.linesOfCode,
@@ -664,8 +669,12 @@ export class RobEngine {
     } catch (error) {
       // Preview generation failed - emit failure receipt but continue
       this.receiptSystem.emit({
-        type: 'preview.failed',
-        sessionId,
+        session_id: sessionId,
+        actor: 'rob',
+        action_type: 'preview.failed',
+        outcome: 'error',
+        evidence_refs: [],
+        truth_state: 'Unknown',
         metadata: {
           error: error instanceof Error ? error.message : 'Unknown error',
         },

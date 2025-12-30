@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid payment amount' }, { status: 500 });
   }
 
-  const stripe = new Stripe(stripeSecretKey, { apiVersion: '2024-12-18.acacia' });
+  const stripe = new Stripe(stripeSecretKey, { apiVersion: '2025-02-24.acacia' });
   const supabase = createClient(supabaseUrl, supabaseKey);
   const receiptWriter = new ReceiptWriter(supabaseUrl, supabaseKey);
 

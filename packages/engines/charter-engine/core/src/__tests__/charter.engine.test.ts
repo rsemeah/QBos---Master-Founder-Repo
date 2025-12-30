@@ -137,7 +137,7 @@ describe('CharterEngine', () => {
 
   describe('processDataRequest', () => {
     it('should complete data request', async () => {
-      const request = await engine.submitDataRequest('user123', 'erasure');
+      const request = await engine.submitDataRequest('user123', 'deletion');
 
       const processed = await engine.processDataRequest(
         request.id,

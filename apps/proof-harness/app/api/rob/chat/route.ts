@@ -15,8 +15,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { RobEngine } from '@qbos/execution-engine-core';
-import { SupabaseRobPersistence } from '@qbos/execution-engine-core/SupabaseRobPersistence';
+import { RobEngine, SupabaseRobPersistence } from '@qbos/execution-engine-core';
 import { SilentEngine, MockProvider } from '@qbos/silent-engine-core';
 
 export async function POST(request: NextRequest) {
@@ -108,7 +107,7 @@ export async function POST(request: NextRequest) {
           policyKey: 'default',
           displayName: 'Default',
           description: 'Default policy',
-          preferredCapabilities: ['fastLatency'],
+          preferredCapabilities: ['fast_latency'],
           requiredCapabilities: [],
           allowFallback: false,
           requireSafetyCheck: false,
@@ -119,16 +118,10 @@ export async function POST(request: NextRequest) {
     });
 
     const startTime = Date.now();
-    const aiResult = await silentEngine.invoke({
-      sessionId: session_id,
-      userMessage: message,
+    const aiResult = await silentEngine.generate({
+      messages: [{ role: 'user', content: message }],
       policyKey: 'default',
-      context: {
-        session_state: session.current_state,
-        progress: session.progress_percent,
-        readiness: session.readiness_tier,
-        config: session.app_config,
-      },
+      preferredCapabilities: ['fast_latency'],
     });
     const latencyMs = Date.now() - startTime;
 
@@ -136,7 +129,7 @@ export async function POST(request: NextRequest) {
     const truthReport = await robEngine.validateSession(session_id);
     
     // Check if AI's response makes unsupported claims
-    let finalResponse = aiResult.response;
+    let finalResponse = aiResult.response.text;
     const violations: string[] = [];
 
     // Simple claim detection (in production, this would be more sophisticated)
@@ -166,32 +159,31 @@ export async function POST(request: NextRequest) {
       content: finalResponse,
       metadata: {
         truthserum: {
-          original: aiResult.response,
+          original: aiResult.response.text,
           rewritten: violations.length > 0,
           violations,
         },
         ai_usage: {
-          provider: aiResult.metadata?.provider_used,
-          model: aiResult.metadata?.model_used,
-          tokens_in: aiResult.metadata?.tokens?.prompt || 0,
-          tokens_out: aiResult.metadata?.tokens?.completion || 0,
+          provider: aiResult.provider,
+          model: aiResult.model,
+          tokens_in: aiResult.response.tokensInput,
+          tokens_out: aiResult.response.tokensOutput,
+          latency_ms: latencyMs,
         },
       },
     });
 
     // Record AI usage
-    if (aiResult.metadata) {
-      await persistence.recordAIUsage({
-        session_id,
-        triggered_by_message_id: assistantMessage.id,
-        provider: aiResult.metadata.provider_used || 'mock',
-        model: aiResult.metadata.model_used || 'mock-model',
-        tokens_in: aiResult.metadata.tokens?.prompt || 0,
-        tokens_out: aiResult.metadata.tokens?.completion || 0,
-        cost_usd: aiResult.metadata.cost_usd || 0,
-        latency_ms: latencyMs,
-      });
-    }
+    await persistence.recordAIUsage({
+      session_id,
+      triggered_by_message_id: assistantMessage.id,
+      provider: aiResult.provider,
+      model: aiResult.model,
+      tokens_in: aiResult.response.tokensInput,
+      tokens_out: aiResult.response.tokensOutput,
+      cost_usd: aiResult.actualCost,
+      latency_ms: latencyMs,
+    });
 
     // Emit receipts
     await persistence.addReceipt({
@@ -202,8 +194,8 @@ export async function POST(request: NextRequest) {
       evidence_refs: [assistantMessage.id],
       truth_state: 'Verified',
       metadata: {
-        provider: aiResult.metadata?.provider_used,
-        model: aiResult.metadata?.model_used,
+        provider: aiResult.provider,
+        model: aiResult.model,
         latency_ms: latencyMs,
       },
     });
