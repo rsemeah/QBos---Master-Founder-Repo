@@ -64,8 +64,36 @@ class RobClient {
 
   // Add receipt querying when backend supports it
   async getReceipts(sessionId: string): Promise<RobReceipt[]> {
-    // TODO: Implement when /api/rob/receipts exists
-    return [];
+    try {
+      const res = await fetch(`/api/receipts?sessionId=${encodeURIComponent(sessionId)}`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.receipts || [];
+    } catch (err) {
+      console.error('Failed to fetch receipts', err);
+      return [];
+    }
+  }
+
+  async writeReceipt(receipt: { sessionId?: string; type: string; details: Record<string, any>; causedBy?: any; }) {
+    try {
+      const res = await fetch('/api/receipts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(receipt),
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err || 'Failed to write receipt');
+      }
+
+      const data = await res.json();
+      return data.receipt;
+    } catch (error) {
+      console.error('writeReceipt error:', error);
+      return null;
+    }
   }
 }
 
