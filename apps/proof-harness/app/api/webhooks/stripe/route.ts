@@ -9,21 +9,44 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { ReceiptWriter } from '@qbos/truthserum';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia'
-});
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const getStripe = () => {
+  if (!stripeSecretKey) {
+    throw new Error('Stripe secret key missing');
+  }
+  return new Stripe(stripeSecretKey, { apiVersion: '2025-02-24.acacia' });
+};
 
-const receiptWriter = new ReceiptWriter(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const getSupabase = () => {
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase configuration missing');
+  }
+  return createClient(supabaseUrl, supabaseKey);
+};
+
+const getReceiptWriter = () => {
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase configuration missing');
+  }
+  return new ReceiptWriter(supabaseUrl, supabaseKey);
+};
 
 export async function POST(req: NextRequest) {
+  let stripe: Stripe;
+  let supabase: ReturnType<typeof getSupabase>;
+  let receiptWriter: ReceiptWriter;
+
+  try {
+    stripe = getStripe();
+    supabase = getSupabase();
+    receiptWriter = getReceiptWriter();
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
   const body = await req.text();
   const sig = req.headers.get('stripe-signature');
 

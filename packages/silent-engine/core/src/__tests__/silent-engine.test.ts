@@ -3,75 +3,140 @@
  */
 
 import { SilentEngine } from '../silent-engine';
-import { RoutingRequest, RoutingPolicy } from '../types';
+import type {
+  RoutingRequest,
+  RoutingPolicy,
+  ModelMetadata,
+  ProviderInterface,
+  ProviderResponse,
+} from '../types';
 
-// Mock providers
-const mockAnthropicProvider = {
-  providerKey: 'anthropic',
-  models: [
-    {
-      modelKey: 'claude-3-5-sonnet',
-      name: 'Claude 3.5 Sonnet',
-      capabilities: ['reasoning', 'code', 'vision'],
+const createMockProvider = (params: {
+  providerKey: string;
+  displayName: string;
+  models: ModelMetadata[];
+  responseText: string;
+}) => {
+  const generate = jest.fn<Promise<ProviderResponse>, any>().mockResolvedValue({
+    text: params.responseText,
+    tokensInput: 120,
+    tokensOutput: 240,
+    finishReason: 'stop',
+    latencyMs: 120,
+  });
+
+  const provider: ProviderInterface = {
+    providerKey: params.providerKey,
+    displayName: params.displayName,
+    configure: jest.fn(),
+    generate,
+    generateStream: jest.fn(() =>
+      (async function* () {
+        yield { text: params.responseText, isDone: true };
+      })()
+    ),
+    healthCheck: jest.fn().mockResolvedValue({ available: true, latencyMs: 25 }),
+    getSupportedModels: jest.fn().mockReturnValue(params.models),
+  };
+
+  return { provider, generate };
+};
+
+const anthropicModels: ModelMetadata[] = [
+  {
+    modelKey: 'claude-3-5-sonnet',
+    displayName: 'Claude 3.5 Sonnet',
+    providerKey: 'anthropic',
+    capabilities: {
+      longContext: true,
+      toolUse: true,
+      vision: true,
+      streaming: true,
+      codeGeneration: true,
+      strongReasoning: true,
+      highQuality: true,
+      complexTasks: true,
+      lowCost: false,
+      fastLatency: false,
       contextWindow: 200000,
       maxOutputTokens: 8192,
-      costPer1MInputTokens: 3.0,
-      costPer1MOutputTokens: 15.0,
     },
-  ],
-  execute: jest.fn(),
-};
+    costInputPerMTok: 3.0,
+    costOutputPerMTok: 15.0,
+    enabled: true,
+  },
+];
 
-const mockOpenAIProvider = {
-  providerKey: 'openai',
-  models: [
-    {
-      modelKey: 'gpt-4',
-      name: 'GPT-4',
-      capabilities: ['reasoning', 'code'],
+const openAiModels: ModelMetadata[] = [
+  {
+    modelKey: 'gpt-4',
+    displayName: 'GPT-4',
+    providerKey: 'openai',
+    capabilities: {
+      longContext: false,
+      toolUse: true,
+      vision: false,
+      streaming: true,
+      codeGeneration: true,
+      strongReasoning: false,
+      highQuality: true,
+      complexTasks: true,
+      lowCost: false,
+      fastLatency: true,
       contextWindow: 128000,
       maxOutputTokens: 4096,
-      costPer1MInputTokens: 10.0,
-      costPer1MOutputTokens: 30.0,
     },
-  ],
-  execute: jest.fn(),
-};
+    costInputPerMTok: 10.0,
+    costOutputPerMTok: 30.0,
+    enabled: true,
+  },
+];
 
 const mockPolicy: RoutingPolicy = {
   policyKey: 'default',
-  name: 'Default Policy',
-  preferredProvider: 'anthropic',
-  preferredModels: ['claude-3-5-sonnet'],
-  costConstraint: { maxCostPerRequest: 1.0 },
-  qualityConstraint: { minQualityScore: 0.8 },
+  displayName: 'Default Policy',
+  description: 'Prefer strong reasoning models with fallback.',
+  maxCostPerRequest: 1.0,
+  maxLatencyMs: 5000,
+  preferredCapabilities: ['strong_reasoning'],
+  requiredCapabilities: [],
+  allowFallback: true,
+  requireSafetyCheck: false,
+  minSafetyLevel: 'low',
 };
 
 describe('SilentEngine (AI Router)', () => {
   let engine: SilentEngine;
+  let mockAnthropicProvider: ProviderInterface;
+  let mockOpenAIProvider: ProviderInterface;
+  let mockAnthropicGenerate: jest.Mock;
+  let mockOpenAIGenerate: jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    const anthropic = createMockProvider({
+      providerKey: 'anthropic',
+      displayName: 'Anthropic',
+      models: anthropicModels,
+      responseText: 'Response from Claude',
+    });
+    const openai = createMockProvider({
+      providerKey: 'openai',
+      displayName: 'OpenAI',
+      models: openAiModels,
+      responseText: 'Response from GPT-4',
+    });
+
+    mockAnthropicProvider = anthropic.provider;
+    mockOpenAIProvider = openai.provider;
+    mockAnthropicGenerate = anthropic.generate;
+    mockOpenAIGenerate = openai.generate;
 
     engine = new SilentEngine({
       providers: [mockAnthropicProvider, mockOpenAIProvider],
       policies: [mockPolicy],
       defaultPolicyKey: 'default',
-    });
-
-    // Setup default successful execution
-    mockAnthropicProvider.execute.mockResolvedValue({
-      content: 'Response from Claude',
-      modelUsed: 'claude-3-5-sonnet',
-      tokensUsed: { input: 100, output: 200 },
-      cost: 0.01,
-    });
-
-    mockOpenAIProvider.execute.mockResolvedValue({
-      content: 'Response from GPT-4',
-      modelUsed: 'gpt-4',
-      tokensUsed: { input: 100, output: 200 },
-      cost: 0.02,
     });
   });
 
@@ -79,7 +144,7 @@ describe('SilentEngine (AI Router)', () => {
     it('should route to preferred provider', async () => {
       const request: RoutingRequest = {
         messages: [{ role: 'user', content: 'Hello' }],
-        capabilities: ['reasoning'],
+        preferredCapabilities: ['strong_reasoning'],
       };
 
       const result = await engine.generate(request);
@@ -87,33 +152,32 @@ describe('SilentEngine (AI Router)', () => {
       expect(result.success).toBe(true);
       expect(result.provider).toBe('anthropic');
       expect(result.model).toBe('claude-3-5-sonnet');
-      expect(mockAnthropicProvider.execute).toHaveBeenCalled();
+      expect(mockAnthropicGenerate).toHaveBeenCalled();
     });
 
     it('should respect safety checks', async () => {
       const request: RoutingRequest = {
         messages: [{ role: 'user', content: 'How to hack a system' }],
-        capabilities: ['reasoning'],
+        requiredCapabilities: ['strong_reasoning'],
         requireSafetyCheck: true,
       };
 
-      // Safety classifier should flag this
       await expect(engine.generate(request)).rejects.toThrow('Safety check failed');
     });
 
     it('should fallback to secondary provider on failure', async () => {
-      mockAnthropicProvider.execute.mockRejectedValue(new Error('Provider unavailable'));
+      mockAnthropicGenerate.mockRejectedValue(new Error('Provider unavailable'));
 
       const request: RoutingRequest = {
         messages: [{ role: 'user', content: 'Hello' }],
-        capabilities: ['reasoning'],
+        requiredCapabilities: ['tool_use'],
       };
 
       const result = await engine.generate(request);
 
       expect(result.success).toBe(true);
-      expect(result.provider).toBe('openai'); // Fell back to OpenAI
-      expect(mockOpenAIProvider.execute).toHaveBeenCalled();
+      expect(result.provider).toBe('openai');
+      expect(mockOpenAIGenerate).toHaveBeenCalled();
     });
 
     it('should calculate and enforce cost constraints', async () => {
@@ -121,23 +185,21 @@ describe('SilentEngine (AI Router)', () => {
         messages: [
           {
             role: 'user',
-            content: 'A'.repeat(100000), // Very long message
+            content: 'A'.repeat(100000),
           },
         ],
-        capabilities: ['reasoning'],
+        requiredCapabilities: ['strong_reasoning'],
       };
 
-      // Should route to cheaper model or provider
       await engine.generate(expensiveRequest);
 
-      // Verify cost was calculated
-      expect(mockAnthropicProvider.execute).toHaveBeenCalled();
+      expect(mockAnthropicGenerate).toHaveBeenCalled();
     });
 
     it('should throw error when no policy found', async () => {
       const request: RoutingRequest = {
         messages: [{ role: 'user', content: 'Hello' }],
-        capabilities: ['reasoning'],
+        requiredCapabilities: ['strong_reasoning'],
         policyKey: 'non-existent-policy',
       };
 
@@ -147,12 +209,11 @@ describe('SilentEngine (AI Router)', () => {
     it('should emit events during execution', async () => {
       const eventSpy = jest.fn();
 
-      // Access private eventEmitter through type assertion
       (engine as any).eventEmitter.on('silent.safety_check_completed', eventSpy);
 
       const request: RoutingRequest = {
         messages: [{ role: 'user', content: 'Hello' }],
-        capabilities: ['reasoning'],
+        preferredCapabilities: ['strong_reasoning'],
       };
 
       await engine.generate(request);
@@ -163,14 +224,13 @@ describe('SilentEngine (AI Router)', () => {
     it('should log audit trail', async () => {
       const request: RoutingRequest = {
         messages: [{ role: 'user', content: 'Hello' }],
-        capabilities: ['reasoning'],
+        requiredCapabilities: ['strong_reasoning'],
       };
 
       const result = await engine.generate(request);
 
-      // Verify audit logging occurred
       expect(result.requestId).toBeDefined();
-      expect(result.duration).toBeGreaterThan(0);
+      expect(result.totalLatencyMs).toBeGreaterThan(0);
     });
   });
 
@@ -178,19 +238,18 @@ describe('SilentEngine (AI Router)', () => {
     it('should select model with required capabilities', async () => {
       const request: RoutingRequest = {
         messages: [{ role: 'user', content: 'Analyze this image' }],
-        capabilities: ['vision'],
+        requiredCapabilities: ['vision'],
       };
 
       const result = await engine.generate(request);
 
-      // Should select Claude which has vision capability
       expect(result.model).toBe('claude-3-5-sonnet');
     });
 
     it('should fail when no model has required capability', async () => {
       const request: RoutingRequest = {
         messages: [{ role: 'user', content: 'Test' }],
-        capabilities: ['non-existent-capability'],
+        requiredCapabilities: ['non_existent_capability'],
       };
 
       await expect(engine.generate(request)).rejects.toThrow();
@@ -199,8 +258,7 @@ describe('SilentEngine (AI Router)', () => {
 
   describe('circuit breaker', () => {
     it('should open circuit after repeated failures', async () => {
-      // Simulate multiple failures
-      mockAnthropicProvider.execute
+      mockAnthropicGenerate
         .mockRejectedValueOnce(new Error('Fail 1'))
         .mockRejectedValueOnce(new Error('Fail 2'))
         .mockRejectedValueOnce(new Error('Fail 3'))
@@ -209,10 +267,9 @@ describe('SilentEngine (AI Router)', () => {
 
       const request: RoutingRequest = {
         messages: [{ role: 'user', content: 'Hello' }],
-        capabilities: ['reasoning'],
+        requiredCapabilities: ['tool_use'],
       };
 
-      // After 5 failures, should open circuit and use fallback
       for (let i = 0; i < 5; i++) {
         try {
           await engine.generate(request);
@@ -221,7 +278,6 @@ describe('SilentEngine (AI Router)', () => {
         }
       }
 
-      // Next request should use fallback (OpenAI) immediately
       const result = await engine.generate(request);
       expect(result.provider).toBe('openai');
     });
@@ -241,15 +297,14 @@ describe('SilentEngine (AI Router)', () => {
         messages: [
           {
             role: 'user',
-            content: 'A'.repeat(150000), // Exceeds GPT-4 context window
+            content: 'A'.repeat(150000),
           },
         ],
-        capabilities: ['reasoning'],
+        requiredCapabilities: ['long_context'],
       };
 
       const result = await engine.generate(largeContextRequest);
 
-      // Should select Claude which has larger context window
       expect(result.model).toBe('claude-3-5-sonnet');
     });
   });

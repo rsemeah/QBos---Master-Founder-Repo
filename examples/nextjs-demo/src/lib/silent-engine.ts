@@ -1,54 +1,47 @@
-import { SilentEngine } from '@qbos/silent-engine-core';
-import { AnthropicProvider } from '@qbos/silent-engine-core/dist/providers/anthropic-provider';
-import { OpenAIProvider } from '@qbos/silent-engine-core/dist/providers/openai-provider';
-import { GoogleProvider } from '@qbos/silent-engine-core/dist/providers/google-provider';
-import { RoutingPolicy } from '@qbos/silent-engine-core/dist/types';
+import { SilentEngine, MockProvider, RoutingPolicy } from '@qbos/silent-engine-core';
 
-// Initialize providers
-const providers = [
-  new AnthropicProvider({
-    apiKey: process.env.ANTHROPIC_API_KEY || '',
-  }),
-  new OpenAIProvider({
-    apiKey: process.env.OPENAI_API_KEY || '',
-  }),
-  new GoogleProvider({
-    apiKey: process.env.GOOGLE_API_KEY || '',
-  }),
-];
+const mockProvider = new MockProvider();
+mockProvider.configure({ providerKey: 'mock', apiKey: 'local' });
 
-// Define routing policies
 const costOptimizedPolicy: RoutingPolicy = {
-  key: 'cost_optimized',
-  name: 'Cost Optimized',
-  maxCost: 0.001,
-  maxLatency: 5000,
+  policyKey: 'cost_optimized',
+  displayName: 'Cost Optimized',
+  description: 'Prefer low cost models for everyday use.',
+  maxCostPerRequest: 0.001,
+  maxLatencyMs: 5000,
   preferredCapabilities: ['low_cost', 'fast_latency'],
-  enableFallback: true,
-  maxFallbackAttempts: 3,
+  requiredCapabilities: [],
+  allowFallback: true,
+  requireSafetyCheck: false,
+  minSafetyLevel: 'low',
 };
 
 const qualityFirstPolicy: RoutingPolicy = {
-  key: 'quality_first',
-  name: 'Quality First',
+  policyKey: 'quality_first',
+  displayName: 'Quality First',
+  description: 'Prefer strong reasoning models for complex work.',
   preferredCapabilities: ['strong_reasoning', 'long_context'],
-  enableFallback: true,
-  maxFallbackAttempts: 3,
+  requiredCapabilities: [],
+  allowFallback: true,
+  requireSafetyCheck: false,
+  minSafetyLevel: 'low',
 };
 
 const speedPriorityPolicy: RoutingPolicy = {
-  key: 'speed_priority',
-  name: 'Speed Priority',
-  maxCost: 0.005,
-  maxLatency: 1000,
+  policyKey: 'speed_priority',
+  displayName: 'Speed Priority',
+  description: 'Prefer fast latency responses.',
+  maxCostPerRequest: 0.005,
+  maxLatencyMs: 1000,
   preferredCapabilities: ['fast_latency'],
-  enableFallback: true,
-  maxFallbackAttempts: 2,
+  requiredCapabilities: [],
+  allowFallback: true,
+  requireSafetyCheck: false,
+  minSafetyLevel: 'low',
 };
 
-// Initialize SilentEngine
 export const silentEngine = new SilentEngine({
-  providers,
+  providers: [mockProvider],
   policies: [costOptimizedPolicy, qualityFirstPolicy, speedPriorityPolicy],
   defaultPolicyKey: 'cost_optimized',
 });

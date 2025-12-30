@@ -95,16 +95,16 @@ export class SupabaseRobPersistence implements RobEnginePersistence {
   // ==========================================================================
 
   async addReceipt(receipt: Omit<Receipt, 'receipt_id' | 'timestamp'>): Promise<Receipt> {
-    const fullReceipt = {
+    const fullReceipt: Receipt = {
       ...receipt,
-      id: this.generateId(),
-      created_at: new Date().toISOString(),
+      receipt_id: this.generateId(),
+      timestamp: new Date().toISOString(),
     };
 
     const { data, error } = await this.supabase
       .from('rob_receipts')
       .insert({
-        id: fullReceipt.receipt_id || fullReceipt.id,
+        id: fullReceipt.receipt_id,
         session_id: fullReceipt.session_id,
         type: fullReceipt.action_type,
         details: {

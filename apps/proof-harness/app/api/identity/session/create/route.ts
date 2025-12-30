@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     const orch = await getOrchestrator();
-    const result = await orch.createSession(email, orgId);
+    const result = await orch.createSession(email);
 
     // Get receipts
     const receiptSystem = orch.getReceiptSystem();
@@ -35,8 +35,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       ok: result.ok,
       data: result.data,
-      error: result.error,
-      receipts: result.receipts,
       receiptDetails: receipts.map((r) => ({
         id: r.receipt_id,
         actor: r.actor,

@@ -21,10 +21,8 @@ export default function RobBuilderPage() {
   const [selectedPaletteId, setSelectedPaletteId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Create session on mount
     createSession();
-    
-    // Refresh receipts every 2 seconds
+
     const interval = setInterval(() => {
       if (sessionId) {
         fetchReceipts();
@@ -109,7 +107,6 @@ export default function RobBuilderPage() {
       const data = await response.json();
       setSessionId(data.sessionId);
 
-      // Write initial receipts to simulate auth + billing
       await writeReceipt({
         sessionId: data.sessionId,
         type: 'identity.authenticated',
@@ -176,8 +173,7 @@ export default function RobBuilderPage() {
 
   async function sendMessage(content: string) {
     try {
-      // Add user message to UI
-      setMessages(prev => [...prev, { role: 'user', content }]);
+      setMessages((prev) => [...prev, { role: 'user', content }]);
 
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -191,8 +187,7 @@ export default function RobBuilderPage() {
 
       const data = await response.json();
 
-      // Add assistant response
-      setMessages(prev => [
+      setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
@@ -202,11 +197,10 @@ export default function RobBuilderPage() {
         },
       ]);
 
-      // Refresh receipts
       fetchReceipts();
     } catch (error) {
       console.error('Chat failed:', error);
-      setMessages(prev => [
+      setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
@@ -249,7 +243,6 @@ export default function RobBuilderPage() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
@@ -259,23 +252,22 @@ export default function RobBuilderPage() {
             </p>
           </div>
           {truthState && (
-            <div className={`px-4 py-2 rounded-lg font-semibold ${
-              truthState.state === 'Verified' ? 'bg-green-100 text-green-800' :
-              truthState.state === 'Blocked' ? 'bg-red-100 text-red-800' :
-              'bg-yellow-100 text-yellow-800'
-            }`}>
+            <div
+              className={`px-4 py-2 rounded-lg font-semibold ${
+                truthState.state === 'Verified'
+                  ? 'bg-green-100 text-green-800'
+                  : truthState.state === 'Blocked'
+                    ? 'bg-red-100 text-red-800'
+                    : 'bg-yellow-100 text-yellow-800'
+              }`}
+            >
               {truthState.state}
             </div>
           )}
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 flex flex-col">
-          <ChatPanel messages={messages} onSendMessage={sendMessage} disabled={!sessionId} />
       <div className="flex-1 flex overflow-hidden">
-        {/* Left: Chat */}
         <div className="w-1/2 border-r border-gray-200 flex flex-col">
           <GuidedSetupPanel
             prompts={promptOptions}
@@ -293,12 +285,15 @@ export default function RobBuilderPage() {
             disabled={!sessionId}
           />
         </div>
-        <div className="border-t border-gray-200">
-          <TruthStatusPanel truthState={truthState} />
+
+        <div className="w-1/2 flex flex-col">
+          <PreviewPanel receipts={receipts} />
+          <div className="border-t border-gray-200">
+            <TruthStatusPanel truthState={truthState} />
+          </div>
         </div>
       </div>
 
-      {/* Bottom: Receipts */}
       <div className="border-t border-gray-200 bg-white">
         <ReceiptsViewer receipts={receipts} />
       </div>

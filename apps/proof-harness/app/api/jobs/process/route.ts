@@ -10,18 +10,28 @@ import { Octokit } from '@octokit/rest';
 import crypto from 'crypto';
 import { ReceiptWriter } from '@qbos/truthserum';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const receiptWriter = new ReceiptWriter(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const getSupabase = () => {
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase configuration missing');
+  }
+  return createClient(supabaseUrl, supabaseKey);
+};
+
+const getReceiptWriter = () => {
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase configuration missing');
+  }
+  return new ReceiptWriter(supabaseUrl, supabaseKey);
+};
 
 export async function POST(req: NextRequest) {
   try {
+    const supabase = getSupabase();
+    const receiptWriter = getReceiptWriter();
+
     // Get pending jobs
     const { data: jobs } = await supabase
       .from('async_jobs')
@@ -54,16 +64,16 @@ export async function POST(req: NextRequest) {
 
         switch (job.job_type) {
           case 'generate_code':
-            result = await processGenerateCode(job);
+            result = await processGenerateCode(supabase, receiptWriter, job);
             break;
           case 'deploy_vercel':
-            result = await processDeployVercel(job);
+            result = await processDeployVercel(supabase, receiptWriter, job);
             break;
           case 'run_healthcheck':
-            result = await processHealthcheck(job);
+            result = await processHealthcheck(supabase, receiptWriter, job);
             break;
           case 'grant_access':
-            result = await processGrantAccess(job);
+            result = await processGrantAccess(supabase, receiptWriter, job);
             break;
           default:
             throw new Error(`Unknown job type: ${job.job_type}`);
@@ -108,7 +118,11 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function processGenerateCode(job: any) {
+async function processGenerateCode(
+  supabase: ReturnType<typeof getSupabase>,
+  receiptWriter: ReceiptWriter,
+  job: any
+) {
   const { sessionId } = job.payload;
 
   // Get session
@@ -174,7 +188,11 @@ async function processGenerateCode(job: any) {
   return { repoUrl: repo.html_url };
 }
 
-async function processDeployVercel(job: any) {
+async function processDeployVercel(
+  supabase: ReturnType<typeof getSupabase>,
+  receiptWriter: ReceiptWriter,
+  job: any
+) {
   const { sessionId, repoUrl, repoName } = job.payload;
 
   // Create Vercel project
@@ -282,7 +300,11 @@ async function processDeployVercel(job: any) {
   return { deploymentUrl };
 }
 
-async function processHealthcheck(job: any) {
+async function processHealthcheck(
+  supabase: ReturnType<typeof getSupabase>,
+  receiptWriter: ReceiptWriter,
+  job: any
+) {
   const { sessionId, url } = job.payload;
 
   // Hit health endpoint (not homepage)
@@ -329,7 +351,11 @@ async function processHealthcheck(job: any) {
   return { passed, responseTime };
 }
 
-async function processGrantAccess(job: any) {
+async function processGrantAccess(
+  supabase: ReturnType<typeof getSupabase>,
+  receiptWriter: ReceiptWriter,
+  job: any
+) {
   const { sessionId } = job.payload;
 
   // Get session

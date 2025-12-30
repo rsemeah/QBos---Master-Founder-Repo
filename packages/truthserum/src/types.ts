@@ -44,7 +44,7 @@ export interface Receipt {
 }
 
 export interface TruthClaim {
-  claimText: string;
+  claimText: string | RegExp;
   requiredProofs: ProofType[];
   contextHints?: string[];
 }

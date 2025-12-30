@@ -25,8 +25,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate asset spec
-    const validation = validateAsset(assetType as any, tier as any, spec);
-    const qualityScore = calculateQualityScore(validation);
+    const validation = validateAsset(spec, assetType, tier);
+    const qualityScore = calculateQualityScore(spec, tier);
 
     return NextResponse.json({
       ok: true,

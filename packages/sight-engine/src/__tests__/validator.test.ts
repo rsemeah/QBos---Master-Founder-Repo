@@ -14,19 +14,18 @@ import {
   calculateQualityScore,
   generatePromptHeader,
 } from '../validator';
-import { AssetSpec, AssetType, QualityTier } from '../types';
+import {
+  AssetSpec,
+  QUALITY_TIER_SPECS,
+  STANDARD_RESOLUTIONS,
+} from '../types';
 
 describe('SightEngine (Quality Validator)', () => {
   describe('validateResolution', () => {
     it('should pass for standard 1080p resolution', () => {
       const result = validateResolution(
-        { width: 1920, height: 1080 },
-        {
-          minResolution: { width: 1920, height: 1080 },
-          requiredColorSpace: ['sRGB'],
-          minBitDepth: 8,
-          lightingRequirement: 'natural',
-        }
+        STANDARD_RESOLUTIONS['HD'],
+        QUALITY_TIER_SPECS.C
       );
 
       expect(result.passed).toBe(true);
@@ -35,13 +34,8 @@ describe('SightEngine (Quality Validator)', () => {
 
     it('should fail for resolution below minimum', () => {
       const result = validateResolution(
-        { width: 1280, height: 720 },
-        {
-          minResolution: { width: 1920, height: 1080 },
-          requiredColorSpace: ['sRGB'],
-          minBitDepth: 8,
-          lightingRequirement: 'natural',
-        }
+        STANDARD_RESOLUTIONS['SD'],
+        QUALITY_TIER_SPECS.C
       );
 
       expect(result.passed).toBe(false);
@@ -51,13 +45,8 @@ describe('SightEngine (Quality Validator)', () => {
 
     it('should accept 4K resolution for investor tier', () => {
       const result = validateResolution(
-        { width: 3840, height: 2160 },
-        {
-          minResolution: { width: 3840, height: 2160 },
-          requiredColorSpace: ['DCI-P3'],
-          minBitDepth: 10,
-          lightingRequirement: 'studio',
-        }
+        STANDARD_RESOLUTIONS['4K'],
+        QUALITY_TIER_SPECS.A
       );
 
       expect(result.passed).toBe(true);
@@ -68,17 +57,11 @@ describe('SightEngine (Quality Validator)', () => {
     it('should pass for professional camera', () => {
       const result = validateCameraSpec(
         {
-          model: 'Sony A7R V',
-          sensor: 'Full Frame 61MP',
-          lens: 'Sony FE 85mm f/1.4 GM',
+          model: 'simulated-cinematic',
+          lens: '50mm-prime',
+          aperture: 3.2,
         },
-        {
-          minResolution: { width: 1920, height: 1080 },
-          requiredColorSpace: ['sRGB'],
-          minBitDepth: 8,
-          lightingRequirement: 'natural',
-          cameraConstraint: 'professional',
-        }
+        QUALITY_TIER_SPECS.B
       );
 
       expect(result.passed).toBe(true);
@@ -88,17 +71,11 @@ describe('SightEngine (Quality Validator)', () => {
     it('should warn for phone camera on investor tier', () => {
       const result = validateCameraSpec(
         {
-          model: 'iPhone 15 Pro',
-          sensor: 'Mobile',
-          lens: 'Mobile lens',
+          model: 'ARRI-Alexa-65',
+          lens: 'macro-lens',
+          aperture: 11,
         },
-        {
-          minResolution: { width: 3840, height: 2160 },
-          requiredColorSpace: ['DCI-P3'],
-          minBitDepth: 10,
-          lightingRequirement: 'studio',
-          cameraConstraint: 'professional',
-        }
+        QUALITY_TIER_SPECS.B
       );
 
       expect(result.passed).toBe(false);
@@ -110,11 +87,11 @@ describe('SightEngine (Quality Validator)', () => {
     it('should pass for natural lighting', () => {
       const result = validateLighting(
         {
-          type: 'natural',
-          sources: ['window', 'ambient'],
+          setup: 'natural-window',
+          keyLight: { type: 'key', intensity: 65, softness: 'soft' },
           colorTemperature: 5500,
         },
-        'natural'
+        'acceptable'
       );
 
       expect(result.passed).toBe(true);
@@ -123,11 +100,11 @@ describe('SightEngine (Quality Validator)', () => {
     it('should fail for flat AI lighting', () => {
       const result = validateLighting(
         {
-          type: 'ai-generated',
-          sources: ['synthetic'],
+          setup: 'natural-window',
+          keyLight: null as any,
           colorTemperature: 6500,
         },
-        'natural'
+        'cinematic'
       );
 
       expect(result.passed).toBe(false);
@@ -137,11 +114,11 @@ describe('SightEngine (Quality Validator)', () => {
     it('should pass for studio lighting on investor tier', () => {
       const result = validateLighting(
         {
-          type: 'studio',
-          sources: ['key', 'fill', 'rim'],
+          setup: 'three-point',
+          keyLight: { type: 'key', intensity: 80, softness: 'medium' },
           colorTemperature: 5600,
         },
-        'studio'
+        'cinematic'
       );
 
       expect(result.passed).toBe(true);
@@ -150,11 +127,11 @@ describe('SightEngine (Quality Validator)', () => {
     it('should fail when color temperature is out of range', () => {
       const result = validateLighting(
         {
-          type: 'natural',
-          sources: ['window'],
+          setup: 'three-point',
+          keyLight: { type: 'key', intensity: 70, softness: 'soft' },
           colorTemperature: 2000, // Too warm
         },
-        'natural'
+        'acceptable'
       );
 
       expect(result.passed).toBe(false);
@@ -165,17 +142,11 @@ describe('SightEngine (Quality Validator)', () => {
     it('should pass for rule of thirds composition', () => {
       const result = validateComposition(
         {
-          followsRuleOfThirds: true,
-          hasSubjectSeparation: true,
-          depth: 'multi-layer',
+          rules: ['rule-of-thirds', 'depth-of-field'],
+          silhouetteClarity: 85,
+          visualClutter: 20,
         },
-        {
-          minResolution: { width: 1920, height: 1080 },
-          requiredColorSpace: ['sRGB'],
-          minBitDepth: 8,
-          lightingRequirement: 'natural',
-          compositionRequirement: 'rule-of-thirds',
-        }
+        QUALITY_TIER_SPECS.B
       );
 
       expect(result.passed).toBe(true);
@@ -184,17 +155,11 @@ describe('SightEngine (Quality Validator)', () => {
     it('should warn for centered composition', () => {
       const result = validateComposition(
         {
-          followsRuleOfThirds: false,
-          hasSubjectSeparation: false,
-          depth: 'flat',
+          rules: ['symmetry'],
+          silhouetteClarity: 50,
+          visualClutter: 65,
         },
-        {
-          minResolution: { width: 1920, height: 1080 },
-          requiredColorSpace: ['sRGB'],
-          minBitDepth: 8,
-          lightingRequirement: 'natural',
-          compositionRequirement: 'rule-of-thirds',
-        }
+        QUALITY_TIER_SPECS.B
       );
 
       expect(result.passed).toBe(false);
@@ -204,32 +169,38 @@ describe('SightEngine (Quality Validator)', () => {
 
   describe('validateVideoSpec', () => {
     it('should pass for 1080p 60fps video', () => {
-      const result = validateVideoSpec({
-        fps: 60,
-        codec: 'H.265',
-        bitrate: 20000,
-      });
+      const result = validateVideoSpec(
+        {
+          frameRate: 24,
+          codec: 'ProRes-422-HQ',
+        },
+        QUALITY_TIER_SPECS.A
+      );
 
       expect(result.passed).toBe(true);
     });
 
     it('should warn for low framerate', () => {
-      const result = validateVideoSpec({
-        fps: 24,
-        codec: 'H.264',
-        bitrate: 10000,
-      });
+      const result = validateVideoSpec(
+        {
+          frameRate: 20,
+          codec: 'H.264',
+        },
+        QUALITY_TIER_SPECS.B
+      );
 
       expect(result.passed).toBe(false);
-      expect(result.warnings.some(w => w.includes('fps'))).toBe(true);
+      expect(result.errors.some(w => w.includes('fps'))).toBe(true);
     });
 
     it('should fail for low bitrate', () => {
-      const result = validateVideoSpec({
-        fps: 60,
-        codec: 'H.264',
-        bitrate: 5000, // Too low
-      });
+      const result = validateVideoSpec(
+        {
+          frameRate: 30,
+          codec: 'H.264',
+        },
+        QUALITY_TIER_SPECS.A
+      );
 
       expect(result.passed).toBe(false);
     });
@@ -238,10 +209,13 @@ describe('SightEngine (Quality Validator)', () => {
   describe('validateLogoRequirements', () => {
     it('should pass for valid logo', () => {
       const result = validateLogoRequirements({
-        format: 'SVG',
-        hasTransparentBackground: true,
         minSize: { width: 512, height: 512 },
-        colorModes: ['light', 'dark'],
+        maxSize: { width: 8192, height: 8192 },
+        vectorFormat: true,
+        readableAt16px: true,
+        scalableTo8K: true,
+        backgrounds: ['white', 'black', 'transparent'],
+        colorVariants: 2,
       });
 
       expect(result.passed).toBe(true);
@@ -249,10 +223,13 @@ describe('SightEngine (Quality Validator)', () => {
 
     it('should fail for raster-only logo', () => {
       const result = validateLogoRequirements({
-        format: 'PNG',
-        hasTransparentBackground: true,
         minSize: { width: 512, height: 512 },
-        colorModes: ['light'],
+        maxSize: { width: 2048, height: 2048 },
+        vectorFormat: false,
+        readableAt16px: true,
+        scalableTo8K: false,
+        backgrounds: ['white'],
+        colorVariants: 1,
       });
 
       expect(result.passed).toBe(false);
@@ -261,10 +238,13 @@ describe('SightEngine (Quality Validator)', () => {
 
     it('should fail for logo without dark mode variant', () => {
       const result = validateLogoRequirements({
-        format: 'SVG',
-        hasTransparentBackground: true,
         minSize: { width: 512, height: 512 },
-        colorModes: ['light'],
+        maxSize: { width: 4096, height: 4096 },
+        vectorFormat: true,
+        readableAt16px: true,
+        scalableTo8K: true,
+        backgrounds: ['white', 'transparent'],
+        colorVariants: 1,
       });
 
       expect(result.passed).toBe(false);
@@ -275,91 +255,126 @@ describe('SightEngine (Quality Validator)', () => {
   describe('checkAIArtifacts', () => {
     it('should pass for real photos', () => {
       const result = checkAIArtifacts({
-        hasWeirdFingers: false,
-        hasFloatingObjects: false,
-        hasInconsistentLighting: false,
-        hasTextGarbling: false,
-        hasSymmetryArtifacts: false,
+        resolution: STANDARD_RESOLUTIONS['HD'],
+        aspectRatio: '16:9',
+        camera: { model: 'simulated-cinematic', lens: '50mm-prime', aperture: 3.2 },
+        colorSpace: 'sRGB',
+        bitDepth: 10,
+        lighting: {
+          setup: 'three-point',
+          keyLight: { type: 'key', intensity: 70, softness: 'medium' },
+          colorTemperature: 5600,
+          contrast: 'medium',
+        },
       });
 
-      expect(result.passed).toBe(true);
-      expect(result.aiLikelihood).toBe('low');
+      expect(result.flatAILighting).toBe(false);
     });
 
     it('should flag AI-generated images', () => {
       const result = checkAIArtifacts({
-        hasWeirdFingers: true,
-        hasFloatingObjects: true,
-        hasInconsistentLighting: true,
-        hasTextGarbling: false,
-        hasSymmetryArtifacts: true,
+        resolution: STANDARD_RESOLUTIONS['4K'],
+        aspectRatio: '16:9',
+        camera: { model: 'simulated-cinematic', lens: '50mm-prime', aperture: 4 },
+        colorSpace: 'sRGB',
+        bitDepth: 8,
+        lighting: {
+          setup: 'natural-window',
+          keyLight: { type: 'key', intensity: 10, softness: 'soft' },
+          colorTemperature: 5600,
+          contrast: 'low',
+        },
+        composition: {
+          rules: ['rule-of-thirds'],
+          focalPoint: { x: 0.5, y: 0.5 },
+          depthOfField: 'medium',
+          silhouetteClarity: 80,
+          visualClutter: 70,
+        },
       });
 
-      expect(result.passed).toBe(false);
-      expect(result.aiLikelihood).toBe('high');
-      expect(result.flags.length).toBeGreaterThan(0);
+      expect(result.flatAILighting).toBe(true);
+      expect(result.lowResUpscale).toBe(true);
     });
 
     it('should detect text garbling artifact', () => {
       const result = checkAIArtifacts({
-        hasWeirdFingers: false,
-        hasFloatingObjects: false,
-        hasInconsistentLighting: false,
-        hasTextGarbling: true,
-        hasSymmetryArtifacts: false,
+        resolution: STANDARD_RESOLUTIONS['HD'],
+        aspectRatio: '16:9',
+        camera: { model: 'simulated-cinematic', lens: '50mm-prime', aperture: 4 },
+        colorSpace: 'sRGB',
+        bitDepth: 10,
+        lighting: {
+          setup: 'three-point',
+          keyLight: { type: 'key', intensity: 70, softness: 'medium' },
+          colorTemperature: 5600,
+          contrast: 'medium',
+        },
+        composition: {
+          rules: ['rule-of-thirds'],
+          focalPoint: { x: 0.4, y: 0.4 },
+          depthOfField: 'shallow',
+          silhouetteClarity: 85,
+          visualClutter: 20,
+        },
       });
 
-      expect(result.passed).toBe(false);
-      expect(result.flags).toContain('text_garbling');
+      expect(result.illegibleDetails).toBe(false);
     });
   });
 
   describe('calculateQualityScore', () => {
     it('should give high score for investor-grade asset', () => {
       const asset: AssetSpec = {
-        resolution: { width: 3840, height: 2160 },
-        colorSpace: 'DCI-P3',
-        bitDepth: 10,
+        resolution: STANDARD_RESOLUTIONS['4K'],
+        aspectRatio: '16:9',
+        colorSpace: 'Display-P3',
+        bitDepth: 16,
         camera: {
-          model: 'Sony A7R V',
-          sensor: 'Full Frame 61MP',
-          lens: 'Sony FE 85mm f/1.4 GM',
+          model: 'ARRI-Alexa-65',
+          lens: '50mm-prime',
+          aperture: 3.2,
         },
         lighting: {
-          type: 'studio',
-          sources: ['key', 'fill', 'rim'],
+          setup: 'three-point',
+          keyLight: { type: 'key', intensity: 80, softness: 'medium' },
           colorTemperature: 5600,
+          contrast: 'high',
         },
         composition: {
-          followsRuleOfThirds: true,
-          hasSubjectSeparation: true,
-          depth: 'multi-layer',
+          rules: ['rule-of-thirds', 'depth-of-field'],
+          focalPoint: { x: 0.4, y: 0.4 },
+          depthOfField: 'shallow',
+          silhouetteClarity: 90,
+          visualClutter: 15,
         },
       };
 
-      const score = calculateQualityScore(asset, 'photo', 'investor');
+      const score = calculateQualityScore(asset, 'A');
 
       expect(score).toBeGreaterThan(90);
     });
 
     it('should give lower score for consumer-grade asset', () => {
       const asset: AssetSpec = {
-        resolution: { width: 1920, height: 1080 },
+        resolution: STANDARD_RESOLUTIONS['HD'],
+        aspectRatio: '16:9',
         colorSpace: 'sRGB',
         bitDepth: 8,
         camera: {
-          model: 'iPhone 15',
-          sensor: 'Mobile',
-          lens: 'Mobile',
+          model: 'simulated-cinematic',
+          lens: 'zoom-lens',
+          aperture: 5.6,
         },
         lighting: {
-          type: 'natural',
-          sources: ['window'],
+          setup: 'natural-window',
+          keyLight: { type: 'key', intensity: 60, softness: 'soft' },
           colorTemperature: 5500,
+          contrast: 'medium',
         },
       };
 
-      const score = calculateQualityScore(asset, 'photo', 'consumer');
+      const score = calculateQualityScore(asset, 'C');
 
       expect(score).toBeGreaterThan(60);
       expect(score).toBeLessThan(90);
@@ -368,54 +383,57 @@ describe('SightEngine (Quality Validator)', () => {
 
   describe('generatePromptHeader', () => {
     it('should generate investor-tier prompt header', () => {
-      const header = generatePromptHeader('investor', 'photo');
+      const header = generatePromptHeader('A');
 
       expect(header).toContain('4K');
-      expect(header).toContain('DCI-P3');
-      expect(header).toContain('10-bit');
-      expect(header).toContain('professional camera');
+      expect(header).toContain('Display-P3');
+      expect(header).toContain('16-bit');
+      expect(header).toContain('ARRI-Alexa-65');
     });
 
     it('should generate consumer-tier prompt header', () => {
-      const header = generatePromptHeader('consumer', 'photo');
+      const header = generatePromptHeader('C');
 
-      expect(header).toContain('1080p');
+      expect(header).toContain('HD');
       expect(header).toContain('sRGB');
-      expect(header).toContain('natural lighting');
+      expect(header).toContain('professional lighting');
     });
 
     it('should include video-specific requirements', () => {
-      const header = generatePromptHeader('investor', 'video');
+      const header = generatePromptHeader('A');
 
-      expect(header).toContain('60fps');
-      expect(header).toContain('H.265');
+      expect(header).toContain('cinematic');
     });
   });
 
   describe('validateAsset (integration)', () => {
     it('should validate complete investor-grade photo', () => {
       const asset: AssetSpec = {
-        resolution: { width: 3840, height: 2160 },
-        colorSpace: 'DCI-P3',
-        bitDepth: 10,
+        resolution: STANDARD_RESOLUTIONS['4K'],
+        aspectRatio: '16:9',
+        colorSpace: 'Display-P3',
+        bitDepth: 16,
         camera: {
-          model: 'Sony A7R V',
-          sensor: 'Full Frame 61MP',
-          lens: 'Sony FE 85mm f/1.4 GM',
+          model: 'ARRI-Alexa-65',
+          lens: '50mm-prime',
+          aperture: 3.2,
         },
         lighting: {
-          type: 'studio',
-          sources: ['key', 'fill', 'rim'],
+          setup: 'three-point',
+          keyLight: { type: 'key', intensity: 80, softness: 'medium' },
           colorTemperature: 5600,
+          contrast: 'high',
         },
         composition: {
-          followsRuleOfThirds: true,
-          hasSubjectSeparation: true,
-          depth: 'multi-layer',
+          rules: ['rule-of-thirds'],
+          focalPoint: { x: 0.4, y: 0.4 },
+          depthOfField: 'shallow',
+          silhouetteClarity: 90,
+          visualClutter: 15,
         },
       };
 
-      const result = validateAsset(asset, 'photo', 'investor');
+      const result = validateAsset(asset, 'hero-image', 'A');
 
       expect(result.passed).toBe(true);
       expect(result.score).toBeGreaterThan(90);
@@ -424,54 +442,60 @@ describe('SightEngine (Quality Validator)', () => {
 
     it('should reject AI-generated image on investor tier', () => {
       const asset: AssetSpec = {
-        resolution: { width: 3840, height: 2160 },
-        colorSpace: 'DCI-P3',
+        resolution: STANDARD_RESOLUTIONS['4K'],
+        aspectRatio: '16:9',
+        colorSpace: 'Display-P3',
         bitDepth: 10,
         camera: {
-          model: 'Midjourney v6',
-          sensor: 'AI',
-          lens: 'AI',
+          model: 'simulated-cinematic',
+          lens: 'zoom-lens',
+          aperture: 8,
         },
         lighting: {
-          type: 'ai-generated',
-          sources: ['synthetic'],
+          setup: 'natural-window',
+          keyLight: null as any,
           colorTemperature: 6500,
+          contrast: 'low',
         },
       };
 
-      const result = validateAsset(asset, 'photo', 'investor');
+      const result = validateAsset(asset, 'hero-image', 'A');
 
       expect(result.passed).toBe(false);
-      expect(result.rejectionCriteria?.flatAILighting).toBe(true);
+      expect(result.rejections.flatAILighting).toBe(true);
       expect(result.score).toBeLessThan(70);
     });
 
     it('should accept good consumer-grade asset', () => {
       const asset: AssetSpec = {
-        resolution: { width: 1920, height: 1080 },
+        resolution: STANDARD_RESOLUTIONS['HD'],
+        aspectRatio: '16:9',
         colorSpace: 'sRGB',
         bitDepth: 8,
         camera: {
-          model: 'iPhone 15 Pro',
-          sensor: 'Mobile',
-          lens: 'Mobile',
+          model: 'simulated-cinematic',
+          lens: 'zoom-lens',
+          aperture: 5.6,
         },
         lighting: {
-          type: 'natural',
-          sources: ['window', 'ambient'],
+          setup: 'natural-window',
+          keyLight: { type: 'key', intensity: 60, softness: 'soft' },
           colorTemperature: 5500,
+          contrast: 'medium',
         },
         composition: {
-          followsRuleOfThirds: true,
-          hasSubjectSeparation: true,
-          depth: 'multi-layer',
+          rules: ['rule-of-thirds'],
+          focalPoint: { x: 0.5, y: 0.4 },
+          depthOfField: 'medium',
+          silhouetteClarity: 80,
+          visualClutter: 25,
         },
       };
 
-      const result = validateAsset(asset, 'photo', 'consumer');
+      const result = validateAsset(asset, 'hero-image', 'C');
 
       expect(result.passed).toBe(true);
-      expect(result.tier).toBe('consumer');
+      expect(result.tier).toBe('C');
     });
   });
 });
