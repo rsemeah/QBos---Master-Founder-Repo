@@ -1,1 +1,0 @@
-{"test":"receipt_operations","endpoints":["GET /api/receipts","POST /api/receipts"],"status":"implemented"}

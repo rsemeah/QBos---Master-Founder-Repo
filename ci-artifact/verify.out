@@ -1,0 +1,24 @@
+Using receipts file: proof/local_receipts.jsonl
+Decoding PUBLIC_KEY_PEM_BASE64 -> public.pem
+Public key path: public.pem
+Running verification using node verify-receipt.js
+node:internal/crypto/keys:618
+    handle.init(kKeyTypePublic, data, format, type, passphrase);
+           ^
+
+Error: error:068000E0:asn1 encoding routines::too small
+    at createPublicKey (node:internal/crypto/keys:618:12)
+    at loadPublicKey (/home/runner/work/QBos---Master-Founder-Repo/QBos---Master-Founder-Repo/verify-receipt.js:23:14)
+    at Object.<anonymous> (/home/runner/work/QBos---Master-Founder-Repo/QBos---Master-Founder-Repo/verify-receipt.js:53:13)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)
+    at node:internal/main/run_main_module:28:49 {
+  library: 'asn1 encoding routines',
+  reason: 'too small',
+  code: 'ERR_OSSL_ASN1_TOO_SMALL'
+}
+
+Node.js v20.19.6

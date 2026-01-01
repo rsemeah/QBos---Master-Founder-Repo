@@ -1,0 +1,28 @@
+SMOKE: initializing keystore...
+No env keys found — generating ephemeral keypair
+Key ID: 6256117f1e0fc2f5 source: ephemeral
+Wrote signed receipt to /Users/rorysemeah/Documents/GitHub/QBos---Master-Founder-Repo/proof/local_receipts.jsonl
+Signed receipt: {
+  "id": "smoke_1767232827784",
+  "createdAt": "2026-01-01T02:00:27.784Z",
+  "sessionId": "smoke-test",
+  "type": "smoke.test",
+  "verification_hash": "648ce24bc6bbbdfdc75d3238e05547973885d949e23102cb235f96f9621f997a",
+  "parentReceiptId": null,
+  "nonce": "e76aa065135114c0",
+  "details": {
+    "message": "hello truthserum",
+    "ts": "2026-01-01T02:00:27.790Z"
+  },
+  "signerKeyId": "6256117f1e0fc2f5",
+  "signature": "mwrVLFBWCyrR+1TPNtW67DaeDICB4YQT/jOAH7MvAaU1lzhowYRy966+s3QSPNohZ5KNoZTZDHX55NQDJW5/Cg==",
+  "algo": "Ed25519"
+}
+Verification (in-memory public key): true
+
+Side effects:
+- Files written: /Users/rorysemeah/Documents/GitHub/QBos---Master-Founder-Repo/proof/local_receipts.jsonl
+- Files read: none
+- Environment variables used: TRUTHSERUM_PRIVATE_KEY_PEM_BASE64, TRUTHSERUM_PUBLIC_KEY_PEM_BASE64
+- External services touched: none
+- Persistent state modified: appended to proof/local_receipts.jsonl

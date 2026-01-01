@@ -1,1 +1,0 @@
-{"test":"truth_evaluation","endpoint":"POST /api/truth/evaluate","intents":["session.ready","rob.ready"]}

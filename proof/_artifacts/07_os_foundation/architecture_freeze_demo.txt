@@ -1,1 +1,0 @@
-Created ADR at docs/ADR/2025-12-26T15-33-02Z-demo-app.md
