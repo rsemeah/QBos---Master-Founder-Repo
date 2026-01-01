@@ -1,5 +1,6 @@
-import { CheckCircle, Loader2, Send, XCircle } from 'lucide-react';
+import { Loader2, Send } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { PreviewIframe } from '../components/PreviewIframe';
 import { robClient, RobMessage, RobSession } from '../lib/rob-client';
 
 export default function RobBuilder() {
@@ -9,6 +10,7 @@ export default function RobBuilder() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [template, setTemplate] = useState('minimal-vertical-slice');
+  const [previewCode, setPreviewCode] = useState('');
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,6 +47,27 @@ export default function RobBuilder() {
       setSession(data.session);
       const assistant: RobMessage = { role: 'assistant', content: data.response, timestamp: new Date().toISOString() };
       setMessages((p) => [...p, assistant]);
+
+      // If assistant response contains a code block, extract it and render preview
+      const resp = data.response || '';
+      const codeFenceStart = resp.indexOf('```');
+      const codeFenceEnd = codeFenceStart >= 0 ? resp.indexOf('```', codeFenceStart + 3) : -1;
+      if (codeFenceStart >= 0 && codeFenceEnd > codeFenceStart) {
+        // extract content between fences
+        let codeBlock = resp.substring(codeFenceStart + 3, codeFenceEnd).trim();
+        // if first line is a language tag, remove it
+        const lines = codeBlock.split('\n');
+        if (lines[0].match(/^[a-zA-Z0-9_-]+$/)) {
+          lines.shift();
+          codeBlock = lines.join('\n');
+        }
+        setPreviewCode(codeBlock);
+        try {
+          await robClient.writeReceipt({ sessionId: session.id, type: 'preview.generated', details: { code: codeBlock } });
+        } catch (e) {
+          // non-fatal
+        }
+      }
 
       // receipts
       await robClient.writeReceipt({ sessionId: session.id, type: 'chat.message', details: { role: 'user', content: userMsg.content } });
@@ -96,6 +119,13 @@ export default function RobBuilder() {
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>
         </div>
+
+        {previewCode && (
+          <div className="mt-6">
+            <h3 className="text-sm font-semibold mb-2">Preview</h3>
+            <PreviewIframe code={previewCode} />
+          </div>
+        )}
 
         {error && (
           <div className="mt-4 bg-red-50 border border-red-200 rounded p-3 text-red-900">{error}</div>

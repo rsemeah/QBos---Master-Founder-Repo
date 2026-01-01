@@ -2,8 +2,8 @@
  * Receipts API - Read receipts for a session
  */
 
-import { NextRequest, NextResponse } from 'next/server';
 import { ReceiptWriter } from '@qbos/truthserum';
+import { NextRequest, NextResponse } from 'next/server';
 
 const receiptWriter = new ReceiptWriter({
   localFallbackPath: './proof/local_receipts.jsonl',
@@ -35,6 +35,18 @@ export async function POST(request: NextRequest) {
   try {
     const receiptData = await request.json();
 
+    // If incoming payload includes a signature, verify it before accepting.
+    if (receiptData && receiptData.sig && receiptData.signerKeyId) {
+      const ok = await receiptWriter.verifyReceipt(receiptData);
+      if (!ok) {
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+      }
+      // Accept already-signed receipts (append-only)
+      const receipt = await receiptWriter.writeReceipt(receiptData);
+      return NextResponse.json({ receipt, status: 'written' });
+    }
+
+    // For unsigned receipts, the writer will sign then write.
     const receipt = await receiptWriter.writeReceipt(receiptData);
 
     return NextResponse.json({

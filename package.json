@@ -23,7 +23,10 @@
     "install:all": "npm install",
     "test": "echo \"Tests coming soon\" && exit 0",
     "truthgate": "ts-node scripts/truthgate.ts",
-    "typecheck": "tsc --noEmit"
+    "smoke:truthserum": "ts-node scripts/smoke-truthserum.ts",
+    "smoke:truthserum:js": "node scripts/smoke-truthserum.js",
+    "typecheck": "tsc --noEmit",
+    "test:receipt": "node ./scripts/test_receipt_api.js"
   },
   "keywords": [
     "quietbuild",
@@ -41,7 +44,8 @@
     "url": "https://github.com/rsemeah/QBos---Master-Founder-Repo.git"
   },
   "devDependencies": {
-    "typescript": "^5.3.0"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=18.0.0",

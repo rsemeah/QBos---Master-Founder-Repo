@@ -9,6 +9,11 @@ build/
 .next/
 out/
 
+# Ignore local secret files and PEMs
+apps/proof-harness/.env.local
+*.pem
+*_b64.txt
+proof/local_receipts.jsonl
 # Next.js app routes (do not ignore)
 !apps/proof-harness/app/build/
 !apps/proof-harness/app/build/**
