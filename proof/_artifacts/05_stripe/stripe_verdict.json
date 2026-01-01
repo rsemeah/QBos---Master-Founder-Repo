@@ -1,8 +1,0 @@
-{
-  "exists": true,
-  "signature_verified": true,
-  "event_processed": false,
-  "db_updated": false,
-  "receipts_emitted": false,
-  "notes": "Webhook handler exists with signature verification, but no CLI test executed in this environment."
-}

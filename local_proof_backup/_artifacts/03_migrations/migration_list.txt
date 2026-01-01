@@ -1,0 +1,1 @@
+Supabase CLI not available in environment; migration list not generated.

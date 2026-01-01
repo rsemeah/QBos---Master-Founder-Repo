@@ -1,0 +1,8 @@
+════════════════════════════════════════════════════════
+TruthSerum-First Canonical Flow Test
+════════════════════════════════════════════════════════
+
+1️⃣  Documenting API endpoints...
+   ✅ API docs generated
+   ✅ Routes mapped
+✅ Canonical flow complete. Artifacts in proof/

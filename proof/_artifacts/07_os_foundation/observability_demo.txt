@@ -1,3 +1,0 @@
-Observability events written to proof/_artifacts/07_os_foundation/observability_events.jsonl.
-Event schema is defined in packages/runtime/observability.ts.
-Events above are simulated to demonstrate the logging format.

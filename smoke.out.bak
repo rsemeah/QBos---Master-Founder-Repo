@@ -1,0 +1,29 @@
+SMOKE: initializing keystore...
+Failed to load env keypair (invalid PEM/base64). Falling back to ephemeral. Error: error:1E08010C:DECODER routines::unsupported
+No env keys found — generating ephemeral keypair
+Key ID: cdaf018376a1746f source: ephemeral
+Wrote signed receipt to /home/runner/work/QBos---Master-Founder-Repo/QBos---Master-Founder-Repo/proof/local_receipts.jsonl
+Signed receipt: {
+  "id": "smoke_1767231162257",
+  "createdAt": "2026-01-01T01:32:42.257Z",
+  "sessionId": "smoke-test",
+  "type": "smoke.test",
+  "verification_hash": "bc2bb1c508e245aec73c1a6a168b1f5d4df29d5a0f6c852195f86bc240822523",
+  "parentReceiptId": null,
+  "nonce": "cef54e5b57c71d67",
+  "details": {
+    "message": "hello truthserum",
+    "ts": "2026-01-01T01:32:42.257Z"
+  },
+  "signerKeyId": "cdaf018376a1746f",
+  "signature": "EzdumcdhahEs+oJh4mB1TPDjtqrUNbANlDzPM+LjvXoBaosUYx7OSqcN8p3ucGkusaWPYwLEqmyDCyHPs9bFAQ==",
+  "algo": "Ed25519"
+}
+Verification (in-memory public key): true
+
+Side effects:
+- Files written: /home/runner/work/QBos---Master-Founder-Repo/QBos---Master-Founder-Repo/proof/local_receipts.jsonl
+- Files read: none
+- Environment variables used: TRUTHSERUM_PRIVATE_KEY_PEM_BASE64, TRUTHSERUM_PUBLIC_KEY_PEM_BASE64
+- External services touched: none
+- Persistent state modified: appended to proof/local_receipts.jsonl

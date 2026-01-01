@@ -1,1 +1,0 @@
-RLS tests not executed. Supabase CLI not available to start local instance.

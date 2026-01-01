@@ -1,0 +1,43 @@
+# Autopilot policy for the assistant (lead-dev behavior)
+# Place this file in the repo to let the assistant operate with minimal prompting.
+
+autopilot:
+  enabled: true            # when true, assistant will follow policy and avoid asking trivial confirmations
+  role: lead_developer
+
+  # Branch/commit behavior
+  auto_branch_prefix: truthserum/autopilot
+  auto_commit: true
+  auto_commit_message: "chore(autopilot): {{summary}}"
+  auto_push: false         # set true to allow the assistant to push (requires ASSISTANT_AUTOPILOT_TOKEN secret)
+  auto_open_pr: true
+  auto_pr_draft: true
+  auto_merge: false        # require manual merge unless explicitly allowed
+
+  # Migration and production safety
+  auto_apply_migrations: false   # DISABLED by default - very dangerous
+  allowed_auto_migrations: []    # list of migration filenames allowed for auto-apply (empty = none)
+
+  # Secrets / permissions
+  # If auto_push=true the assistant will use the GH secret named below to push.
+  assistant_push_secret: ASSISTANT_AUTOPILOT_TOKEN
+  allow_secret_use: false        # assistant will never read secrets unless explicitly allowed in policy
+
+  # Verification rules
+  require_registry_entry_before_verify: true
+  allow_ephemeral_keys_for_ci: false
+
+  # Notifications / verbosity
+  notify_on_actions: summary     # choices: none | summary | verbose
+  notify_channel: github-pr      # where to post confirmations (options: github-pr, email, slack)
+
+  # Exceptions - actions that ALWAYS require human approval
+  exceptions:
+    - apply_migrations_to_production
+    - rotate_private_keys
+    - revoke_active_keys
+
+# Example: to enable full autonomy you may set auto_push: true and add
+# a repo secret named ASSISTANT_AUTOPILOT_TOKEN containing a PAT
+# with repo:contents and repo:status (or install a GitHub App). Be aware
+# this grants the assistant ability to push branches and open PRs.

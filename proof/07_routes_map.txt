@@ -1,5 +1,0 @@
-TruthSerum-First Routes:
-/rob - Rob builder
-/engines - Engine index
-/engines/[key] - Engine details
-API: /api/chat, /api/truth/evaluate, /api/receipts, /api/billing/status

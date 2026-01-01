@@ -1,6 +1,0 @@
-branch: work
-commit: 08e787d05a0050e2cec05cfb653a62af96c6d750
-status:
-?? proof/_artifacts/
-node: v22.21.0
-npm: 11.4.2

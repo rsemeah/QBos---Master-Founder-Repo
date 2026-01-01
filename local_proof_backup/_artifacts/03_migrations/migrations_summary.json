@@ -1,0 +1,6 @@
+{
+  "migration_count": null,
+  "tables_created_count": null,
+  "any_errors": true,
+  "notes": "Supabase CLI not available in environment; migrations not executed."
+}
