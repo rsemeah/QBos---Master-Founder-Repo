@@ -1,0 +1,45 @@
+name: TruthSerum Smoke + Verify
+
+on:
+  push:
+    branches:
+      - truthserum/**
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  smoke-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Run smoke tests (JS)
+        env:
+          TRUTHSERUM_PRIVATE_KEY_PEM_BASE64: ${{ secrets.TRUTHSERUM_PRIVATE_KEY_PEM_BASE64 }}
+          TRUTHSERUM_PUBLIC_KEY_PEM_BASE64: ${{ secrets.TRUTHSERUM_PUBLIC_KEY_PEM_BASE64 }}
+        run: |
+          node scripts/smoke-truthserum.js
+
+      - name: Verify latest receipt
+        env:
+          PUBLIC_KEY_PEM_BASE64: ${{ secrets.TRUTHSERUM_PUBLIC_KEY_PEM_BASE64 }}
+        run: |
+          chmod +x scripts/verify-latest.sh
+          ./scripts/verify-latest.sh
+
+      - name: Upload verification artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: truthserum-verification
+          path: proof/local_receipts.jsonl

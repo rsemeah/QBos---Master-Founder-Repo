@@ -4,9 +4,9 @@
 
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +29,9 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // Proceed with real Supabase login flow. Removed dev fallback so auth
+    // failures manifest during local testing and can be fixed.
 
     try {
       const { createClientComponentClient } = await import('@supabase/auth-helpers-nextjs');
