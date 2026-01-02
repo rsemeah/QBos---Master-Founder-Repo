@@ -44,11 +44,27 @@ function loadPublicKey() {
   throw new Error('Set PUBLIC_KEY_PEM_BASE64 or PUBLIC_KEY_PATH');
 }
 
-const receiptsPath = process.argv[2] || 'proof/local_receipts.cleaned.jsonl';
-const content = fs.readFileSync(receiptsPath, 'utf8').trim();
-if (!content) throw new Error('No receipts found in ' + receiptsPath);
-const line = content.split('\n').pop();
-const r = JSON.parse(line);
+let r = null;
+// Support three modes:
+// 1) Called as: node verify-receipt.js <receipts_path>
+// 2) Called as: node verify-receipt.js --json '<receipt_json>'
+// 3) Called with JSON on stdin
+if (process.argv[2] === '--json') {
+  const jsonArg = process.argv[3] || '';
+  if (jsonArg) {
+    r = JSON.parse(jsonArg);
+  } else {
+    const stdin = fs.readFileSync(0, 'utf8').trim();
+    if (!stdin) throw new Error('No JSON provided to --json and stdin is empty');
+    r = JSON.parse(stdin);
+  }
+} else {
+  const receiptsPath = process.argv[2] || 'proof/local_receipts.cleaned.jsonl';
+  const content = fs.readFileSync(receiptsPath, 'utf8').trim();
+  if (!content) throw new Error('No receipts found in ' + receiptsPath);
+  const line = content.split('\n').pop();
+  r = JSON.parse(line);
+}
 
 const key = loadPublicKey();
 const sig = Buffer.from(r.signature, 'base64');

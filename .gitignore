@@ -64,3 +64,7 @@ temp/
 proof/_artifacts/
 proof/local_receipts.jsonl
 apps/proof-harness/.env.local
+
+# Robby local keys and receipts
+.keys/
+/receipts/robby/*.pem

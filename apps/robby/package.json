@@ -1,0 +1,24 @@
+{
+  "name": "@qbos/robby",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "robby": "tsx src/cli.ts",
+    "calibrate": "tsx src/cli.ts calibrate",
+    "verify": "tsx src/cli.ts verify",
+    "certify": "tsx src/cli.ts certify",
+    "retro": "tsx src/cli.ts retro",
+    "rotate-key": "tsx src/cli.ts rotate-key"
+  },
+  "dependencies": {
+    "execa": "^7.0.0",
+    "zod": "^3.22.4",
+    "@qbos/truthserum": "file:../../packages/truthserum"
+  },
+  "devDependencies": {
+    "tsx": "^3.12.7",
+    "typescript": "^5.9.3",
+    "@types/node": "^20.0.0"
+  }
+}

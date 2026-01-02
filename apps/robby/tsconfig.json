@@ -1,0 +1,33 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node"
+  },
+  "baseUrl": ".",
+  "paths": {
+    "@qbos/truthserum": [
+      "src/types/truthserum.d.ts"
+    ]
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/node_modules/*",
+    "node_modules/.pnpm/**",
+    ".pnpm/**",
+    "**/.pnpm/**",
+    "dist",
+    "../../packages/**",
+    "../../**/node_modules/**",
+    "node_modules/**/@qbos/**",
+    "**/*.clean.ts",
+    "src/core/verification_clean.ts"
+  ]
+}
