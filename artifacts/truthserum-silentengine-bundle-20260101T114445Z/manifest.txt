@@ -1,0 +1,29 @@
+TruthSerum + SilentEngine bundle
+Generated: 20260101T114445Z
+
+Included paths (best-effort):
+packages/truthserum/src/keystore.ts
+packages/truthserum/src/ReceiptWriter.ts
+verify-receipt.js
+scripts/smoke-truthserum.js
+scripts/generate-truthserum-keys.sh
+scripts/verify-latest.sh
+scripts/collect-proof-evidence.sh
+scripts/truth-built-works-report.mjs
+supabase/migrations
+proof
+proof/local_receipts.jsonl
+docs/TRUTH_SERUM_REPORT.md
+docs/ROB_INTELLIGENCE_REFERENCE.md
+.github/workflows/truthserum-ci.yml
+apps/proof-harness
+packages/silent-engine
+packages/sight-engine
+packages/engines
+package.json
+tsconfig.json
+README.md
+scripts/collect-proof-evidence.sh
+scripts/truth-built-works-report.mjs
+scripts/export-truthserum-silentengine-bundle.sh
+docs/TRUTHSERUM_SILENTENGINE_CHATGPT_PROMPT.md

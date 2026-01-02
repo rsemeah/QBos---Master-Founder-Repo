@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-01-02T03:51:16.127Z",
+  "steps": [
+    {
+      "name": "collect-proof-evidence",
+      "cmd": "NO_INSTALL=1 ./scripts/collect-proof-evidence.sh",
+      "exitCode": 127,
+      "stdout": "",
+      "stderr": "/bin/sh: ./scripts/collect-proof-evidence.sh: No such file or directory\n"
+    }
+  ]
+}

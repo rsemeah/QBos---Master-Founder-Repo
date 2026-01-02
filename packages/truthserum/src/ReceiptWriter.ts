@@ -3,9 +3,8 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import keystore from './keystore';
-export const ReceiptWriter = new ReceiptWriterImpl();
 
-export interface Receipt {
+interface Receipt {
   id: string;
   createdAt: string;
   sessionId?: string | null;
@@ -221,4 +220,3 @@ class ReceiptWriterImpl {
 export const ReceiptWriter = new ReceiptWriterImpl();
 
 export default ReceiptWriter;
-if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });

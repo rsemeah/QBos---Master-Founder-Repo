@@ -49,8 +49,10 @@ export function initKeystore(): void {
     const { publicKey, privateKey } = generateKeyPairSync('ed25519');
     const privPem = privateKey.export({ type: 'pkcs8', format: 'pem' }) as string;
     const pubPem = publicKey.export({ type: 'spki', format: 'pem' }) as string;
-    const keyId = `dev-${Date.now()}`;
-    activeKey = { id: keyId, privateKey: crypto.createPrivateKey(privPem), publicKeyPem: pubPem };
+    // derive canonical key id from public SPKI DER (sha256 -> first 16 hex chars)
+    const pubDer = publicKey.export({ type: 'spki', format: 'der' }) as Buffer;
+    const derivedId = crypto.createHash('sha256').update(pubDer).digest('hex').substring(0, 16);
+    activeKey = { id: derivedId, privateKey: crypto.createPrivateKey(privPem), publicKeyPem: pubPem };
   }
 
   initialized = true;

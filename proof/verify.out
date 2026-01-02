@@ -1,0 +1,7 @@
+Using receipts file: proof/local_receipts.jsonl
+Using existing PUBLIC_KEY_PATH=.keys/public.pem
+Public key path: .keys/public.pem
+Running verification using node verify-receipt.js
+computed public key id: e40abb8a9b431d54
+receipt signerKeyId: b1d9dc9aec8b9d12
+receipt id: smoke_1767271402027 verified: false
