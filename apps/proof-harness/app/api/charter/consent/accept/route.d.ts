@@ -1,0 +1,10 @@
+import { NextRequest, NextResponse } from 'next/server';
+export declare function POST(request: NextRequest): Promise<NextResponse<{
+    ok: boolean;
+    error: string;
+}> | NextResponse<{
+    ok: boolean;
+    data: import("@qbos/charter-engine-core").ConsentRecord;
+    message: string;
+}>>;
+//# sourceMappingURL=route.d.ts.map

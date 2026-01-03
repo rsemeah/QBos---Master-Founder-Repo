@@ -1,0 +1,131 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = RobBuilder;
+const lucide_react_1 = require("lucide-react");
+const react_1 = require("react");
+const PreviewIframe_1 = require("../components/PreviewIframe");
+const rob_client_1 = require("../lib/rob-client");
+function RobBuilder() {
+    const [session, setSession] = (0, react_1.useState)(null);
+    const [messages, setMessages] = (0, react_1.useState)([]);
+    const [input, setInput] = (0, react_1.useState)('');
+    const [loading, setLoading] = (0, react_1.useState)(false);
+    const [error, setError] = (0, react_1.useState)(null);
+    const [template, setTemplate] = (0, react_1.useState)('minimal-vertical-slice');
+    const [previewCode, setPreviewCode] = (0, react_1.useState)('');
+    const endRef = (0, react_1.useRef)(null);
+    (0, react_1.useEffect)(() => {
+        endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
+    const startSession = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const data = await rob_client_1.robClient.initSession(template);
+            setSession(data.session);
+            setMessages(data.messages || []);
+            await rob_client_1.robClient.writeReceipt({
+                sessionId: data.session.id,
+                type: 'session.created',
+                details: { template },
+            });
+        }
+        catch (err) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
+        }
+        finally {
+            setLoading(false);
+        }
+    };
+    const handleSend = async () => {
+        if (!input.trim() || !session || loading)
+            return;
+        const userMsg = { role: 'user', content: input, timestamp: new Date().toISOString() };
+        setMessages((p) => [...p, userMsg]);
+        setInput('');
+        setLoading(true);
+        try {
+            const data = await rob_client_1.robClient.sendMessage(session.id, input);
+            setSession(data.session);
+            const assistant = { role: 'assistant', content: data.response, timestamp: new Date().toISOString() };
+            setMessages((p) => [...p, assistant]);
+            // If assistant response contains a code block, extract it and render preview
+            const resp = data.response || '';
+            const codeFenceStart = resp.indexOf('```');
+            const codeFenceEnd = codeFenceStart >= 0 ? resp.indexOf('```', codeFenceStart + 3) : -1;
+            if (codeFenceStart >= 0 && codeFenceEnd > codeFenceStart) {
+                // extract content between fences
+                let codeBlock = resp.substring(codeFenceStart + 3, codeFenceEnd).trim();
+                // if first line is a language tag, remove it
+                const lines = codeBlock.split('\n');
+                if (lines[0].match(/^[a-zA-Z0-9_-]+$/)) {
+                    lines.shift();
+                    codeBlock = lines.join('\n');
+                }
+                setPreviewCode(codeBlock);
+                try {
+                    await rob_client_1.robClient.writeReceipt({ sessionId: session.id, type: 'preview.generated', details: { code: codeBlock } });
+                }
+                catch (e) {
+                    // non-fatal
+                }
+            }
+            // receipts
+            await rob_client_1.robClient.writeReceipt({ sessionId: session.id, type: 'chat.message', details: { role: 'user', content: userMsg.content } });
+            await rob_client_1.robClient.writeReceipt({ sessionId: session.id, type: 'chat.response', details: { role: 'assistant', content: data.response } });
+        }
+        catch (err) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
+        }
+        finally {
+            setLoading(false);
+        }
+    };
+    return (<div className="min-h-screen bg-gray-50 flex flex-col">
+      <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
+        <div className="max-w-6xl mx-auto">
+          <h1 className="text-2xl font-bold text-gray-900">Rob Builder</h1>
+          <p className="text-sm text-gray-600">Create a session and interact with Rob</p>
+        </div>
+      </header>
+
+      <div className="p-6 max-w-6xl mx-auto w-full">
+        <div className="mb-4 flex items-center gap-4">
+          <label className="text-sm text-gray-700">Template</label>
+          <select value={template} onChange={(e) => setTemplate(e.target.value)} className="px-3 py-2 border rounded">
+            <option value="minimal-vertical-slice">minimal-vertical-slice</option>
+            <option value="feature-rich-starter">feature-rich-starter</option>
+            <option value="bugfix-assistant">bugfix-assistant</option>
+          </select>
+          <button onClick={startSession} disabled={loading} className="ml-auto px-4 py-2 bg-blue-600 text-white rounded">
+            {loading ? <lucide_react_1.Loader2 className="w-4 h-4 animate-spin"/> : 'Start Session'}
+          </button>
+        </div>
+
+        <div className="bg-white border rounded p-4 mb-4">
+          <div className="space-y-3">
+            {messages.map((m, i) => (<div key={i} className={`p-3 rounded ${m.role === 'user' ? 'bg-blue-50 ml-12' : m.role === 'system' ? 'bg-yellow-50' : 'bg-gray-50 mr-12'}`}>
+                <div className="text-xs text-gray-500 mb-1">{m.role} • {new Date(m.timestamp).toLocaleTimeString()}</div>
+                <div className="text-gray-900 whitespace-pre-wrap">{m.content}</div>
+              </div>))}
+            <div ref={endRef}/>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <input value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} className="flex-1 px-4 py-2 border rounded" placeholder={session ? 'Message Rob...' : 'Start a session first'} disabled={!session}/>
+          <button onClick={handleSend} disabled={!session || !input.trim() || loading} className="px-4 py-2 bg-blue-600 text-white rounded">
+            {loading ? <lucide_react_1.Loader2 className="w-4 h-4 animate-spin"/> : <lucide_react_1.Send className="w-4 h-4"/>}
+          </button>
+        </div>
+
+        {previewCode && (<div className="mt-6">
+            <h3 className="text-sm font-semibold mb-2">Preview</h3>
+            <PreviewIframe_1.PreviewIframe code={previewCode}/>
+          </div>)}
+
+        {error && (<div className="mt-4 bg-red-50 border border-red-200 rounded p-3 text-red-900">{error}</div>)}
+      </div>
+    </div>);
+}
+//# sourceMappingURL=RobBuilder.js.map

@@ -1,0 +1,18 @@
+{
+  "seq": 0,
+  "type": "step.unit-tests",
+  "command": "pnpm -C packages/robby-pa test",
+  "exit_code": 1,
+  "signal": null,
+  "stdout": "packages/robby-pa/receipts/0000_unit-tests_1767422488684.stdout.log",
+  "stderr": "packages/robby-pa/receipts/0000_unit-tests_1767422488684.stderr.log",
+  "stdout_hash": "843a7a34623f16500fd30ff21597ac4e2bf82364b4983aa2c4461159cad72567",
+  "stderr_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "timestamp": "2026-01-03T06:41:28.965Z",
+  "prev_hash": null,
+  "hash": "597f4eb4df5450a7135c327ec391e75fbe2d1532cddac00411220fe1ae0412ac",
+  "mac": {
+    "key_id": "robby-v1-primary",
+    "value": "b5c17d3622b2d03a307e1373b52ef845b04ac3560b4541fbe1ab94f29a36c52e"
+  }
+}

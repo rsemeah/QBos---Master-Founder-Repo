@@ -1,0 +1,33 @@
+name: Robby PA Verify
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - name: Install
+        run: pnpm install
+      - name: Run Robby verify
+        env:
+          ROBBY_RECEIPT_MAC_SECRET: ${{ secrets.ROBBY_RECEIPT_MAC_SECRET }}
+          ROBBY_RECEIPT_MAC_KEY_ID: robby-v1-primary
+        run: pnpm robby:verify
+      - name: Upload receipts
+        uses: actions/upload-artifact@v4
+        with:
+          name: robby-pa-receipts
+          path: packages/robby-pa/receipts/**

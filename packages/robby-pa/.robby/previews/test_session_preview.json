@@ -1,0 +1,11 @@
+{
+  "previewUrl": "http://localhost:3001/preview/test_session_preview",
+  "expiresAt": "2026-01-06T06:43:49.889Z",
+  "accessToken": "0803dd1501767b8a4b5df61cdf1d4025fb3568d09e2d21ec",
+  "indexed": false,
+  "rateLimited": true,
+  "maxRequests": 1000,
+  "artifactPaths": [
+    "file:///tmp/doesnotexist"
+  ]
+}

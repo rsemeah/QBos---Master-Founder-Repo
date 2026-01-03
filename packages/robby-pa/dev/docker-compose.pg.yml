@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    container_name: robby_pa_dev_postgres
+    environment:
+      POSTGRES_USER: robby
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: robby
+    ports:
+      - "5433:5432"
+    volumes:
+      - type: bind
+        source: ./sql
+        target: /migrations
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U robby -d robby"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+    restart: unless-stopped
