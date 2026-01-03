@@ -25,6 +25,21 @@ jobs:
         env:
           ROBBY_RECEIPT_MAC_SECRET: ${{ secrets.ROBBY_RECEIPT_MAC_SECRET }}
           ROBBY_RECEIPT_MAC_KEY_ID: robby-v1-primary
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          TRUTHSERUM_PRIVATE_KEY_PEM_BASE64: ${{ secrets.TRUTHSERUM_PRIVATE_KEY_PEM_BASE64 }}
+          TRUTHSERUM_PUBLIC_KEY_PEM_BASE64: ${{ secrets.TRUTHSERUM_PUBLIC_KEY_PEM_BASE64 }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          MISTRAL_ORG_ID: ${{ secrets.MISTRAL_ORG_ID }}
+          GCP_PROJECT_NAME: ${{ secrets.GCP_PROJECT_NAME }}
+          GCP_PROJECT_NUMBER: ${{ secrets.GCP_PROJECT_NUMBER }}
         run: pnpm robby:verify
       - name: Upload receipts
         uses: actions/upload-artifact@v4
