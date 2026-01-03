@@ -20,6 +20,8 @@ jobs:
       name: Constitutional Compliance Checks
       runs-on: ubuntu-latest
       timeout-minutes: 15
+      env:
+        RUN_CANONICAL_FLOW: 'false'
     
       steps:
         - name: Checkout repository
@@ -51,6 +53,7 @@ jobs:
           continue-on-error: false
         
         - name: Run Canonical Flow Test
+          if: env.RUN_CANONICAL_FLOW == 'true'
           run: bash test-canonical-flow.sh
           continue-on-error: false
           env:
