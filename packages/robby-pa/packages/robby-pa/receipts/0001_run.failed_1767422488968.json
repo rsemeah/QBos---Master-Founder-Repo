@@ -1,0 +1,14 @@
+{
+  "seq": 1,
+  "type": "run.failed",
+  "reason": "step_failed",
+  "step": "unit-tests",
+  "exit_code": 1,
+  "timestamp": "2026-01-03T06:41:28.968Z",
+  "prev_hash": "597f4eb4df5450a7135c327ec391e75fbe2d1532cddac00411220fe1ae0412ac",
+  "hash": "cbbbca55fd0f36d9984904db14d6903b697c8462e742171ae37f5000bb6a992a",
+  "mac": {
+    "key_id": "robby-v1-primary",
+    "value": "cb2262e18d66041f30157d3f5d9d81c5755a6acb70eaad9cd377065e1331b2c0"
+  }
+}

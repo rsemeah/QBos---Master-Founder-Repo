@@ -1,0 +1,11 @@
+{
+  "previewUrl": "http://localhost:3001/preview/session_preview_demo",
+  "expiresAt": "2026-01-06T02:16:04.591Z",
+  "accessToken": "967c75c5a9213fbdc7de19252022b29aff0a2a5af2778647",
+  "indexed": false,
+  "rateLimited": true,
+  "maxRequests": 1000,
+  "artifactPaths": [
+    "file:///Users/rorysemeah/Documents/GitHub/QBos---Master-Founder-Repo/.robby/artifacts/session_preview_demo/index.html"
+  ]
+}

@@ -2,66 +2,70 @@ name: TruthSerum Smoke + Verify
 
 on:
   push:
-    branches:
-      - main
-      - truthserum/**
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch: {}
+    name: TruthSerum Smoke + Verify
 
-jobs:
-  smoke-and-verify:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    on:
+      push:
+        branches:
+          - main
+          - truthserum/**
+      pull_request:
+        branches:
+          - main
+      workflow_dispatch: {}
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
+    jobs:
+      smoke-and-verify:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v4
 
-      - name: Install deps
-        run: npm ci
+          - name: Setup Node
+            uses: actions/setup-node@v4
+            with:
+              node-version: '20'
+              cache: 'npm'
 
-      - name: Prepare proof dir
-        run: |
-          mkdir -p proof
-          : > proof/local_receipts.jsonl
-          : > proof/smoke.out
-          : > proof/verify.out
+          - name: Install deps
+            run: npm ci
 
-      - name: Smoke TruthSerum (writes receipt)
-        env:
-          TRUTHSERUM_PRIVATE_KEY_PEM_BASE64: ${{ secrets.TRUTHSERUM_PRIVATE_KEY_PEM_BASE64 }}
-          TRUTHSERUM_PUBLIC_KEY_PEM_BASE64: ${{ secrets.TRUTHSERUM_PUBLIC_KEY_PEM_BASE64 }}
-        run: |
-          if [ -z "${TRUTHSERUM_PRIVATE_KEY_PEM_BASE64:-}" ] || [ -z "${TRUTHSERUM_PUBLIC_KEY_PEM_BASE64:-}" ]; then
-            echo "MISSING_SECRETS: TruthSerum keys not present in CI secrets. Marking run as UNVERIFIED." | tee proof/smoke.out
-            exit 2
-          fi
-          node scripts/smoke-truthserum.js 2>&1 | tee proof/smoke.out
+          - name: Prepare proof dir
+            run: |
+              mkdir -p proof
+              : > proof/local_receipts.jsonl
+              : > proof/smoke.out
+              : > proof/verify.out
 
-      - name: Verify latest receipt
-        if: always()
-        env:
-          PUBLIC_KEY_PEM_BASE64: ${{ secrets.TRUTHSERUM_PUBLIC_KEY_PEM_BASE64 }}
-        run: |
-          if [ -z "${PUBLIC_KEY_PEM_BASE64:-}" ]; then
-            echo "MISSING_SECRETS: Public key missing. Cannot verify. UNVERIFIED." | tee proof/verify.out
-            exit 2
-          fi
-          chmod +x scripts/verify-latest.sh
-          ./scripts/verify-latest.sh 2>&1 | tee proof/verify.out
+          - name: Smoke TruthSerum (writes receipt)
+            env:
+              TRUTHSERUM_PRIVATE_KEY_PEM_BASE64: ${{ secrets.TRUTHSERUM_PRIVATE_KEY_PEM_BASE64 }}
+              TRUTHSERUM_PUBLIC_KEY_PEM_BASE64: ${{ secrets.TRUTHSERUM_PUBLIC_KEY_PEM_BASE64 }}
+            run: |
+              if [ -z "${TRUTHSERUM_PRIVATE_KEY_PEM_BASE64:-}" ] || [ -z "${TRUTHSERUM_PUBLIC_KEY_PEM_BASE64:-}" ]; then
+                echo "MISSING_SECRETS: TruthSerum keys not present in CI secrets. Marking run as UNVERIFIED." | tee proof/smoke.out
+                exit 2
+              fi
+              node scripts/smoke-truthserum.js 2>&1 | tee proof/smoke.out
 
-      - name: Upload verification artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: truthserum-verification
-          path: |
-            proof/local_receipts.jsonl
-            proof/smoke.out
-            proof/verify.out
+          - name: Verify latest receipt
+            if: always()
+            env:
+              PUBLIC_KEY_PEM_BASE64: ${{ secrets.TRUTHSERUM_PUBLIC_KEY_PEM_BASE64 }}
+            run: |
+              if [ -z "${PUBLIC_KEY_PEM_BASE64:-}" ]; then
+                echo "MISSING_SECRETS: Public key missing. Cannot verify. UNVERIFIED." | tee proof/verify.out
+                exit 2
+              fi
+              chmod +x scripts/verify-latest.sh
+              ./scripts/verify-latest.sh 2>&1 | tee proof/verify.out
+
+          - name: Upload verification artifacts
+            if: always()
+            uses: actions/upload-artifact@v4
+            with:
+              name: truthserum-verification
+              path: |
+                proof/local_receipts.jsonl
+                proof/smoke.out
+                proof/verify.out

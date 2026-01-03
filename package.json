@@ -26,7 +26,8 @@
     "smoke:truthserum": "ts-node scripts/smoke-truthserum.ts",
     "smoke:truthserum:js": "node scripts/smoke-truthserum.js",
     "typecheck": "tsc --noEmit",
-    "test:receipt": "node ./scripts/test_receipt_api.js"
+    "test:receipt": "node ./scripts/test_receipt_api.js",
+    "robby:verify": "node packages/robby-pa/scripts/verify.mjs"
   },
   "keywords": [
     "quietbuild",

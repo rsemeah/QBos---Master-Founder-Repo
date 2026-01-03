@@ -68,3 +68,17 @@ apps/proof-harness/.env.local
 # Robby local keys and receipts
 .keys/
 /receipts/robby/*.pem
+
+# Generated proof artifacts and collected evidence
+artifacts/
+proof-evidence-*/
+proof-evidence-*/collected/
+proof-evidence-*/collected/**
+proof-evidence-*/proof-*
+**/collected/
+**/artifacts/
+**/receipts/
+packages/robby-pa/receipts/
+proof-evidence-*/artifacts/
+*.out
+*.bak
