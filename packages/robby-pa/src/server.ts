@@ -6,7 +6,7 @@ import InMemoryStore from './store/inMemoryStore';
 import PostgresReceiptStore from './store/postgresStore';
 import { InMemorySessionStore, PostgresSessionStore } from './store/sessionStore';
 
-const app = express();
+const app: any = express();
 app.use(bodyParser.json());
 
 const usePostgres = !!process.env.PGHOST || !!process.env.PG_CONNECTION_STRING;
