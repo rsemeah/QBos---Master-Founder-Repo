@@ -4,24 +4,60 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
+  pull_request:
 
 jobs:
   verify:
     runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: qbos
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d qbos"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      # Deterministic run identity — receipts never collide
+      ROBBY_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+      # Force per-run receipts directory
+      ROBBY_RECEIPTS_DIR: packages/robby-pa/receipts/runs/${{ github.run_id }}-${{ github.run_attempt }}
+      # Postgres for verify's integration tests
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/qbos
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'pnpm'
+
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9
+
       - name: Install
-        run: pnpm install
-      - name: Run Robby verify
+        run: pnpm -w install
+
+      - name: Print run identity
+        run: |
+          echo "ROBBY_RUN_ID=${ROBBY_RUN_ID}"
+          echo "ROBBY_RECEIPTS_DIR=${ROBBY_RECEIPTS_DIR}"
+          echo "Node: $(node -v)"
+          echo "pnpm: $(pnpm -v)"
+
+      - name: Run Robby PA Verify
         env:
           ROBBY_RECEIPT_MAC_SECRET: ${{ secrets.ROBBY_RECEIPT_MAC_SECRET }}
           ROBBY_RECEIPT_MAC_KEY_ID: robby-v1-primary
@@ -40,9 +76,12 @@ jobs:
           MISTRAL_ORG_ID: ${{ secrets.MISTRAL_ORG_ID }}
           GCP_PROJECT_NAME: ${{ secrets.GCP_PROJECT_NAME }}
           GCP_PROJECT_NUMBER: ${{ secrets.GCP_PROJECT_NUMBER }}
-        run: pnpm robby:verify
-      - name: Upload receipts
+        run: pnpm -C packages/robby-pa run robby:verify
+
+      - name: Upload receipts artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: robby-pa-receipts
-          path: packages/robby-pa/receipts/**
+          name: robby-pa-receipts-${{ github.run_id }}-${{ github.run_attempt }}
+          path: packages/robby-pa/receipts/runs/${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: warn
