@@ -101,6 +101,4 @@ export async function executeTask(sessionId: string, task: Task, receiptStore: a
   }
 }
 
-export default {};
-
-export default {};
+// module exports
