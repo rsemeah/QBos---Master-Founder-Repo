@@ -1,0 +1,20 @@
+{
+  "name": "QBos Dev",
+  "dockerComposeFile": ["docker-compose.yml"],
+  "service": "node",
+  "workspaceFolder": "/workspaces/qbos",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "20" }
+  },
+  "postCreateCommand": "pnpm -w install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "github.vscode-github-actions",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  }
+}

@@ -1,8 +1,9 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import * as crypto from 'crypto';
-import * as fs from 'fs';
-import * as path from 'path';
-import keystore from './keystore';
+import { getReceiptsDir } from "@qbos/run";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import * as crypto from "crypto";
+import * as fs from "fs";
+import * as path from "path";
+import keystore from "./keystore";
 
 interface Receipt {
   id: string;
@@ -22,14 +23,16 @@ class ReceiptWriterImpl {
   private supabase: SupabaseClient | null = null;
   private useSupabase = false;
   private config = {
-    localFallbackPath: './proof/local_receipts.jsonl',
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || undefined,
     supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY || undefined,
   };
 
   constructor() {
     if (this.config.supabaseUrl && this.config.supabaseKey) {
-      this.supabase = createClient(this.config.supabaseUrl, this.config.supabaseKey);
+      this.supabase = createClient(
+        this.config.supabaseUrl,
+        this.config.supabaseKey
+      );
       this.useSupabase = true;
     }
   }
@@ -40,18 +43,35 @@ class ReceiptWriterImpl {
 
   private canonicalize(obj: any): string {
     const step = (v: any): any => {
-      if (v === null || typeof v !== 'object') return v;
+      if (v === null || typeof v !== "object") return v;
       if (Array.isArray(v)) return v.map(step);
       const out: any = {};
-      Object.keys(v).sort().forEach((k) => { out[k] = step(v[k]); });
+      Object.keys(v)
+        .sort()
+        .forEach((k) => {
+          out[k] = step(v[k]);
+        });
       return out;
     };
     return JSON.stringify(step(obj));
   }
 
-  async write(data: { sessionId?: string | null; type: string; details: Record<string, any>; parentReceiptId?: string | null }): Promise<{ id: string; hash: string }> {
-    const hash = crypto.createHash('sha256').update(JSON.stringify(data.details)).digest('hex');
-    const fallbackReceipt: any = { id: this.generateId(), createdAt: new Date().toISOString(), ...data, verification_hash: hash };
+  async write(data: {
+    sessionId?: string | null;
+    type: string;
+    details: Record<string, any>;
+    parentReceiptId?: string | null;
+  }): Promise<{ id: string; hash: string }> {
+    const hash = crypto
+      .createHash("sha256")
+      .update(JSON.stringify(data.details))
+      .digest("hex");
+    const fallbackReceipt: any = {
+      id: this.generateId(),
+      createdAt: new Date().toISOString(),
+      ...data,
+      verification_hash: hash,
+    };
 
     if (!this.useSupabase || !this.supabase) {
       await this.writeToLocalFile(fallbackReceipt);
@@ -59,13 +79,17 @@ class ReceiptWriterImpl {
     }
 
     try {
-      const { data: receipt, error } = await this.supabase.from('build_receipts').insert({
-        session_id: data.sessionId || null,
-        type: data.type,
-        details: data.details,
-        verification_hash: hash,
-        parent_receipt_id: data.parentReceiptId || null
-      }).select().single();
+      const { data: receipt, error } = await this.supabase
+        .from("build_receipts")
+        .insert({
+          session_id: data.sessionId || null,
+          type: data.type,
+          details: data.details,
+          verification_hash: hash,
+          parent_receipt_id: data.parentReceiptId || null,
+        })
+        .select()
+        .single();
 
       if (error) throw error;
       return { id: receipt.id, hash };
@@ -75,15 +99,20 @@ class ReceiptWriterImpl {
     }
   }
 
-  async writeReceipt(receipt: Omit<Receipt, 'id' | 'createdAt'>): Promise<Receipt> {
+  async writeReceipt(
+    receipt: Omit<Receipt, "id" | "createdAt">
+  ): Promise<Receipt> {
     const full: Receipt = {
       id: this.generateId(),
       createdAt: new Date().toISOString(),
-      ...receipt
+      ...receipt,
     } as any;
 
-    const verification_hash = crypto.createHash('sha256').update(JSON.stringify(full.details)).digest('hex');
-    const nonce = crypto.randomBytes(16).toString('hex');
+    const verification_hash = crypto
+      .createHash("sha256")
+      .update(JSON.stringify(full.details))
+      .digest("hex");
+    const nonce = crypto.randomBytes(16).toString("hex");
 
     const unsigned = {
       id: full.id,
@@ -92,7 +121,7 @@ class ReceiptWriterImpl {
       type: full.type,
       verification_hash,
       parentReceiptId: full.parentReceiptId || null,
-      nonce
+      nonce,
     };
 
     const canonical = this.canonicalize(unsigned);
@@ -106,7 +135,7 @@ class ReceiptWriterImpl {
       nonce,
       signerKeyId: keyId,
       signature,
-      algo: 'Ed25519'
+      algo: "Ed25519",
     };
 
     if (this.useSupabase) {
@@ -121,7 +150,10 @@ class ReceiptWriterImpl {
   async verifyReceipt(receipt: any): Promise<boolean> {
     if (!receipt || !receipt.signature || !receipt.signerKeyId) return false;
     try {
-      const verification_hash = crypto.createHash('sha256').update(JSON.stringify(receipt.details)).digest('hex');
+      const verification_hash = crypto
+        .createHash("sha256")
+        .update(JSON.stringify(receipt.details))
+        .digest("hex");
       if (receipt.verification_hash !== verification_hash) return false;
 
       const unsigned = {
@@ -131,13 +163,17 @@ class ReceiptWriterImpl {
         type: receipt.type,
         verification_hash: receipt.verification_hash,
         parentReceiptId: receipt.parentReceiptId || null,
-        nonce: receipt.nonce
+        nonce: receipt.nonce,
       };
 
       const canonical = this.canonicalize(unsigned);
-      return await keystore.verify(canonical, receipt.signature, receipt.signerKeyId);
+      return await keystore.verify(
+        canonical,
+        receipt.signature,
+        receipt.signerKeyId
+      );
     } catch (e) {
-      console.error('[ReceiptWriter] verifyReceipt error', e);
+      console.error("[ReceiptWriter] verifyReceipt error", e);
       return false;
     }
   }
@@ -156,33 +192,35 @@ class ReceiptWriterImpl {
         signer_key_id: receipt.signerKeyId || null,
         signature: receipt.signature || null,
         algo: receipt.algo || null,
-        nonce: receipt.nonce || null
+        nonce: receipt.nonce || null,
       };
 
-      const { error } = await this.supabase.from('build_receipts').insert(payload);
+      const { error } = await this.supabase
+        .from("build_receipts")
+        .insert(payload);
       if (error) {
-        console.error('[ReceiptWriter] Supabase insert error:', error);
+        console.error("[ReceiptWriter] Supabase insert error:", error);
         await this.writeToLocalFile(receipt);
       }
     } catch (e) {
-      console.error('[ReceiptWriter] writeToSupabase exception:', e);
+      console.error("[ReceiptWriter] writeToSupabase exception:", e);
       await this.writeToLocalFile(receipt);
     }
   }
 
   private async writeToLocalFile(receipt: any): Promise<void> {
-    const filePath = this.config.localFallbackPath;
+    const filePath = this.resolveLocalPath();
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.appendFileSync(filePath, JSON.stringify(receipt) + '\n', 'utf-8');
+    fs.appendFileSync(filePath, JSON.stringify(receipt) + "\n", "utf-8");
   }
 
   async readReceipts(sessionId?: string): Promise<Receipt[]> {
     if (this.useSupabase && this.supabase) {
       try {
-        let q: any = this.supabase.from('build_receipts').select('*');
-        if (sessionId) q = q.eq('session_id', sessionId);
-        q = q.order('created_at', { ascending: true });
+        let q: any = this.supabase.from("build_receipts").select("*");
+        if (sessionId) q = q.eq("session_id", sessionId);
+        q = q.order("created_at", { ascending: true });
         const { data, error } = await q;
         if (error) throw error;
         return (data || []).map((r: any) => ({
@@ -196,10 +234,10 @@ class ReceiptWriterImpl {
           signature: r.signature || undefined,
           algo: r.algo || undefined,
           nonce: r.nonce || undefined,
-          verification_hash: r.verification_hash || undefined
+          verification_hash: r.verification_hash || undefined,
         }));
       } catch (e) {
-        console.error('[ReceiptWriter] readReceipts supabase error', e);
+        console.error("[ReceiptWriter] readReceipts supabase error", e);
         return this.readFromLocalFile(sessionId);
       }
     }
@@ -207,13 +245,21 @@ class ReceiptWriterImpl {
   }
 
   private readFromLocalFile(sessionId?: string): Receipt[] {
-    const filePath = this.config.localFallbackPath;
+    const filePath = this.resolveLocalPath();
     if (!fs.existsSync(filePath)) return [];
-    const content = fs.readFileSync(filePath, 'utf-8');
-    const lines = content.trim().split('\n').filter(Boolean);
-    const receipts = lines.map((line) => JSON.parse(line)).map((r: any) => ({ ...r }));
+    const content = fs.readFileSync(filePath, "utf-8");
+    const lines = content.trim().split("\n").filter(Boolean);
+    const receipts = lines
+      .map((line) => JSON.parse(line))
+      .map((r: any) => ({ ...r }));
     if (sessionId) return receipts.filter((r) => r.sessionId === sessionId);
     return receipts;
+  }
+
+  private resolveLocalPath(): string {
+    const override = process.env.TRUTHSERUM_RECEIPTS_DIR;
+    const baseDir = override || getReceiptsDir("truthserum");
+    return path.join(baseDir, "local_receipts.jsonl");
   }
 }
 

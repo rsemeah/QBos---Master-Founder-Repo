@@ -10,6 +10,7 @@
     "packages/truthserum",
     "packages/runtime",
     "packages/engines/*/core",
+    "packages/shared/*",
     "apps/*",
     "examples/*"
   ],
@@ -27,7 +28,11 @@
     "smoke:truthserum:js": "node scripts/smoke-truthserum.js",
     "typecheck": "tsc --noEmit",
     "test:receipt": "node ./scripts/test_receipt_api.js",
-    "robby:verify": "node packages/robby-pa/scripts/verify.mjs"
+    "robby:verify": "node packages/robby-pa/scripts/verify.mjs",
+    "verify:truthserum": "pnpm -C packages/truthserum run verify",
+    "verify:robby-pa": "pnpm -C packages/robby-pa run robby:verify",
+    "verify:engines": "pnpm -r --filter \"@qbos/engine-*\" test",
+    "verify:all": "pnpm run verify:truthserum && pnpm run verify:robby-pa && pnpm run verify:engines"
   },
   "keywords": [
     "quietbuild",
