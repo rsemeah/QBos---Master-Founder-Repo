@@ -22,7 +22,7 @@ app.post('/api/v1/sessions', userAuthMiddleware, async (req, res) => {
     await createReceipt({
       sessionId: session.id,
       type: 'session.created',
-      payload: { createdBy: req.user?.sub || 'unknown' },
+      payload: { createdBy: (req as any).user?.sub || 'unknown' },
       store: {
         getLastReceiptForSession: receiptStore.getLastReceiptForSession.bind(receiptStore),
         insertReceipt: receiptStore.insertReceipt.bind(receiptStore)
@@ -47,7 +47,7 @@ app.post('/api/v1/sessions/:id/approve', userAuthMiddleware, async (req, res) =>
     await createReceipt({
       sessionId: id,
       type: 'intent.locked',
-      payload: { by: req.user?.sub || 'unknown' },
+      payload: { by: (req as any).user?.sub || 'unknown' },
       store: {
         getLastReceiptForSession: receiptStore.getLastReceiptForSession.bind(receiptStore),
         insertReceipt: receiptStore.insertReceipt.bind(receiptStore)
@@ -85,7 +85,7 @@ app.post('/api/v1/admin/sessions/:id/transition', adminAuthMiddleware, async (re
   await createReceipt({
     sessionId: id,
     type: 'admin.forced_transition',
-    payload: { targetPhase, targetState, adminId: req.adminId },
+    payload: { targetPhase, targetState, adminId: (req as any).adminId },
     store: {
       getLastReceiptForSession: receiptStore.getLastReceiptForSession.bind(receiptStore),
       insertReceipt: receiptStore.insertReceipt.bind(receiptStore)
