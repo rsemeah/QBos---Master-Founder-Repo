@@ -26,6 +26,10 @@
     "proof-evidence-*",
     "proof-evidence-*/**",
     "apps/**/build",
-    "templates/**/app/build"
+    "templates/**/app/build",
+    "examples",
+    "examples/**",
+    "templates",
+    "templates/**"
   ]
 }
