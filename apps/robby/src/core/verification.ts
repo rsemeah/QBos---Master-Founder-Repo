@@ -7,9 +7,12 @@ type StepResult = { name: string; cmd: string; exitCode: number; stdout: string;
 async function runStep(cmd: string, cwd: string): Promise<{ exitCode: number; stdout: string; stderr: string }> {
   // Use child_process.exec with a shell to reliably support compound commands (&&, |, etc.)
   try {
-    const { exec } = await import('node:child_process');
+    const child = await import('node:child_process');
+    const execFile = child.execFile;
     return await new Promise((resolve) => {
-      exec(cmd, { cwd, shell: true, maxBuffer: 10 * 1024 * 1024 }, (error: any, stdout: string, stderr: string) => {
+      const shell = process.platform === 'win32' ? 'cmd.exe' : '/bin/bash';
+      const args = process.platform === 'win32' ? ['/d', '/s', '/c', cmd] : ['-lc', cmd];
+      execFile(shell, args, { cwd, maxBuffer: 10 * 1024 * 1024 }, (error: any, stdout: string, stderr: string) => {
         const exitCode = error && typeof error.code === 'number' ? error.code : 0;
         resolve({ exitCode, stdout: stdout ?? '', stderr: stderr ?? '' });
       });
