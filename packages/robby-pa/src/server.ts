@@ -6,14 +6,14 @@ import InMemoryStore from './store/inMemoryStore';
 import PostgresReceiptStore from './store/postgresStore';
 import { InMemorySessionStore, PostgresSessionStore } from './store/sessionStore';
 
-const app = express();
+const app: any = express();
 app.use(bodyParser.json());
 
 const usePostgres = !!process.env.PGHOST || !!process.env.PG_CONNECTION_STRING;
 const sessionStore = usePostgres ? new PostgresSessionStore() : new InMemorySessionStore();
 const receiptStore = usePostgres ? new PostgresReceiptStore() : new InMemoryStore();
 
-app.post('/api/v1/sessions', userAuthMiddleware, async (req, res) => {
+app.post('/api/v1/sessions', userAuthMiddleware, async (req: any, res: any) => {
   try {
     const initial = req.body || {};
     const session = await sessionStore.createSession(initial);
@@ -22,7 +22,7 @@ app.post('/api/v1/sessions', userAuthMiddleware, async (req, res) => {
     await createReceipt({
       sessionId: session.id,
       type: 'session.created',
-      payload: { createdBy: req.user?.sub || 'unknown' },
+      payload: { createdBy: (req as any).user?.sub || 'unknown' },
       store: {
         getLastReceiptForSession: receiptStore.getLastReceiptForSession.bind(receiptStore),
         insertReceipt: receiptStore.insertReceipt.bind(receiptStore)
@@ -35,7 +35,7 @@ app.post('/api/v1/sessions', userAuthMiddleware, async (req, res) => {
   }
 });
 
-app.post('/api/v1/sessions/:id/approve', userAuthMiddleware, async (req, res) => {
+app.post('/api/v1/sessions/:id/approve', userAuthMiddleware, async (req: any, res: any) => {
   try {
     const id = req.params.id;
     const session = await sessionStore.getSession(id);
@@ -47,7 +47,7 @@ app.post('/api/v1/sessions/:id/approve', userAuthMiddleware, async (req, res) =>
     await createReceipt({
       sessionId: id,
       type: 'intent.locked',
-      payload: { by: req.user?.sub || 'unknown' },
+      payload: { by: (req as any).user?.sub || 'unknown' },
       store: {
         getLastReceiptForSession: receiptStore.getLastReceiptForSession.bind(receiptStore),
         insertReceipt: receiptStore.insertReceipt.bind(receiptStore)
@@ -60,7 +60,7 @@ app.post('/api/v1/sessions/:id/approve', userAuthMiddleware, async (req, res) =>
   }
 });
 
-app.get('/api/v1/sessions/:id/status', userAuthMiddleware, async (req, res) => {
+app.get('/api/v1/sessions/:id/status', userAuthMiddleware, async (req: any, res: any) => {
   const id = req.params.id;
   const session = await sessionStore.getSession(id);
   if (!session) return res.status(404).json({ error: 'not found' });
@@ -68,14 +68,14 @@ app.get('/api/v1/sessions/:id/status', userAuthMiddleware, async (req, res) => {
   res.json({ phase: session.phase, sub_state: session.sub_state, ux_state: session.ux_state });
 });
 
-app.get('/api/v1/sessions/:id/receipts', userAuthMiddleware, async (req, res) => {
+app.get('/api/v1/sessions/:id/receipts', userAuthMiddleware, async (req: any, res: any) => {
   const id = req.params.id;
   const receipts = await receiptStore.getReceiptsForSession(id);
   res.json(receipts);
 });
 
 // admin transition endpoint
-app.post('/api/v1/admin/sessions/:id/transition', adminAuthMiddleware, async (req, res) => {
+app.post('/api/v1/admin/sessions/:id/transition', adminAuthMiddleware, async (req: any, res: any) => {
   const id = req.params.id;
   const { targetPhase, targetState } = req.body;
   const session = await sessionStore.getSession(id);
@@ -85,7 +85,7 @@ app.post('/api/v1/admin/sessions/:id/transition', adminAuthMiddleware, async (re
   await createReceipt({
     sessionId: id,
     type: 'admin.forced_transition',
-    payload: { targetPhase, targetState, adminId: req.adminId },
+    payload: { targetPhase, targetState, adminId: (req as any).adminId },
     store: {
       getLastReceiptForSession: receiptStore.getLastReceiptForSession.bind(receiptStore),
       insertReceipt: receiptStore.insertReceipt.bind(receiptStore)

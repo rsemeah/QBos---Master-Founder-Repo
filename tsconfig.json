@@ -21,6 +21,15 @@
     "node_modules",
     "dist",
     "build",
-    ".next"
+    ".next",
+    "artifacts",
+    "proof-evidence-*",
+    "proof-evidence-*/**",
+    "apps/**/build",
+    "templates/**/app/build",
+    "examples",
+    "examples/**",
+    "templates",
+    "templates/**"
   ]
 }

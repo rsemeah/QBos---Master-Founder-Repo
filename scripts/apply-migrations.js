@@ -4,8 +4,8 @@ const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const path = require('path');
 
-const SUPABASE_URL = 'https://gcpnnkdldnnnkkkwbnog.supabase.co';
-const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjcG5ua2RsZG5ubmtra3dibm9nIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTQ5NTYzNCwiZXhwIjoyMDgxMDcxNjM0fQ.sb_secret_6oi0gHoMLNzI7jkF9APEeA_rFZ5MsNb';
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://your-project.supabase.co';
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || 'REDACTED_SERVICE_ROLE_KEY';
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
@@ -20,7 +20,7 @@ async function applyMigrations() {
   for (const file of files) {
     console.log(`⏳ Applying ${file}...`);
     const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
-    
+
     // Split by statement and execute each
     const statements = sql
       .split(';')
@@ -32,14 +32,14 @@ async function applyMigrations() {
       if (!stmt) continue;
 
       try {
-        const { data, error } = await supabase.rpc('exec_sql', { 
-          sql: stmt + ';' 
+        const { data, error } = await supabase.rpc('exec_sql', {
+          sql: stmt + ';'
         });
-        
+
         if (error) {
           // Ignore "already exists" errors
-          if (error.message.includes('already exists') || 
-              error.message.includes('duplicate')) {
+          if (error.message.includes('already exists') ||
+            error.message.includes('duplicate')) {
             console.log(`   ⚠️  Skipped (already exists)`);
           } else {
             console.error(`   ❌ Error: ${error.message}`);
@@ -54,7 +54,7 @@ async function applyMigrations() {
         }
       }
     }
-    
+
     console.log(`   ✅ ${file} complete\n`);
   }
 

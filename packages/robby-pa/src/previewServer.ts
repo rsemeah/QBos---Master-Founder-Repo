@@ -2,7 +2,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import fs from 'fs/promises';
 import path from 'path';
 
-const app = express();
+const app: any = express();
 
 interface PreviewConfig {
   previewUrl: string;

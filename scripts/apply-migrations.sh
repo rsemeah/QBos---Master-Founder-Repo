@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-SUPABASE_URL="https://gcpnnkdldnnnkkkwbnog.supabase.co"
-SERVICE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjcG5ua2RsZG5ubmtra3dibm9nIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTQ5NTYzNCwiZXhwIjoyMDgxMDcxNjM0fQ.sb_secret_6oi0gHoMLNzI7jkF9APEeA_rFZ5MsNb"
+SUPABASE_URL="${SUPABASE_URL:-https://your-project.supabase.co}"
+SERVICE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-REDACTED_SERVICE_ROLE_KEY}"
 
 echo "Applying database migrations..."
 

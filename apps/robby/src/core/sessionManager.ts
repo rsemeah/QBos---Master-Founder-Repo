@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { robbyReceipt } from '../util/robby-receipt.ts';
-import { ExecutionState, IntentState, RobbyPhase, VerdictState, isValidTransition } from './stateMachine.ts';
+import { robbyReceipt } from '../util/robby-receipt';
+import { ExecutionState, IntentState, RobbyPhase, VerdictState, isValidTransition } from './stateMachine';
 
 const RECEIPTS_PATH = path.resolve('receipts/robby/robby.receipts.jsonl');
 

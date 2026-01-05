@@ -11,6 +11,8 @@ const __dirname = path.dirname(__filename);
 const SCRIPT_ROOT = path.resolve(__dirname, '..');
 const RECEIPTS_DIR = path.join(SCRIPT_ROOT, 'receipts');
 await fs.mkdir(RECEIPTS_DIR, { recursive: true });
+// Root of repository / working directory for commands
+const ROOT = process.cwd();
 
 let seq = 0;
 let prevHash = null;
