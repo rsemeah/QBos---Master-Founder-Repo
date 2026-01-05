@@ -9,7 +9,25 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const SCRIPT_ROOT = path.resolve(__dirname, '..');
-const RECEIPTS_DIR = path.join(SCRIPT_ROOT, 'receipts');
+
+// RUN_ID isolation: use provided RUN_ID or create one per run
+const RUN_ID = process.env.ROBBY_RUN_ID || (crypto.randomUUID ? crypto.randomUUID() : (`run-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`));
+process.env.ROBBY_RUN_ID = RUN_ID;
+
+// Receipts directory: per-run folder to avoid cross-run collisions
+const RECEIPTS_DIR = process.env.ROBBY_RECEIPTS_DIR || path.join(SCRIPT_ROOT, 'receipts', 'runs', RUN_ID);
+process.env.ROBBY_RECEIPTS_DIR = RECEIPTS_DIR;
+
+// Optional dev convenience: explicit clean of this run folder only
+if (process.env.ROBBY_VERIFY_CLEAN === '1') {
+  try {
+    // remove only this run folder if present
+    await fs.rm(RECEIPTS_DIR, { recursive: true, force: true });
+  } catch (e) {
+    // ignore
+  }
+}
+
 await fs.mkdir(RECEIPTS_DIR, { recursive: true });
 // Root of repository / working directory for commands
 const ROOT = process.cwd();
@@ -117,11 +135,10 @@ async function main() {
   }
 
   const steps = [
-    { name: 'unit-tests', cmd: 'pnpm', args: ['test:unit'], opts: { cwd: path.join(ROOT, 'packages', 'robby-pa') } },
-    { name: 'start-postgres', cmd: 'docker-compose', args: ['-f', 'packages/robby-pa/dev/docker-compose.pg.yml', 'up', '-d', '--force-recreate'] },
+    { name: 'unit-tests', cmd: 'pnpm', args: ['-C', 'packages/robby-pa', 'run', 'test:unit'] },
     { name: 'migrate', cmd: 'node', args: ['packages/robby-pa/bin/migrate.cjs'] },
-    { name: 'integration-tests', cmd: 'pnpm', args: ['test:integration'], opts: { cwd: path.join(ROOT, 'packages', 'robby-pa') } },
-    { name: 'teardown-postgres', cmd: 'docker-compose', args: ['-f', 'packages/robby-pa/dev/docker-compose.pg.yml', 'down', '-v'] }
+    { name: 'integration-tests', cmd: 'pnpm', args: ['-C', 'packages/robby-pa', 'run', 'test:integration'] },
+    { name: 'teardown-postgres', cmd: 'docker', args: ['rm', '-f', 'robby_pa_dev_postgres'] }
   ];
 
   for (const s of steps) {
@@ -209,40 +226,70 @@ async function verifyReceipts(dir, secret) {
   const receipts = [];
   for (const f of files) {
     if (!f.endsWith('.json')) continue;
-    const raw = await fs.readFile(path.join(dir, f), 'utf8');
     try {
+      const raw = await fs.readFile(path.join(dir, f), 'utf8');
       const obj = JSON.parse(raw);
       receipts.push(obj);
     } catch (e) {
-      // ignore
+      // ignore parse errors
     }
   }
+
+  console.log('verifyReceipts: secret present?', !!secret);
+  if (!receipts.length) {
+    console.log('verifyReceipts: no receipts found in', dir);
+    return false;
+  }
+
+  // sort by seq ascending and verify sequential chain for this run
   receipts.sort((a, b) => (a.seq || 0) - (b.seq || 0));
 
-  let prev = null;
-  for (const r of receipts) {
+  for (let i = 0; i < receipts.length; i++) {
+    const r = receipts[i];
     const { mac, hash, ...withoutMac } = r;
-    const computedHash = crypto.createHash('sha256').update(JSON.stringify(withoutMac)).digest('hex');
-    if (computedHash !== r.hash) return false;
+    const computedHash = crypto.createHash('sha256').update(JSON.stringify(withoutMac, null, 2)).digest('hex');
+    if (computedHash !== r.hash) {
+      console.error('verifyReceipts: hash mismatch at seq', r.seq, 'file?', r);
+      return false;
+    }
     const expectedMac = crypto.createHmac('sha256', secret).update(r.hash).digest('hex');
     if (r.mac && r.mac.value) {
-      if (r.mac.value !== expectedMac) return false;
+      if (r.mac.value !== expectedMac) {
+        console.error('verifyReceipts: mac mismatch at seq', r.seq, 'expected', expectedMac, 'got', r.mac.value);
+        return false;
+      }
     } else if (r.mac) {
-      // legacy mac as string
-      if (r.mac !== expectedMac) return false;
+      if (r.mac !== expectedMac) {
+        console.error('verifyReceipts: legacy mac mismatch at seq', r.seq);
+        return false;
+      }
     } else {
+      console.error('verifyReceipts: missing mac at seq', r.seq);
       return false;
     }
 
-    if (prev === null) {
-      if (r.prev_hash !== null && r.prev_hash !== undefined) return false;
-      if (r.seq !== 0) return false;
+    if (i === 0) {
+      if (r.prev_hash !== null && r.prev_hash !== undefined) {
+        console.error('verifyReceipts: head prev_hash non-null', r.prev_hash);
+        return false;
+      }
+      if (r.seq !== 0) {
+        console.error('verifyReceipts: head seq not 0', r.seq);
+        return false;
+      }
     } else {
-      if (r.prev_hash !== prev.hash) return false;
-      if (r.seq !== prev.seq + 1) return false;
+      const prev = receipts[i - 1];
+      if (r.prev_hash !== prev.hash) {
+        console.error('verifyReceipts: prev_hash mismatch at seq', r.seq, 'expected', prev.hash, 'got', r.prev_hash);
+        return false;
+      }
+      if (r.seq !== prev.seq + 1) {
+        console.error('verifyReceipts: seq gap at', r.seq, 'prev.seq', prev.seq);
+        return false;
+      }
     }
-    prev = r;
   }
+
   return true;
 }
 

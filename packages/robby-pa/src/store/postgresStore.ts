@@ -36,6 +36,28 @@ export class PostgresStore {
   }
 
   async insertReceipt(r: Omit<Receipt, 'hash' | 'mac'> & { hash?: string | null; mac?: string | null } & Partial<Receipt>): Promise<Receipt> {
+    // Ensure a session row exists for the session_id so foreign key constraint is satisfied.
+    const now = new Date().toISOString();
+    await this.pool.query(
+      `INSERT INTO robby_sessions(id, user_id, org_id, phase, sub_state, ux_state, intent, plan, verdict, preview, is_anonymized, locked_at, created_at, updated_at)
+       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) ON CONFLICT (id) DO NOTHING`,
+      [
+        (r as any).sessionId,
+        null,
+        null,
+        'INTENT',
+        'collecting',
+        'shaping',
+        null,
+        null,
+        null,
+        null,
+        false,
+        null,
+        now,
+        now
+      ]
+    );
     const q = `INSERT INTO robby_receipts(id, session_id, seq, prev_hash, type, payload, artifact_refs, hash, mac, mac_key_id, created_at)
       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`;
     await this.pool.query(q, [

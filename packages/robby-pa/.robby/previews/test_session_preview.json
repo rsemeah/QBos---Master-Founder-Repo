@@ -1,7 +1,7 @@
 {
   "previewUrl": "http://localhost:3001/preview/test_session_preview",
-  "expiresAt": "2026-01-08T14:56:36.509Z",
-  "accessToken": "87e4e75ba1f53cf7e433c75eaad1b2b9ef934011a2c5d05b",
+  "expiresAt": "2026-01-08T21:10:01.426Z",
+  "accessToken": "169ffb19dae89b4cf295207988d7ffe551261a3f1f22cbb7",
   "indexed": false,
   "rateLimited": true,
   "maxRequests": 1000,

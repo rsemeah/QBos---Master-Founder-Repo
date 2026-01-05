@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- Organizations
 CREATE TABLE IF NOT EXISTS organizations (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   name TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -12,9 +12,9 @@ CREATE INDEX IF NOT EXISTS idx_orgs_created ON organizations(created_at DESC);
 
 -- Sessions
 CREATE TABLE IF NOT EXISTS robby_sessions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL,
-  org_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  user_id TEXT,
+  org_id TEXT REFERENCES organizations(id) ON DELETE SET NULL,
   phase TEXT NOT NULL CHECK (phase IN ('INTENT', 'EXECUTION', 'VERDICT')),
   sub_state TEXT NOT NULL,
   ux_state TEXT NOT NULL CHECK (ux_state IN ('shaping', 'building', 'ready')),
@@ -42,8 +42,8 @@ CREATE INDEX IF NOT EXISTS idx_robby_sessions_anonymized ON robby_sessions(is_an
 
 -- Receipts
 CREATE TABLE IF NOT EXISTS robby_receipts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES robby_sessions(id) ON DELETE CASCADE,
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  session_id TEXT NOT NULL REFERENCES robby_sessions(id) ON DELETE CASCADE,
   seq INTEGER NOT NULL,
   prev_hash TEXT,
   type TEXT NOT NULL,
@@ -64,8 +64,8 @@ CREATE INDEX IF NOT EXISTS idx_robby_receipts_security ON robby_receipts(retaine
 
 -- Session events
 CREATE TABLE IF NOT EXISTS robby_session_events (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES robby_sessions(id) ON DELETE CASCADE,
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  session_id TEXT NOT NULL REFERENCES robby_sessions(id) ON DELETE CASCADE,
   session_seq INTEGER NOT NULL,
   type TEXT NOT NULL,
   payload JSONB NOT NULL,
@@ -77,8 +77,8 @@ CREATE INDEX IF NOT EXISTS idx_robby_events_created ON robby_session_events(crea
 
 -- Artifacts
 CREATE TABLE IF NOT EXISTS robby_artifacts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES robby_sessions(id) ON DELETE CASCADE,
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  session_id TEXT NOT NULL REFERENCES robby_sessions(id) ON DELETE CASCADE,
   uri TEXT NOT NULL,
   sha256 TEXT NOT NULL,
   content_type TEXT NOT NULL,
@@ -92,12 +92,12 @@ CREATE INDEX IF NOT EXISTS idx_robby_artifacts_hash ON robby_artifacts(sha256);
 
 -- Snapshots
 CREATE TABLE IF NOT EXISTS robby_snapshots (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES robby_sessions(id) ON DELETE CASCADE,
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  session_id TEXT NOT NULL REFERENCES robby_sessions(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   note TEXT,
   is_fork BOOLEAN NOT NULL DEFAULT false,
-  parent_snapshot_id UUID REFERENCES robby_snapshots(id) ON DELETE SET NULL,
+  parent_snapshot_id TEXT REFERENCES robby_snapshots(id) ON DELETE SET NULL,
   phase TEXT NOT NULL,
   sub_state TEXT NOT NULL,
   state_snapshot JSONB NOT NULL,
@@ -109,11 +109,11 @@ CREATE INDEX IF NOT EXISTS idx_robby_snapshots_session ON robby_snapshots(sessio
 
 -- Proofs
 CREATE TABLE IF NOT EXISTS robby_proofs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES robby_sessions(id) ON DELETE CASCADE,
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  session_id TEXT NOT NULL REFERENCES robby_sessions(id) ON DELETE CASCADE,
   type TEXT NOT NULL,
   class TEXT NOT NULL CHECK (class IN ('HARD', 'MEDIUM', 'SOFT')),
-  artifact_id UUID REFERENCES robby_artifacts(id) ON DELETE CASCADE,
+  artifact_id TEXT REFERENCES robby_artifacts(id) ON DELETE CASCADE,
   artifact_uri TEXT,
   artifact_sha256 TEXT,
   verifier TEXT NOT NULL,

@@ -60,7 +60,7 @@ jobs:
           done
           echo "Postgres did not become ready" && exit 1
 
-      - name: Run robby:verify (produce receipts)
+      - name: Run robby verify - produce receipts
         if: ${{ secrets.ROBBY_RECEIPT_MAC_SECRET != '' }}
         run: pnpm run robby:verify
         env:
