@@ -1,0 +1,16 @@
+{
+  "name": "@qbos/run",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/runContext.cjs",
+  "module": "src/runContext.mjs",
+  "types": "src/runContext.d.ts",
+  "exports": {
+    ".": {
+      "import": "./src/runContext.mjs",
+      "require": "./src/runContext.cjs",
+      "types": "./src/runContext.d.ts"
+    }
+  }
+}

@@ -36,18 +36,31 @@ async function main() {
 
   const containerName = 'robby_pa_dev_postgres';
   try {
-    // start container with local sql mounted
-    run(`docker rm -f ${containerName} || true`);
-    run(`docker run -d --name ${containerName} -e POSTGRES_PASSWORD=pass -e POSTGRES_USER=robby -e POSTGRES_DB=robby -v ${SQL_DIR}:/migrations -p 5433:5432 postgres:15`);
+    // If the docker-compose started container is present, apply migration there.
+    try {
+      run(`docker inspect ${containerName}`);
+      console.log('Container', containerName, 'already exists — applying migration in-place');
+      // ensure a clean public schema so migrations are applied predictably
+      run(`docker exec -i ${containerName} psql -U robby -d robby -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"`);
+      run(`docker exec -i ${containerName} psql -U robby -d robby -f /migrations/001_init.sql`);
+      console.log('Migration applied to existing container', containerName, 'on port 5433');
+      console.log('Connection: host=localhost port=5433 user=robby password=pass dbname=robby');
+    } catch (e) {
+      // start container with local sql mounted
+      run(`docker rm -f ${containerName} || true`);
+      run(`docker run -d --name ${containerName} -e POSTGRES_PASSWORD=pass -e POSTGRES_USER=robby -e POSTGRES_DB=robby -v ${SQL_DIR}:/migrations -p 5433:5432 postgres:15`);
 
-    console.log('Waiting for Postgres to be ready (sleep 5s)...');
-    execSync('sleep 5');
+      console.log('Waiting for Postgres to be ready (sleep 5s)...');
+      execSync('sleep 5');
 
-    // apply migration
-    run(`docker exec -i ${containerName} psql -U robby -d robby -f /migrations/001_init.sql`);
+      // ensure a clean public schema so migrations are applied predictably
+      run(`docker exec -i ${containerName} psql -U robby -d robby -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"`);
+      // apply migration
+      run(`docker exec -i ${containerName} psql -U robby -d robby -f /migrations/001_init.sql`);
 
-    console.log('Migration applied to container', containerName, 'on port 5433');
-    console.log('Connection: host=localhost port=5433 user=robby password=pass dbname=robby');
+      console.log('Migration applied to container', containerName, 'on port 5433');
+      console.log('Connection: host=localhost port=5433 user=robby password=pass dbname=robby');
+    }
   } catch (err) {
     console.error('Migration failed:', err && err.message);
     process.exit(2);

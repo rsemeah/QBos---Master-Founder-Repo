@@ -107,8 +107,16 @@ export class PostgresSessionStore implements SessionStore {
   }
 
   async updateSession(id: string, patch: Partial<SessionRow>) {
+    // If changing phase without sub_state, set a sensible default sub_state for the new phase
+    if (patch.phase && !('sub_state' in patch)) {
+      if (patch.phase === 'INTENT') patch.sub_state = 'collecting';
+      else if (patch.phase === 'EXECUTION') patch.sub_state = 'queued';
+      else if (patch.phase === 'VERDICT') patch.sub_state = 'analyzing';
+    }
+
     const keys = Object.keys(patch);
     if (!keys.length) return;
+
     const sets = keys.map((k, i) => `${k} = $${i + 2}`);
     const vals = keys.map(k => (patch as any)[k]);
     const q = `UPDATE robby_sessions SET ${sets.join(', ')}, updated_at = $${keys.length + 2} WHERE id = $1`;

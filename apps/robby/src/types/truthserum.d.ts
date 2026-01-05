@@ -1,6 +1,6 @@
 declare module '@qbos/truthserum' {
-  import type { Receipt, IntentEvaluation, TruthState, BuildIntent } from '../../../../packages/truthserum/dist/types';
-  export type { Receipt, IntentEvaluation, TruthState, BuildIntent };
+  import type { BuildIntent, IntentEvaluation, Receipt, TruthState } from '../../../../packages/truthserum/dist/types';
+  export type { BuildIntent, IntentEvaluation, Receipt, TruthState };
   export const ReceiptWriter: {
     writeReceipt: (opts: any) => Promise<Receipt>;
     readReceipts?: (filter?: any) => Promise<Receipt[]>;

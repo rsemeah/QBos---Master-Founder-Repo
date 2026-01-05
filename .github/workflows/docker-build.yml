@@ -23,12 +23,16 @@ jobs:
           endpoint: "redlanternstudios/qbos-robbypa"
 
       - name: Log in to Docker Hub
+        # yamllint disable-line rule:truthy
+        if: vars.DOCKER_USER && secrets.DOCKER_PAT
         uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PAT }}
 
       - name: Build and push image
+        # yamllint disable-line rule:truthy
+        if: vars.DOCKER_USER && secrets.DOCKER_PAT
         uses: docker/build-push-action@v6
         with:
           context: .

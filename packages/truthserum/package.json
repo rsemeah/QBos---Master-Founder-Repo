@@ -22,9 +22,11 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "verify": "node ../../scripts/smoke-truthserum.js"
   },
   "dependencies": {
+    "@qbos/run": "workspace:*",
     "@supabase/supabase-js": "^2.89.0",
     "zod": "^3.22.4"
   },

@@ -34,8 +34,8 @@ jobs:
       - name: Test Robby PA
         run: pnpm --filter @qbos/robby-pa test
 
-      - name: Optional: Run robby:verify (if secrets set)
-        if: ${{ secrets.ROBBY_RECEIPT_MAC_SECRET != '' }}
+      - name: Optional - Run robby verify if secrets set
+        if: hashFiles('secrets.ROBBY_RECEIPT_MAC_SECRET') != ''
         run: pnpm run robby:verify
         env:
           ROBBY_RECEIPT_MAC_SECRET: ${{ secrets.ROBBY_RECEIPT_MAC_SECRET }}

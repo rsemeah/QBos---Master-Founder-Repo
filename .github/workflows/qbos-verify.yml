@@ -1,0 +1,76 @@
+name: qbos-verify
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: qbos
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d qbos"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      QBOS_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+      ROBBY_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+      ROBBY_RECEIPTS_DIR: packages/robby-pa/receipts/runs/${{ github.run_id }}-${{ github.run_attempt }}
+      TRUTHSERUM_RECEIPTS_DIR: packages/truthserum/receipts/runs/${{ github.run_id }}-${{ github.run_attempt }}
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/qbos
+      ROBBY_RECEIPT_MAC_SECRET: ${{ secrets.ROBBY_RECEIPT_MAC_SECRET }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install
+        run: pnpm -w install
+
+      - name: Print identity
+        run: |
+          echo "QBOS_RUN_ID=${QBOS_RUN_ID}"
+          echo "ROBBY_RECEIPTS_DIR=${ROBBY_RECEIPTS_DIR}"
+          echo "TRUTHSERUM_RECEIPTS_DIR=${TRUTHSERUM_RECEIPTS_DIR}"
+          node -v
+          pnpm -v
+
+      - name: Verify all
+        run: pnpm run verify:all
+
+      - name: Upload Robby receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: robby-pa-receipts-${{ github.run_id }}-${{ github.run_attempt }}
+          path: packages/robby-pa/receipts/runs/${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: warn
+
+      - name: Upload TruthSerum receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: truthserum-receipts-${{ github.run_id }}-${{ github.run_attempt }}
+          path: packages/truthserum/receipts/runs/${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: warn
