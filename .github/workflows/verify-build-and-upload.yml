@@ -1,0 +1,84 @@
+name: Build, Verify, Upload Receipts
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  verify:
+    name: Build + Verify + Upload Receipts
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: robby
+          POSTGRES_PASSWORD: pass
+          POSTGRES_DB: robby
+        ports: [ "5433:5432" ]
+        options: >-
+          --health-cmd "pg_isready -U robby -d robby"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PGHOST: localhost
+      PGPORT: 5433
+      PGUSER: robby
+      PGPASSWORD: pass
+      PGDATABASE: robby
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        run: npm install -g pnpm@latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck TruthSerum
+        run: npx tsc -p packages/truthserum/tsconfig.json --noEmit
+
+      - name: Test TruthSerum
+        run: pnpm --filter @qbos/truthserum test
+
+      - name: Test Robby PA
+        run: pnpm --filter @qbos/robby-pa test
+
+      - name: Wait for Postgres
+        run: |
+          for i in $(seq 1 30); do
+            pg_isready -h localhost -p 5433 -U robby && exit 0 || sleep 1
+          done
+          echo "Postgres did not become ready" && exit 1
+
+      - name: Run robby:verify (produce receipts)
+        if: ${{ secrets.ROBBY_RECEIPT_MAC_SECRET != '' }}
+        run: pnpm run robby:verify
+        env:
+          ROBBY_RECEIPT_MAC_SECRET: ${{ secrets.ROBBY_RECEIPT_MAC_SECRET }}
+          PGHOST: localhost
+          PGPORT: 5433
+          PGUSER: robby
+          PGPASSWORD: pass
+          PGDATABASE: robby
+
+      - name: Collect receipts
+        run: |
+          mkdir -p ./artifacts/receipts || true
+          cp -R packages/robby-pa/receipts ./artifacts/receipts || true
+          cp -R receipts ./artifacts/receipts || true
+
+      - name: Upload receipts artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: truthserum-verification-receipts
+          path: artifacts/receipts
