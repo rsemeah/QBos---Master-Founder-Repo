@@ -29,6 +29,23 @@ app.post('/api/v1/sessions', userAuthMiddleware, async (req: any, res: any) => {
       }
     } as any);
 
+    // Auto-approval: lock intent immediately when non-interactive policy allows
+    const autoApprove = (process.env.ROBBY_AUTO_APPROVE_INTENT || '').toLowerCase();
+    if (autoApprove === 'true' || autoApprove === '1') {
+      await sessionStore.updateSession(session.id, { phase: 'INTENT', sub_state: 'locked', ux_state: 'shaping', locked_at: new Date().toISOString() } as any);
+      await createReceipt({
+        sessionId: session.id,
+        type: 'intent.locked',
+        payload: { by: 'policy' },
+        store: {
+          getLastReceiptForSession: receiptStore.getLastReceiptForSession.bind(receiptStore),
+          insertReceipt: receiptStore.insertReceipt.bind(receiptStore)
+        }
+      } as any);
+      const updated = await sessionStore.getSession(session.id);
+      return res.status(201).json(updated);
+    }
+
     res.status(201).json(session);
   } catch (e: any) {
     res.status(500).json({ error: e.message });

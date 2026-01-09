@@ -57,6 +57,15 @@ export class SessionManager {
     s.intent = { ...intent, humanApproved: false };
     s.state = IntentState.CONFIRMING;
     robbyReceipt('intent.submitted', { sessionId, intent: s.intent });
+
+    // Auto-approve intent when non-interactive policy allows
+    const autoApprove = (process.env.ROBBY_AUTO_APPROVE_INTENT || '').toLowerCase();
+    if (autoApprove === 'true' || autoApprove === '1') {
+      // Mark as approved-by policy and lock intent
+      const approvedBy = 'policy';
+      // Write an intent.locked receipt and transition to LOCKED
+      return this.lockIntent(sessionId, approvedBy);
+    }
     return s;
   }
 
@@ -72,12 +81,10 @@ export class SessionManager {
       return s;
     }
 
-    // Write an intent.locked receipt (this is required for execution gate)
-    const receipt = await robbyReceipt('intent.locked', { sessionId, approvedBy: 'human' });
-    s.intent = { ...(s.intent || {}), humanApproved: true } as IntentPayload;
-    s.state = IntentState.LOCKED;
-    robbyReceipt('intent.locked.ack', { sessionId, receiptId: receipt.id });
-    return s;
+    // Determine approver based on runtime policy
+    const autoApprove = (process.env.ROBBY_AUTO_APPROVE_INTENT || '').toLowerCase();
+    const approvedBy = (autoApprove === 'true' || autoApprove === '1') ? 'policy' : 'human';
+    return this.lockIntent(sessionId, approvedBy);
   }
 
   async execute(sessionId: string) {
@@ -87,11 +94,17 @@ export class SessionManager {
     // Execution gate: check for intent.locked receipt
     const lockedExists = this.checkReceiptExists(sessionId, 'intent.locked');
     if (!lockedExists) {
-      s.phase = RobbyPhase.EXECUTION;
-      s.state = ExecutionState.BLOCKED;
-      s.blockers = ['intent.locked missing'];
-      robbyReceipt('execution.blocked', { sessionId, reason: 'intent_not_locked' });
-      return { status: 'blocked', blockers: s.blockers };
+      // If policy allows auto-approval, lock intent on the fly
+      const autoApprove = (process.env.ROBBY_AUTO_APPROVE_INTENT || '').toLowerCase();
+      if ((autoApprove === 'true' || autoApprove === '1') && s.intent) {
+        await this.lockIntent(sessionId, 'policy');
+      } else {
+        s.phase = RobbyPhase.EXECUTION;
+        s.state = ExecutionState.BLOCKED;
+        s.blockers = ['intent.locked missing'];
+        robbyReceipt('execution.blocked', { sessionId, reason: 'intent_not_locked' });
+        return { status: 'blocked', blockers: s.blockers };
+      }
     }
 
     // Otherwise queue tasks
@@ -136,5 +149,15 @@ export class SessionManager {
     } catch (e) {
       return false;
     }
+  }
+
+  private async lockIntent(sessionId: string, approvedBy: 'human' | 'policy') {
+    const s = this.sessions.get(sessionId);
+    if (!s) throw new Error('session_not_found');
+    const receipt = await robbyReceipt('intent.locked', { sessionId, approvedBy });
+    s.intent = { ...(s.intent || {}), humanApproved: true } as IntentPayload;
+    s.state = IntentState.LOCKED;
+    robbyReceipt('intent.locked.ack', { sessionId, receiptId: receipt.id });
+    return s;
   }
 }
