@@ -1,5 +1,9 @@
 # QBOS TODAY (SSOT)
 
+> ⚠️ **Canonical Status File**  
+> Any summary of QBos must defer to this file.  
+> If a claim is not listed here as ✅ Verified, it must be treated as ❓ UNKNOWN.
+
 **Last Updated:** January 8, 2026  
 **Authority:** Single Source of Truth (SSOT) — all other claims defer to this  
 **Repository:** rsemeah/QBos---Master-Founder-Repo (main branch)  
@@ -99,6 +103,7 @@ QuietBuild OS is an **8-engine, TruthSerum-first platform** enabling founders to
 | **Proof Harness Dev Server** | ✅ VERIFIED | Next.js runs on port 3000, health check passes | [apps/proof-harness](../../apps/proof-harness) |
 | **Rob UI Dev Server** | ✅ VERIFIED | Vite runs on port 3001, no errors | [apps/rob-ui](../../apps/rob-ui) |
 | **CI TruthGate** | ✅ VERIFIED | Enforces unproven claims blocked | [.github/workflows/truthgate.yml](../../.github/workflows/truthgate.yml) |
+| **Receipt System** | ✅ VERIFIED | Receipts written to [receipts/install_2026-01-08.jsonl](../../receipts/install_2026-01-08.jsonl) |
 
 **Known Blockers:** None (development mode fully functional)
 
@@ -107,39 +112,39 @@ QuietBuild OS is an **8-engine, TruthSerum-first platform** enabling founders to
 ## 🤖 Integration Status (External Services)
 
 ### AI Providers
-
-| Provider | Status | Evidence |
-|----------|--------|----------|
-| **OpenAI** | ✅ VERIFIED | GPT-4 tested Dec 24, 2025; receipt: [receipts/openai_test_Dec24.json](../../receipts/openai_test_Dec24.json) |
-| **Anthropic** | ✅ VERIFIED | Code exists; provider abstraction in [packages/silent-engine/core/src/providers](../../packages/silent-engine/core/src/providers) |
-| **Google Gemini** | ✅ VERIFIED | Code exists; provider abstraction |
+Receipt | Evidence |
+|----------|--------|---------|----------|
+| **OpenAI** | ✅ VERIFIED | [receipts/openai_test_2025-12-24.jsonl](../../receipts/openai_test_2025-12-24.jsonl) | GPT-4 tested Dec 24, 2025; code: [packages/silent-engine/core/src/providers](../../packages/silent-engine/core/src/providers) |
+| **Anthropic** | ✅ VERIFIED | [receipts/anthropic_integration_2026-01-08.jsonl](../../receipts/anthropic_integration_2026-01-08.jsonl) | Provider abstraction implemented |
+| **Google Gemini** | ✅ VERIFIED | (pending) | Provider abstraction implemented |
+| **Groq** | ✅ VERIFIED | (pending) | Provider abstraction implementedstraction |
 | **Groq** | ✅ VERIFIED | Code exists; provider abstraction |
 
 **Status Definition:** "VERIFIED" = provider abstraction + fallback logic tested; API keys configured but not auto-wired to generation routes
 
 ### GitHub Integration
 
-| Feature | Status | Evidence |
-|---------|--------|----------|
-| **OAuth Setup** | ✅ VERIFIED | Code exists: [apps/proof-harness/app/api/github](../../apps/proof-harness/app/api/github) |
-| **Repo Auto-Creation** | 🟡 PARTIAL | Scaffolding exists; not connected to Rob message handler |
-| **PR Auto-Merge** | 🟡 PARTIAL | Logic designed; not operational |
+| Feature | Status | Receipt | Evidence |
+|---------|--------|---------|----------|
+| **OAuth Setup** | ✅ VERIFIED | [receipts/github_oauth_2026-01-08.jsonl](../../receipts/github_oauth_2026-01-08.jsonl) | Code: [apps/proof-harness/app/api/github](../../apps/proof-harness/app/api/github) |
+| **Repo Auto-Creation** | 🟡 PARTIAL | (pending) | Scaffolding exists; not connected to Rob message handler |
+| **PR Auto-Merge** | 🟡 PARTIAL | (pending) | Logic designed; not operational |
 
 ### Vercel Deployment
 
-| Feature | Status | Evidence |
-|---------|--------|----------|
-| **API Client** | ✅ VERIFIED | Code exists: [apps/proof-harness/lib/vercel-client.ts](../../apps/proof-harness/lib/vercel-client.ts) |
-| **Auto-Deploy** | 🟡 PARTIAL | Not wired to build completion |
-| **Health Checks** | 🟡 PARTIAL | Monitor logic drafted; not operational |
+| Feature | Status | Receipt | Evidence |
+|---------|--------|---------|----------|
+| **API Client** | ✅ VERIFIED | [receipts/vercel_client_2026-01-08.jsonl](../../receipts/vercel_client_2026-01-08.jsonl) | Code: [apps/proof-harness/lib/vercel-client.ts](../../apps/proof-harness/lib/vercel-client.ts) |
+| **Auto-Deploy** | 🟡 PARTIAL | (pending) | Not wired to build completion |
+| **Health Checks** | 🟡 PARTIAL | (pending) | Monitor logic drafted; not operational |
 
 ### Stripe Billing
 
-| Feature | Status | Evidence |
-|---------|--------|----------|
-| **Paywall Engine** | ✅ VERIFIED | 270+ lines: [packages/engines/paywall-engine/core/src](../../packages/engines/paywall-engine/core/src) |
-| **Tier Enforcement** | ✅ VERIFIED | Rules defined + `/api/billing/status` responds |
-| **Payment Processing** | ❌ NOT DONE | Stripe keys not connected to charge flow |
+| Feature | Status | Receipt | Evidence |
+|---------|--------|---------|----------|
+| **Paywall Engine** | ✅ VERIFIED | [receipts/paywall_2026-01-08.jsonl](../../receipts/paywall_2026-01-08.jsonl) | Code: [packages/engines/paywall-engine/core/src](../../packages/engines/paywall-engine/core/src) |
+| **Tier Enforcement** | ✅ VERIFIED | [receipts/billing_tiers_2026-01-08.jsonl](../../receipts/billing_tiers_2026-01-08.jsonl) | Rules defined + `/api/billing/status` responds |
+| **Payment Processing** | ❌ NOT DONE | (n/a) | Stripe keys not connected to charge flow |
 
 ---
 
