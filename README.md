@@ -8,7 +8,29 @@ QuietBuild OS™ V3 is a production-ready infrastructure platform that guides fo
 
 Built for founders who need investor-grade demos with proof artifacts, not promises.
 
-## ⚡ Latest Updates (December 24, 2025)
+## ⚡ Latest Updates (January 9, 2026)
+
+### 🤖 Robby PA Autonomy & Non-Interactive Mode
+**Status:** PRODUCTION READY (Hands-off operation enabled)
+
+**What Changed:**
+- ✅ **NEW: Autonomy Manifest** - Constitutional authority for hands-off operation
+- ✅ **NEW: Non-interactive consent bypass** - `ROBBY_NON_INTERACTIVE=1` skips prompts
+- ✅ **NEW: Intent auto-approval** - `ROBBY_AUTO_APPROVE_INTENT=true` locks intent via policy
+- ✅ **NEW: CI enforcement** - Verify workflows run without approval gates
+- ✅ **NEW: Policy-driven receipts** - `approvedBy: policy` in all autonomous decisions
+
+**Runtime Flags:**
+- `ROBBY_NON_INTERACTIVE=1` → Bypass consent prompts
+- `ROBBY_AUTO_APPROVE_INTENT=true` → Auto-lock intent when policy allows
+- `ROBBY_FAIL_FAST=false` → Prefer rollback over blocking (optional)
+
+**Verification:**
+- Intent auto-approval: `intent.locked` receipt with `approvedBy: policy`
+- CI artifacts: `robby-pa-receipts-{run_id}` uploaded post-verify
+- Autonomy charter: [docs/ROBBY_AUTONOMY_MANIFEST.md](docs/ROBBY_AUTONOMY_MANIFEST.md)
+
+---
 
 ### 🎉 Rob the QuietBuilder - COMPLETE AI Integration
 **Status:** PRODUCTION READY (All features wired)
@@ -19,9 +41,9 @@ Built for founders who need investor-grade demos with proof artifacts, not promi
 - ✅ Constitutional state machine (13 states)
 - ✅ CharterEngine consent enforcement
 - ✅ Supabase database (9 tables, deployed)
-- ✅ **NEW: OpenAI GPT-4 integration for real code generation**
-- ✅ **NEW: GitHub OAuth + repo creation**
-- ✅ **NEW: Token tracking and cost logging**
+- ✅ OpenAI GPT-4 integration for real code generation
+- ✅ GitHub OAuth + repo creation
+- ✅ Token tracking and cost logging
 
 **What's Configurable (Choose What You Need):**
 - ⚡ **OpenAI API Key** → Real AI code generation
