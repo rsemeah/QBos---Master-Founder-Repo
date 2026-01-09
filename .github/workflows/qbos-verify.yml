@@ -32,6 +32,8 @@ jobs:
       TRUTHSERUM_RECEIPTS_DIR: packages/truthserum/receipts/runs/${{ github.run_id }}-${{ github.run_attempt }}
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/qbos
       ROBBY_RECEIPT_MAC_SECRET: ${{ secrets.ROBBY_RECEIPT_MAC_SECRET }}
+      ROBBY_NON_INTERACTIVE: "1"
+      ROBBY_AUTO_APPROVE_INTENT: "true"
 
     steps:
       - uses: actions/checkout@v4
