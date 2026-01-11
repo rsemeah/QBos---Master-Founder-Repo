@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: quietbuild-base
+
+resources:
+  - namespace.yaml
+  - robby-deployment.yaml
+  - robby-service.yaml
+  - truthserum-deployment.yaml
+  - truthserum-service.yaml
+
+commonLabels:
+  managed-by: kustomize
+  project: quietbuild
+
+commonAnnotations:
+  description: "QuietBuild OS - Constitutional AI Infrastructure"
+  constitutional-freeze: "true"
