@@ -1,7 +1,12 @@
 {
   "previewUrl": "http://localhost:3001/preview/test_session_preview",
+<<<<<<< Updated upstream
   "expiresAt": "2026-01-08T21:10:01.426Z",
   "accessToken": "169ffb19dae89b4cf295207988d7ffe551261a3f1f22cbb7",
+=======
+  "expiresAt": "2026-01-11T19:48:26.897Z",
+  "accessToken": "f81ef8228d36bd7938300855f9e7170239e47d87834ccc05",
+>>>>>>> Stashed changes
   "indexed": false,
   "rateLimited": true,
   "maxRequests": 1000,
