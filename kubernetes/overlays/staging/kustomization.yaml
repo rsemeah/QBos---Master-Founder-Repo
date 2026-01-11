@@ -4,7 +4,7 @@ kind: Kustomization
 metadata:
   name: quietbuild-staging
 
-bases:
+resources:
   - ../../base
 
 namePrefix: staging-
@@ -15,16 +15,18 @@ replicas:
   - name: truthserum
     count: 2
 
-commonLabels:
-  environment: staging
+labels:
+  - pairs:
+      environment: staging
 
-commonAnnotations:
-  environment: "staging"
-  description: "Staging environment - pre-production verification"
-  sla: "99.5%"
+annotations:
+  - pairs:
+      environment: "staging"
+      description: "Staging environment - pre-production verification"
+      sla: "99.5%"
 
-patchesStrategicMerge:
-  - deployment-patch.yaml
+patches:
+  - path: deployment-patch.yaml
 
 configMapGenerator:
   - name: app-config

@@ -4,7 +4,7 @@ kind: Kustomization
 metadata:
   name: quietbuild-dev
 
-bases:
+resources:
   - ../../base
 
 namePrefix: dev-
@@ -15,15 +15,17 @@ replicas:
   - name: truthserum
     count: 1
 
-commonLabels:
-  environment: dev
+labels:
+  - pairs:
+      environment: dev
 
-commonAnnotations:
-  environment: "development"
-  description: "Development environment - local K8s (Minikube/Docker Desktop)"
+annotations:
+  - pairs:
+      environment: "development"
+      description: "Development environment - local K8s (Minikube/Docker Desktop)"
 
-patchesStrategicMerge:
-  - deployment-patch.yaml
+patches:
+  - path: deployment-patch.yaml
 
 configMapGenerator:
   - name: app-config

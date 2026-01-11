@@ -4,8 +4,10 @@ kind: Kustomization
 metadata:
   name: quietbuild-production
 
-bases:
+resources:
   - ../../base
+  - production-network-policy.yaml
+  - production-pod-security-policy.yaml
 
 namePrefix: prod-
 
@@ -15,19 +17,21 @@ replicas:
   - name: truthserum
     count: 3
 
-commonLabels:
-  environment: production
-  sla: critical
+labels:
+  - pairs:
+      environment: production
+      sla: critical
 
-commonAnnotations:
-  environment: "production"
-  description: "Production - Constitutional AI Infrastructure"
-  sla: "99.95%"
-  security: "hardened"
-  constitutional-freeze: "true"
+annotations:
+  - pairs:
+      environment: "production"
+      description: "Production - Constitutional AI Infrastructure"
+      sla: "99.95%"
+      security: "hardened"
+      constitutional-freeze: "true"
 
-patchesStrategicMerge:
-  - deployment-patch.yaml
+patches:
+  - path: deployment-patch.yaml
 
 configMapGenerator:
   - name: app-config
@@ -42,10 +46,3 @@ secretGenerator:
   - name: app-secrets
     envs:
       - secrets.env
-
-networkPolicy:
-  - production-network-policy.yaml
-
-resources:
-  - production-network-policy.yaml
-  - production-pod-security-policy.yaml
