@@ -61,6 +61,8 @@ jobs:
         env:
           ROBBY_RECEIPT_MAC_SECRET: ${{ secrets.ROBBY_RECEIPT_MAC_SECRET }}
           ROBBY_RECEIPT_MAC_KEY_ID: robby-v1-primary
+          ROBBY_NON_INTERACTIVE: "1"
+          ROBBY_AUTO_APPROVE_INTENT: "true"
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

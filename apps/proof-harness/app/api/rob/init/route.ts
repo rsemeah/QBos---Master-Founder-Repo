@@ -9,14 +9,15 @@
  * No AI. No templates. Just state management + receipts.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from 'next/server';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export async function POST(request: NextRequest) {
   try {
+    const nonInteractive = ['1', 'true'].includes((process.env.ROBBY_NON_INTERACTIVE || '').toLowerCase());
     // Get user (mock for now, real auth later)
     const userId = request.headers.get('x-user-id') || 'mock-user-123';
 
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
         state: 'INIT',
         progress: 0,
         readiness: 'draft',
-        consent_granted: false,
+        consent_granted: nonInteractive ? true : false,
         created_at: new Date().toISOString(),
       };
 
@@ -56,8 +57,9 @@ export async function POST(request: NextRequest) {
           },
           {
             role: 'assistant',
-            content:
-              "Hello! I'm Rob the QuietBuilder. Before we begin, I need your consent to proceed. Please type 'I consent' to continue.",
+            content: nonInteractive
+              ? "Non-interactive mode: consent pre-granted. Proceeding with initialization."
+              : "Hello! I'm Rob the QuietBuilder. Before we begin, I need your consent to proceed. Please type 'I consent' to continue.",
             timestamp: new Date().toISOString(),
           },
         ],
@@ -79,7 +81,7 @@ export async function POST(request: NextRequest) {
         current_state: 'INIT',
         progress_percent: 0,
         readiness_tier: 'draft',
-        app_config: { consent_granted: false },
+        app_config: { consent_granted: nonInteractive ? true : false },
       })
       .select()
       .single();
@@ -113,8 +115,9 @@ export async function POST(request: NextRequest) {
       {
         session_id: session.id,
         role: 'assistant',
-        content:
-          "Hello! I'm Rob the QuietBuilder. Before we begin, I need your consent to proceed. Please type 'I consent' to continue.",
+        content: nonInteractive
+          ? 'Non-interactive mode: consent pre-granted. Proceeding with initialization.'
+          : "Hello! I'm Rob the QuietBuilder. Before we begin, I need your consent to proceed. Please type 'I consent' to continue.",
       },
     ];
 
