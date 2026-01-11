@@ -19,7 +19,7 @@ labels:
   - pairs:
       environment: dev
 
-annotations:
+commonAnnotations:
   - pairs:
       environment: "development"
       description: "Development environment - local K8s (Minikube/Docker Desktop)"
