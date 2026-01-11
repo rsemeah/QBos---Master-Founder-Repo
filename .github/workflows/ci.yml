@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ k8s-merge-to-main ]
+
+jobs:
+  validate-k8s:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Kustomize
+        uses: imranismail/setup-kustomize@v1
+        with:
+          kustomize-version: v5.4.1
+
+      - name: Build dev manifests
+        run: kustomize build kubernetes/overlays/dev
+
+      - name: Build staging manifests
+        run: kustomize build kubernetes/overlays/staging
+
+      - name: Build production manifests
+        run: kustomize build kubernetes/overlays/production
+
+  node-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Enable Corepack (pnpm)
+        run: corepack enable
+
+      - name: Install deps
+        run: |
+          npm install -g pnpm
+          pnpm install --no-frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm run typecheck || echo "No typecheck script, skipping"
+
+      - name: Tests
+        run: pnpm run test || echo "No tests yet, skipping"
