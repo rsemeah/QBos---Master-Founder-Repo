@@ -1,0 +1,11 @@
+packages:
+  - "packages/sight-engine"
+  - "packages/silent-engine/core"
+  - "packages/adapters/nextjs"
+  - "packages/truthserum"
+  - "packages/runtime"
+  - "packages/engines/*/core"
+  - "packages/shared/*"
+  - "packages/robby-pa"
+  - "apps/*"
+  - "examples/*"

@@ -6,12 +6,23 @@
     "outDir": "dist",
     "skipLibCheck": true,
     "esModuleInterop": true,
+<<<<<<< Updated upstream
     "moduleResolution": "node16"
   },
   "baseUrl": ".",
   "paths": {
     "@qbos/truthserum": [
       "src/types/truthserum.d.ts"
+=======
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "plugins": [
+      {
+        "name": "next"
+      }
+>>>>>>> Stashed changes
     ]
   },
   "include": [
