@@ -1,13 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-metadata:
-  name: quietbuild-production
-
 resources:
   - ../../base
   - production-network-policy.yaml
-  - production-pod-security-policy.yaml
 
 namePrefix: prod-
 
@@ -17,21 +13,24 @@ replicas:
   - name: truthserum
     count: 3
 
-labels:
-  - pairs:
-      environment: production
-      sla: critical
+commonLabels:
+  environment: production
+  sla: critical
 
-annotations:
-  - pairs:
-      environment: "production"
-      description: "Production - Constitutional AI Infrastructure"
-      sla: "99.95%"
-      security: "hardened"
-      constitutional-freeze: "true"
+commonAnnotations:
+  environment: "production"
+  description: "Production - Constitutional AI Infrastructure"
+  sla: "99.95%"
+  security: "hardened"
+  constitutional-freeze: "true"
 
-patches:
-  - path: deployment-patch.yaml
+images:
+  - name: quietbuild/robby
+    newName: ghcr.io/rsemeah/robby-pa
+    newTag: latest
+  - name: quietbuild/truthserum
+    newName: nginx
+    newTag: alpine
 
 configMapGenerator:
   - name: app-config
