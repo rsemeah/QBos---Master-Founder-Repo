@@ -1,6 +1,6 @@
 import { IdentityEngine } from '@qbos/identity-engine-core';
 import { NextRequest, NextResponse } from 'next/server';
-import { ReceiptWriter } from '../../../../packages/truthserum/src/ReceiptWriter';
+import { ReceiptWriter } from '@qbos/truthserum';
 
 const ALLOWED_SERVER_SIGN_TYPES = [
   'build.session.created',

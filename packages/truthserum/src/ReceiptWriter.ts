@@ -3,7 +3,7 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import * as crypto from "crypto";
 import * as fs from "fs";
 import * as path from "path";
-import keystore from "./keystore";
+import keystore from "./keystore.js";
 
 interface Receipt {
   id: string;

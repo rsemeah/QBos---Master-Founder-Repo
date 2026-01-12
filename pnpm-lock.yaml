@@ -58,10 +58,10 @@ importers:
         version: 2.90.1
       next:
         specifier: ^14.0.4
-        version: 14.2.35(@babel/core@7.28.6)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 14.2.35(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       next-auth:
         specifier: ^4.24.13
-        version: 4.24.13(next@14.2.35(@babel/core@7.28.6)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 4.24.13(next@14.2.35(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       openai:
         specifier: ^4.104.0
         version: 4.104.0(ws@8.19.0)(zod@3.25.76)
@@ -190,7 +190,7 @@ importers:
         version: link:../../silent-engine/core
       next:
         specifier: ^14.0.0 || ^15.0.0
-        version: 14.2.35(@babel/core@7.28.6)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 14.2.35(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       zod:
         specifier: ^3.22.0
         version: 3.25.76
@@ -287,6 +287,9 @@ importers:
       '@types/jest':
         specifier: ^29.5.3
         version: 29.5.14
+      '@types/node-fetch':
+        specifier: ^2.6.13
+        version: 2.6.13
       '@types/pg':
         specifier: ^8.6.6
         version: 8.16.0
@@ -6847,13 +6850,13 @@ snapshots:
 
   neo-async@2.6.2: {}
 
-  next-auth@4.24.13(next@14.2.35(@babel/core@7.28.6)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  next-auth@4.24.13(next@14.2.35(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@babel/runtime': 7.28.6
       '@panva/hkdf': 1.2.1
       cookie: 0.7.2
       jose: 4.15.9
-      next: 14.2.35(@babel/core@7.28.6)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 14.2.35(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       oauth: 0.9.15
       openid-client: 5.7.1
       preact: 10.28.2
@@ -6862,7 +6865,7 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
       uuid: 8.3.2
 
-  next@14.2.35(@babel/core@7.28.6)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  next@14.2.35(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@next/env': 14.2.35
       '@swc/helpers': 0.5.5
@@ -6872,7 +6875,7 @@ snapshots:
       postcss: 8.4.31
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-      styled-jsx: 5.1.1(@babel/core@7.28.6)(react@18.3.1)
+      styled-jsx: 5.1.1(react@18.3.1)
     optionalDependencies:
       '@next/swc-darwin-arm64': 14.2.33
       '@next/swc-darwin-x64': 14.2.33
@@ -7495,12 +7498,10 @@ snapshots:
       '@types/node': 20.19.28
       qs: 6.14.1
 
-  styled-jsx@5.1.1(@babel/core@7.28.6)(react@18.3.1):
+  styled-jsx@5.1.1(react@18.3.1):
     dependencies:
       client-only: 0.0.1
       react: 18.3.1
-    optionalDependencies:
-      '@babel/core': 7.28.6
 
   sucrase@3.35.1:
     dependencies:

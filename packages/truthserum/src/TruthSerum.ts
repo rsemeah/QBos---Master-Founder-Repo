@@ -11,7 +11,7 @@ import {
   BuildIntent,
   IntentEvaluation,
   ProofRequirement,
-} from "./types";
+} from "./types.js";
 
 export class TruthSerum {
   /**

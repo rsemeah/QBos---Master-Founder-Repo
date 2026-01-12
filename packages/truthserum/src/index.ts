@@ -3,15 +3,15 @@
  * NO claim without receipts
  */
 
-export * from "./types";
-export * from "./TruthSerum";
-export * from "./ReceiptWriter";
-export * from "./intents/registry";
+export * from "./intents/registry.js";
+export * from "./ReceiptWriter.js";
+export * from "./TruthSerum.js";
+export * from "./types.js";
 
 /**
  * Helper to get intent by ID
  */
-import { IntentsRegistry } from "./intents/registry";
+import { IntentsRegistry } from "./intents/registry.js";
 export function getIntent(intentId: string) {
   return IntentsRegistry[intentId];
 }
