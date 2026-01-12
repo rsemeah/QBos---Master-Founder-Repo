@@ -9,11 +9,15 @@
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit"
   },
-  "keywords": ["qbos", "config", "feature-flags"],
+  "keywords": [
+    "qbos",
+    "config",
+    "feature-flags"
+  ],
   "author": "QuietBuild",
   "license": "MIT",
-  "dependencies": {},
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "typescript": "^5.3.3"
   }
 }
