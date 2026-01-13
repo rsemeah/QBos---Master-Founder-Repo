@@ -1,0 +1,47 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+  - production-network-policy.yaml
+
+namePrefix: prod-
+
+replicas:
+  - name: robby
+    count: 3
+  - name: truthserum
+    count: 3
+
+commonLabels:
+  environment: production
+  sla: critical
+
+commonAnnotations:
+  environment: "production"
+  description: "Production - Constitutional AI Infrastructure"
+  sla: "99.95%"
+  security: "hardened"
+  constitutional-freeze: "true"
+
+images:
+  - name: quietbuild/robby
+    newName: ghcr.io/rsemeah/robby-pa
+    newTag: latest
+  - name: quietbuild/truthserum
+    newName: nginx
+    newTag: alpine
+
+configMapGenerator:
+  - name: app-config
+    literals:
+      - NODE_ENV=production
+      - LOG_LEVEL=warn
+      - ENABLE_METRICS=true
+      - ENABLE_TRACING=true
+      - CONSTITUTIONAL_MODE=strict
+
+secretGenerator:
+  - name: app-secrets
+    envs:
+      - secrets.env

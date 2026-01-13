@@ -23,7 +23,8 @@
     "build": "tsc",
     "clean": "rm -rf dist",
     "dev": "tsc --watch",
-    "verify": "node ../../scripts/smoke-truthserum.js"
+    "verify": "node ../../scripts/smoke-truthserum.js",
+    "start": "node dist/server.js"
   },
   "dependencies": {
     "@qbos/run": "workspace:*",

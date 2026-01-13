@@ -9,7 +9,8 @@
     "verify": "tsx src/cli.ts verify",
     "certify": "tsx src/cli.ts certify",
     "retro": "tsx src/cli.ts retro",
-    "rotate-key": "tsx src/cli.ts rotate-key"
+    "rotate-key": "tsx src/cli.ts rotate-key",
+    "start": "tsx src/server.ts"
   },
   "dependencies": {
     "execa": "^7.0.0",

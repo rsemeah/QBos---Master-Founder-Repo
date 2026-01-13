@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: robby
+  namespace: quietbuild
+  labels:
+    app: robby
+    component: core
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: robby
+  template:
+    metadata:
+      labels:
+        app: robby
+        component: core
+    spec:
+      containers:
+        - name: robby
+          image: quietbuild/robby:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: ROBBY_PRODUCTION
+              value: "true"
+            - name: ROBBY_VERIFIER_REQUIRED
+              value: "true"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"

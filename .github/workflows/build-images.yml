@@ -1,0 +1,47 @@
+name: Build & Push Images
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ k8s-merge-to-main, main ]
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        service:
+          - name: robby-pa
+            context: packages/robby-pa
+            dockerfile: packages/robby-pa/Dockerfile
+            tag: dev
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push ${{ matrix.service.name }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ matrix.service.dockerfile }}
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.service.name }}:${{ matrix.service.tag }}
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.service.name }}:latest
+          build-args: |
+            CI=true
