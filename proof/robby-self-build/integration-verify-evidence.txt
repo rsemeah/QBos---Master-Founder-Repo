@@ -1,0 +1,4 @@
+Evidence for integration.verify
+Operation ID: integration-verify
+Timestamp: 2026-01-13T01:00:02.823Z
+Capability: qbos.self-build

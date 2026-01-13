@@ -1,0 +1,4 @@
+Evidence for test.run
+Operation ID: capabilities-test
+Timestamp: 2026-01-13T01:00:02.318Z
+Capability: qbos.capabilities
