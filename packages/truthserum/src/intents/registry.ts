@@ -2,7 +2,7 @@
  * Intents Registry - Canonical definitions of what constitutes "ready"
  */
 
-import { BuildIntent } from "../types";
+import { BuildIntent } from "../types.js";
 
 export const IntentsRegistry: Record<string, BuildIntent> = {
   "session.ready": {

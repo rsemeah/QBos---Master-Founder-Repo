@@ -9,11 +9,17 @@
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit"
   },
-  "keywords": ["qbos", "notifications", "email", "sms"],
+  "keywords": [
+    "qbos",
+    "notifications",
+    "email",
+    "sms"
+  ],
   "author": "QuietBuild",
   "license": "MIT",
-  "dependencies": {},
   "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.0.6",
     "typescript": "^5.3.3"
   }
 }
