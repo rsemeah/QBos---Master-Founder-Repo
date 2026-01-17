@@ -1,0 +1,5 @@
+{
+  "git_behavior_if_no_remote": "abort-if-no-remote",
+  "default_remote_name": "origin",
+  "notes": "Decision source for Robby — explicit choices only."
+}

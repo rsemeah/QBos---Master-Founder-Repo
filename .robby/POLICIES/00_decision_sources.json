@@ -1,0 +1,12 @@
+{
+  "decision_sources": [
+    ".robby/DECISIONS.json",
+    ".robby/POLICIES/*.json",
+    "DEFAULTS.md"
+  ],
+  "rules": {
+    "never_wait_for_answers": true,
+    "missing_info_becomes_constraint": true,
+    "no_questions_in_execution": true
+  }
+}
