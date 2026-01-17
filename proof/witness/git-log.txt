@@ -1,0 +1,20 @@
+e6b12de feat: add Phase 0 constitutional AI architecture
+dda8fca fix(k8s): modernize staging/prod kustomizations with image overlays; add secrets.env files for validation
+024b416 chore(k8s,ci): update staging/prod overlays to GHCR; build GHCR on main with latest tag
+f9994cd fix(k8s): modernize dev kustomization with resources + commonAnnotations map
+2012e03 fix(k8s): use commonAnnotations in dev overlay kustomization
+0cdd7ba chore(ci,k8s): add GHCR build workflow; containerize robby-pa; add health/ready endpoints; update dev overlay to use GHCR image
+7b66295 feat: add minimal HTTP servers and health endpoints for Robby (3000) and TruthSerum (3001); add start scripts
+95cfa93 feat: complete Kubernetes infrastructure with Kustomize overlays (dev/staging/prod)
+f6291ba Merge pull request #27 from rsemeah/phase4-witness-constitutional-freeze
+5be01d5 Merge branch 'main' of https://github.com/rsemeah/QBos---Master-Founder-Repo
+f6d3ee3 Phase 4 Witness Proof & Constitutional Freeze
+6e72985 Merge pull request #26 from rsemeah/feature/robby-autonomy-noninteractive
+7ff2088 feat(autonomy): add Robby Autonomy Manifest; enable non-interactive consent bypass; auto-approve intent and lock via policy; enforce CI flags in verify workflows
+38d7b67 Merge pull request #25 from rsemeah/robby-pa/verify-runner
+9bdbd5c chore(audit): unify run-id receipts across workspace
+d9b7738 fix: add yamllint config + improve YAML schema validation
+ebe47ce fix(ci): resolve workflow conditional syntax + exclude artifacts from linting
+d6c73e5 fix(ci): resolve 85 workflow YAML syntax errors + verify runner hardenings
+0486134 ci(robby-pa): add run-id receipts + pg service + upload artifacts
+0c59c67 ci(verify): add unified Build+Verify+Upload Receipts workflow (PR + manual)

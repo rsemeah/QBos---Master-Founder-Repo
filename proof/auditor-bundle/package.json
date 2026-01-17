@@ -1,0 +1,60 @@
+{
+  "name": "qbos-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "QuietBuild OS™ - Precision Infrastructure for Trust-Based Products",
+  "workspaces": [
+    "packages/sight-engine",
+    "packages/silent-engine/core",
+    "packages/adapters/nextjs",
+    "packages/truthserum",
+    "packages/runtime",
+    "packages/engines/*/core",
+    "packages/shared/*",
+    "apps/*",
+    "examples/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "build:sight": "npm run build --workspace=@qbos/sight-engine",
+    "build:silent": "npm run build --workspace=@qbos/silent-engine-core",
+    "build:adapters": "npm run build --workspace=@qbos/nextjs-adapter",
+    "dev": "npm run dev --workspaces",
+    "clean": "npm run clean --workspaces && rm -rf node_modules",
+    "install:all": "npm install",
+    "test": "echo \"Tests coming soon\" && exit 0",
+    "truthgate": "ts-node scripts/truthgate.ts",
+    "smoke:truthserum": "ts-node scripts/smoke-truthserum.ts",
+    "smoke:truthserum:js": "node scripts/smoke-truthserum.js",
+    "typecheck": "tsc --noEmit",
+    "test:receipt": "node ./scripts/test_receipt_api.js",
+    "robby:verify": "node packages/robby-pa/scripts/verify.mjs",
+    "verify:truthserum": "pnpm -C packages/truthserum run verify",
+    "verify:robby-pa": "pnpm -C packages/robby-pa run robby:verify",
+    "verify:engines": "pnpm -r --filter \"@qbos/engine-*\" test",
+    "verify:all": "pnpm run verify:truthserum && pnpm run verify:robby-pa && pnpm run verify:engines"
+  },
+  "keywords": [
+    "quietbuild",
+    "qbos",
+    "sight-engine",
+    "silent-engine",
+    "ai-routing",
+    "visual-quality",
+    "infrastructure"
+  ],
+  "author": "QuietBuild OS",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rsemeah/QBos---Master-Founder-Repo.git"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

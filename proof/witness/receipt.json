@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-01-11T12:15:16Z",
+  "action": "phase4:witness",
+  "executor": "robby-runner",
+  "artifacts": [
+    "git-log.txt",
+    "git-status.txt",
+    "ts-file-count.txt",
+    "ts-file-manifest.txt",
+    "receipt.json"
+  ]
+}
