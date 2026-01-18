@@ -2,6 +2,29 @@ name: Validate Robby Receipts
 
 on:
   pull_request:
+    paths:
+      - '.robby/**'
+
+jobs:
+  verify-receipts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate receipts presence
+        run: |
+          if [ -z "$(ls -A .robby/receipts 2>/dev/null)" ]; then
+            echo "No receipts found in .robby/receipts";
+            exit 1;
+          fi
+      - name: Check signature (placeholder)
+        env:
+          RECEIPT_SIGNING_KEY: ${{ secrets.RECEIPT_SIGNING_KEY }}
+        run: |
+          echo "Receipt signature verification step (configure SECRET)"
+name: Validate Robby Receipts
+
+on:
+  pull_request:
     types: [opened, synchronize, reopened]
 
 jobs:
