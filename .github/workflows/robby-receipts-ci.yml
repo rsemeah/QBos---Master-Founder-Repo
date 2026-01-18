@@ -1,0 +1,19 @@
+name: Robby Receipts CI
+
+on:
+  pull_request:
+    paths:
+      - ".robby/**"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pnpm
+        run: npm install -g pnpm
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+      - name: Verify receipts with TruthSerum
+        run: |
+          node scripts/ci-verify-receipts.js
