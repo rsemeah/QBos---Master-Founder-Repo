@@ -10,7 +10,8 @@
     "certify": "tsx src/cli.ts certify",
     "retro": "tsx src/cli.ts retro",
     "rotate-key": "tsx src/cli.ts rotate-key",
-    "start": "tsx src/server.ts"
+    "start": "tsx src/server.ts",
+    "build": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
     "execa": "^7.0.0",
