@@ -82,3 +82,7 @@ packages/robby-pa/receipts/
 proof-evidence-*/artifacts/
 *.out
 *.bak
+
+# Allow committing signed demo receipts into .robby/receipts
+!.robby/receipts/
+!.robby/receipts/*.json
