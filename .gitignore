@@ -84,5 +84,4 @@ proof-evidence-*/artifacts/
 *.bak
 
 # Allow committing signed demo receipts into .robby/receipts
-!.robby/receipts/
-!.robby/receipts/*.json
+# receipts remain ignored; CI will generate and commit signed receipts when authorized
