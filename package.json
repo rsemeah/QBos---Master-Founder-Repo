@@ -32,7 +32,8 @@
     "verify:truthserum": "pnpm -C packages/truthserum run verify",
     "verify:robby-pa": "pnpm -C packages/robby-pa run robby:verify",
     "verify:engines": "pnpm -r --filter \"@qbos/engine-*\" test",
-    "verify:all": "pnpm run verify:truthserum && pnpm run verify:robby-pa && pnpm run verify:engines"
+    "verify:all": "pnpm run verify:truthserum && pnpm run verify:robby-pa && pnpm run verify:engines",
+    "test:guard": "ts-node scripts/test-guard.ts"
   },
   "keywords": [
     "quietbuild",
