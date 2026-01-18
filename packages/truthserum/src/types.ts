@@ -3,10 +3,10 @@
  * NO claim without receipts
  */
 
-export type TruthState = 
-  | "Verified"     // Has complete proof chain
-  | "Unknown"      // Missing proof or indeterminate
-  | "Blocked";     // Has proof it cannot proceed
+export type TruthState =
+  | "Verified" // Has complete proof chain
+  | "Unknown" // Missing proof or indeterminate
+  | "Blocked"; // Has proof it cannot proceed
 
 export type ProofType =
   | "identity.authenticated"
@@ -40,7 +40,7 @@ export interface Receipt {
     rule?: string;
     constraint?: string;
   };
-  createdAt: Date;
+  createdAt: Date | string;
 }
 
 export interface TruthClaim {
