@@ -52,7 +52,8 @@
   "devDependencies": {
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
-    "@types/jest": "^29.5.3"
+    "@types/jest": "^29.5.3",
+    "@types/node": "^20.19.27"
   },
   "engines": {
     "node": ">=18.0.0",
