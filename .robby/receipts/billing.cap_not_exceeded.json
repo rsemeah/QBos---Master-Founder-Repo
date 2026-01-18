@@ -1,0 +1,8 @@
+{
+  "payload": {
+    "type": "billing.cap_not_exceeded",
+    "subject": "robby",
+    "createdAt": "2026-01-17T00:00:00Z"
+  },
+  "signature": "+CJvIA2RF4OyV6HCgttRQTe9zvM9bQa5HMs/GzsLAoPIiJSyCMFBepmkMn3ylPVEC20bDaN4GqYutZkfYxgQBA=="
+}

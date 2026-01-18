@@ -1,0 +1,8 @@
+{
+  "payload": {
+    "type": "safety.passed",
+    "subject": "robby",
+    "createdAt": "2026-01-17T00:00:00Z"
+  },
+  "signature": "uym1zKsB3eKXS+WEWrDWRIbtz6yOGh/LxskfVO3X3dqkVj363uczzY+o5p8LCoOrF9O+2PX6mm+3TxVO+S1nBw=="
+}
