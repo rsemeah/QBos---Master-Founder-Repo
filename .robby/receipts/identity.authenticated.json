@@ -1,8 +1,0 @@
-{
-  "payload": {
-    "type": "identity.authenticated",
-    "subject": "noor",
-    "createdAt": "2026-01-17T00:00:00Z"
-  },
-  "signature": "fTf9jyX8hZEzLTwZcDjH+cg/R7zmASuU6sx/cLpHqu0fe+gohhO/Uj6tOqacpWXypayvdOcCW4OHB3iM7t/lAw=="
-}
