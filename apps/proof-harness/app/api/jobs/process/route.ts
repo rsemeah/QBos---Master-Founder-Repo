@@ -24,7 +24,7 @@ const getReceiptWriter = () => {
   if (!supabaseUrl || !supabaseKey) {
     throw new Error('Supabase configuration missing');
   }
-  return new ReceiptWriter(supabaseUrl, supabaseKey);
+  return ReceiptWriter;
 };
 
 export async function POST(req: NextRequest) {
@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
 
 async function processGenerateCode(
   supabase: ReturnType<typeof getSupabase>,
-  receiptWriter: ReceiptWriter,
+  receiptWriter: typeof ReceiptWriter,
   job: any
 ) {
   const { sessionId } = job.payload;
@@ -190,7 +190,7 @@ async function processGenerateCode(
 
 async function processDeployVercel(
   supabase: ReturnType<typeof getSupabase>,
-  receiptWriter: ReceiptWriter,
+  receiptWriter: typeof ReceiptWriter,
   job: any
 ) {
   const { sessionId, repoUrl, repoName } = job.payload;
@@ -302,7 +302,7 @@ async function processDeployVercel(
 
 async function processHealthcheck(
   supabase: ReturnType<typeof getSupabase>,
-  receiptWriter: ReceiptWriter,
+  receiptWriter: typeof ReceiptWriter,
   job: any
 ) {
   const { sessionId, url } = job.payload;
@@ -353,7 +353,7 @@ async function processHealthcheck(
 
 async function processGrantAccess(
   supabase: ReturnType<typeof getSupabase>,
-  receiptWriter: ReceiptWriter,
+  receiptWriter: typeof ReceiptWriter,
   job: any
 ) {
   const { sessionId } = job.payload;

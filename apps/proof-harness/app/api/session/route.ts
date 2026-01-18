@@ -5,9 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ReceiptWriter } from '@qbos/truthserum';
 
-const receiptWriter = new ReceiptWriter({
-  localFallbackPath: './proof/local_receipts.jsonl',
-});
+const receiptWriter = ReceiptWriter;
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,7 +56,7 @@ export async function GET(request: NextRequest) {
     }
 
     const receipts = await receiptWriter.readReceipts(sessionId);
-    const sessionReceipt = receipts.find(r => r.type === 'session.created');
+    const sessionReceipt = receipts.find((r: any) => r.type === 'session.created');
 
     if (!sessionReceipt) {
       return NextResponse.json(

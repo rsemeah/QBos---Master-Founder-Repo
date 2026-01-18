@@ -31,13 +31,13 @@ const getReceiptWriter = () => {
   if (!supabaseUrl || !supabaseKey) {
     throw new Error('Supabase configuration missing');
   }
-  return new ReceiptWriter(supabaseUrl, supabaseKey);
+  return ReceiptWriter;
 };
 
 export async function POST(req: NextRequest) {
   let stripe: Stripe;
   let supabase: ReturnType<typeof getSupabase>;
-  let receiptWriter: ReceiptWriter;
+  let receiptWriter: typeof ReceiptWriter;
 
   try {
     stripe = getStripe();

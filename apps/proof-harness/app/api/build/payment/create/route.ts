@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
   const stripe = new Stripe(stripeSecretKey, { apiVersion: '2025-02-24.acacia' });
   const supabase = createClient(supabaseUrl, supabaseKey);
-  const receiptWriter = new ReceiptWriter(supabaseUrl, supabaseKey);
+  const receiptWriter = ReceiptWriter;
 
   try {
     const paymentIntent = await stripe.paymentIntents.create({

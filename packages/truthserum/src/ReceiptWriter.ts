@@ -3,9 +3,12 @@ let getReceiptsDir: (name: string) => string;
 try {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const runMod = require("@qbos/run");
-  getReceiptsDir = runMod.getReceiptsDir || ((n: string) => require('path').join(process.cwd(), '.robby', 'receipts'));
+  getReceiptsDir =
+    runMod.getReceiptsDir ||
+    ((n: string) => require("path").join(process.cwd(), ".robby", "receipts"));
 } catch (e) {
-  getReceiptsDir = (_: string) => require('path').join(process.cwd(), '.robby', 'receipts');
+  getReceiptsDir = (_: string) =>
+    require("path").join(process.cwd(), ".robby", "receipts");
 }
 
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
@@ -40,7 +43,7 @@ class ReceiptWriterImpl {
     if (this.config.supabaseUrl && this.config.supabaseKey) {
       this.supabase = createClient(
         this.config.supabaseUrl,
-        this.config.supabaseKey
+        this.config.supabaseKey,
       );
       this.useSupabase = true;
     }
@@ -109,7 +112,7 @@ class ReceiptWriterImpl {
   }
 
   async writeReceipt(
-    receipt: Omit<Receipt, "id" | "createdAt">
+    receipt: Omit<Receipt, "id" | "createdAt">,
   ): Promise<Receipt> {
     const full: Receipt = {
       id: this.generateId(),
@@ -179,7 +182,7 @@ class ReceiptWriterImpl {
       return await keystore.verify(
         canonical,
         receipt.signature,
-        receipt.signerKeyId
+        receipt.signerKeyId,
       );
     } catch (e) {
       console.error("[ReceiptWriter] verifyReceipt error", e);

@@ -11,9 +11,7 @@ import {
   suggestTemplate,
 } from './templateRouter';
 
-const receiptWriter = new ReceiptWriter({
-  localFallbackPath: './proof/local_receipts.jsonl',
-});
+const receiptWriter = ReceiptWriter;
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,10 +34,22 @@ export async function POST(request: NextRequest) {
     // Step 2: Read all receipts for session
     const receipts = await receiptWriter.readReceipts(sessionId);
 
-    // Step 3: Evaluate session.ready intent
+      // Step 3: Normalize receipts and evaluate session.ready intent
+      const normalizedReceipts = receipts.map((r: any) => ({
+      ...r,
+      sessionId: r.sessionId ?? undefined,
+      createdAt: r.createdAt ? new Date(r.createdAt) : new Date(),
+      parentReceiptId: r.parentReceiptId ?? undefined,
+      signerKeyId: r.signerKeyId ?? undefined,
+      signature: r.signature ?? undefined,
+      algo: r.algo ?? undefined,
+      nonce: r.nonce ?? undefined,
+      verification_hash: (r as any).verification_hash ?? undefined,
+    }));
+
     const sessionReadyEval = TruthSerum.evaluateIntent(
       IntentsRegistry['session.ready'],
-      receipts
+      normalizedReceipts
     );
 
     // Step 4: If not ready, return truthful response
@@ -89,7 +99,7 @@ export async function POST(request: NextRequest) {
     )}\n\nAvailable templates:\n${templateList}`;
 
     // Step 6: Sanitize with TruthSerum
-    const verdict = TruthSerum.sanitizeClaims(draftResponse, receipts, 'Unknown');
+      const verdict = TruthSerum.sanitizeClaims(draftResponse, normalizedReceipts, 'Unknown');
 
     const finalResponse = verdict.sanitizedText || draftResponse;
 

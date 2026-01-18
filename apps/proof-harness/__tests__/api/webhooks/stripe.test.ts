@@ -114,7 +114,7 @@ describe('/api/webhooks/stripe', () => {
 
     // Verify receipt was written
     const { ReceiptWriter } = require('@/../../../packages/truthserum/src/ReceiptWriter');
-    const receiptWriter = new ReceiptWriter();
+    const receiptWriter = ReceiptWriter;
     expect(receiptWriter.write).toHaveBeenCalledWith(
       expect.objectContaining({
         sessionId: 'session123',
@@ -164,7 +164,7 @@ describe('/api/webhooks/stripe', () => {
 
     // Verify no receipt was written
     const { ReceiptWriter } = require('@/../../../packages/truthserum/src/ReceiptWriter');
-    const receiptWriter = new ReceiptWriter();
+    const receiptWriter = ReceiptWriter;
     expect(receiptWriter.write).not.toHaveBeenCalled();
   });
 });

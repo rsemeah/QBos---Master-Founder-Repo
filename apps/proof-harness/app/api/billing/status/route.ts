@@ -3,47 +3,43 @@
  * NO optimistic claims - only what receipts prove
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { ReceiptWriter, TruthState } from '@qbos/truthserum';
+import { ReceiptWriter, TruthState } from "@qbos/truthserum";
+import { NextRequest, NextResponse } from "next/server";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-const receiptWriter = new ReceiptWriter({
-  localFallbackPath: './proof/local_receipts.jsonl',
-});
+const receiptWriter = ReceiptWriter;
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const sessionId = searchParams.get('sessionId');
+    const sessionId = searchParams.get("sessionId");
 
     if (!sessionId) {
-      return NextResponse.json(
-        { error: 'Missing sessionId' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing sessionId" }, { status: 400 });
     }
 
     // Read receipts
     const receipts = await receiptWriter.readReceipts(sessionId);
 
     // Find billing proofs
-    const billingActive = receipts.find(r => r.type === 'billing.active');
-    const capCheck = receipts.find(r => r.type === 'billing.cap_not_exceeded');
-    const capWarning = receipts.find(r => r.type === 'billing.cap_warning');
+    const billingActive = receipts.find((r: any) => r.type === "billing.active");
+    const capCheck = receipts.find((r: any) => r.type === "billing.cap_not_exceeded",
+    );
+    const capWarning = receipts.find((r: any) => r.type === "billing.cap_warning");
 
-    let state: TruthState = 'Unknown';
+    let state: TruthState = "Unknown";
     const missingProofs: string[] = [];
 
     if (billingActive && capCheck) {
-      state = 'Verified';
+      state = "Verified";
     } else {
-      if (!billingActive) missingProofs.push('billing.active');
-      if (!capCheck) missingProofs.push('billing.cap_not_exceeded');
+      if (!billingActive) missingProofs.push("billing.active");
+      if (!capCheck) missingProofs.push("billing.cap_not_exceeded");
     }
 
     if (capWarning) {
-      state = 'Blocked';
+      state = "Blocked";
     }
 
     return NextResponse.json({
@@ -51,18 +47,18 @@ export async function GET(request: NextRequest) {
       billingActive: Boolean(billingActive),
       capExceeded: Boolean(capWarning),
       missingProofs,
-      receipts: receipts.filter(r => r.type.startsWith('billing.')),
+      receipts: receipts.filter((r: any) => r.type.startsWith("billing.")),
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Billing status error:', error);
+    console.error("Billing status error:", error);
     return NextResponse.json(
       {
-        state: 'Unknown',
-        error: 'Could not determine billing status',
-        nextActions: ['Check server logs', 'Ensure receipts are being written'],
+        state: "Unknown",
+        error: "Could not determine billing status",
+        nextActions: ["Check server logs", "Ensure receipts are being written"],
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

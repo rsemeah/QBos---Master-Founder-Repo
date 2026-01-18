@@ -5,9 +5,7 @@
 import { ReceiptWriter } from '@qbos/truthserum';
 import { NextRequest, NextResponse } from 'next/server';
 
-const receiptWriter = new ReceiptWriter({
-  localFallbackPath: './proof/local_receipts.jsonl',
-});
+const receiptWriter = ReceiptWriter;
 
 export async function GET(request: NextRequest) {
   try {
