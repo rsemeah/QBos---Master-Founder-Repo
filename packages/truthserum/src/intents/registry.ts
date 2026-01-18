@@ -1,4 +1,6 @@
 // BrainSmart + Action lifecycle intents
+// Ensure a local `intents` map exists for runtime registration.
+const intents: Map<string, any> = new Map();
 try {
   intents.set("brainsmart.started", {
     intentKey: "brainsmart.started",

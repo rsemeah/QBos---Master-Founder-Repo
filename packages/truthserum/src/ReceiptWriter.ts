@@ -1,4 +1,13 @@
-import { getReceiptsDir } from "@qbos/run";
+// Dynamic attempt to load getReceiptsDir from @qbos/run; fall back to local .robby folder
+let getReceiptsDir: (name: string) => string;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const runMod = require("@qbos/run");
+  getReceiptsDir = runMod.getReceiptsDir || ((n: string) => require('path').join(process.cwd(), '.robby', 'receipts'));
+} catch (e) {
+  getReceiptsDir = (_: string) => require('path').join(process.cwd(), '.robby', 'receipts');
+}
+
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import * as crypto from "crypto";
 import * as fs from "fs";
