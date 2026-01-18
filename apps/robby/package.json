@@ -11,7 +11,7 @@
     "retro": "tsx src/cli.ts retro",
     "rotate-key": "tsx src/cli.ts rotate-key",
     "start": "tsx src/server.ts",
-    "build": "tsc -p tsconfig.build.json"
+    "build": "mkdir -p dist && cp -R src/* dist/"
   },
   "dependencies": {
     "execa": "^7.0.0",
