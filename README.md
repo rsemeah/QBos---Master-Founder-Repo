@@ -1,3 +1,54 @@
+QBos - Master Founder Repo
+=================================
+
+This repository contains the QBos platform components: runtime, orchestrator, SilentEngine, Robby tooling, Brainsmart (constitutional) checks, and TruthSerum proof/evaluation tooling.
+
+Recent Upgrades (summary)
+-------------------------
+
+- SilentEngine: routing and AI generation improvements, clearer routing metadata, and deterministic test hooks.
+- Robby (.robby): runtime receipt registry and verification; receipts live under `.robby/receipts` and CI includes signing/verification tooling.
+- Brainsmart (constitutional): policy/pre-execution approval gating requiring Noor-signed receipts before guarded actions are allowed.
+- TruthSerum: intent registry (e.g. `session.ready`, `rob.ready`), evaluation APIs (`evaluateIntent`, `computeOverallState`, `sanitizeClaims`), and compatibility exports (`getIntent`, `TruthSerum` facade) to support deterministic tests.
+- Testing & Mocks: manual mocks consolidated under `apps/proof-harness/__mocks__` (keep only `.js` mocks); orchestrator accepts an injectable `serum` for tests.
+- CI: GitHub Actions to verify Noor-signed receipts and enforce approvals before guarded merges.
+
+Running tests (runtime-focused)
+------------------------------
+
+1. Install dependencies:
+
+   ```bash
+   pnpm install
+   ```
+
+2. Run runtime tests:
+
+   ```bash
+   pnpm -w exec jest packages/runtime --config jest.config.cjs --runInBand
+   ```
+
+Developer notes
+---------------
+
+- `packages/runtime/orchestrator.ts` now supports injecting a `serum` dependency for deterministic unit tests.
+- `packages/runtime/src/guard/ActionGuard.ts` resolves `.robby` relative to `process.cwd()` to match test setups that write `.robby/REGISTRY` into the repo root.
+- Manual mocks: ensure duplicate `.ts` mock copies are removed from `apps/proof-harness/__mocks__` to avoid jest-haste-map warnings.
+- CI secrets required for verification: `RECEIPT_SIGNING_KEY`, `RECEIPT_VERIFY_PUBKEY`.
+
+Where to look
+-------------
+
+- Runtime guard: `packages/runtime/src/guard/ActionGuard.ts`
+- Orchestrator: `packages/runtime/orchestrator.ts`
+- TruthSerum manual mocks: `apps/proof-harness/__mocks__/@qbos/truthserum.js`
+- CI workflows: `.github/workflows/`
+
+Next steps
+----------
+
+- Stabilize broader monorepo tests beyond `packages/runtime`.
+- Finalize CI secret setup for receipt signing/verification.
 # QuietBuild OS™ V3 - Master Founder Repository
 
 **Complete 8-Engine Platform + TruthSerum™ Verification System**
@@ -11,9 +62,11 @@ Built for founders who need investor-grade demos with proof artifacts, not promi
 ## ⚡ Latest Updates (December 24, 2025)
 
 ### 🎉 Rob the QuietBuilder - COMPLETE AI Integration
+
 **Status:** PRODUCTION READY (All features wired)
 
 **What's Running:**
+
 - ✅ Complete Vite React UI (14 files) - port 3001
 - ✅ Next.js Backend API - port 3000
 - ✅ Constitutional state machine (13 states)
@@ -24,20 +77,24 @@ Built for founders who need investor-grade demos with proof artifacts, not promi
 - ✅ **NEW: Token tracking and cost logging**
 
 **What's Configurable (Choose What You Need):**
+
 - ⚡ **OpenAI API Key** → Real AI code generation
 - ⚡ **GitHub OAuth** → Create repos with generated code
 - ⚡ **Supabase Service Key** → Full database persistence
 - ⚡ **Nothing** → Works with deterministic fallbacks
 
-**See:** 
+**See:**
+
 - [Quick Reference](docs/ROB_QUICK_REFERENCE.md) - One-page setup
 - [Complete Setup Guide](docs/COMPLETE_SETUP_GUIDE.md) - Step-by-step for all options
 - [Production Readiness](PRODUCTION_READINESS.md) - Honest assessment
 
 ### 🔒 TruthSerum & Constitutional Enforcement
+
 **Status:** OPERATIONAL
 
 Automated truth enforcement across the entire codebase:
+
 - ✅ No unverified claims allowed
 - ✅ CI TruthGate validates every push (5 validation scripts)
 - ✅ Receipt system with parent-child chaining
@@ -45,6 +102,7 @@ Automated truth enforcement across the entire codebase:
 - ✅ Engine page coverage (8/8 engines verified)
 
 ### 📚 Documentation
+
 - [Rob Vertical Slice Execution](docs/ROB_VERTICAL_SLICE_EXECUTION.md) - Complete deployment guide
 - [Rob Production Deployment](docs/ROB_PRODUCTION_DEPLOYMENT.md) - 4-phase production checklist
 - [Secrets & Auth Enforcement](docs/SECRETS_AND_AUTH_PROMPT.md) - Security rules
@@ -56,6 +114,7 @@ Automated truth enforcement across the entire codebase:
 ## 🧪 TruthSerum™ - Constitutional Proof System
 
 **What It Does:**
+
 - ✅ No claims accepted without receipts
 - ✅ All state transitions auditable
 - ✅ Every API response sanitized for unproven claims
@@ -63,20 +122,26 @@ Automated truth enforcement across the entire codebase:
 - ✅ Investor truth sheet generated from actual receipts
 
 ```typescript
-import { TruthSerum } from '@qbos/truthserum';
-import { ReceiptWriter } from '@qbos/truthserum';
+import { TruthSerum } from "@qbos/truthserum";
+import { ReceiptWriter } from "@qbos/truthserum";
 
 // Evaluate intent before proceeding
-const evaluation = await TruthSerum.evaluateIntent('deploy.ready', context);
-if (evaluation.truthState !== 'Verified') {
-  return { error: 'Cannot proceed without proof', missing: evaluation.missingProofs };
+const evaluation = await TruthSerum.evaluateIntent("deploy.ready", context);
+if (evaluation.truthState !== "Verified") {
+  return {
+    error: "Cannot proceed without proof",
+    missing: evaluation.missingProofs,
+  };
 }
 
 // Write receipt after operation
 await ReceiptWriter.write({
-  sessionId: 'session-123',
-  type: 'deploy.completed',
-  details: { timestamp: new Date().toISOString(), url: 'https://app.vercel.com' }
+  sessionId: "session-123",
+  type: "deploy.completed",
+  details: {
+    timestamp: new Date().toISOString(),
+    url: "https://app.vercel.com",
+  },
 });
 ```
 
@@ -87,9 +152,11 @@ await ReceiptWriter.write({
 ## 🎯 QBos V3 - Complete 8-Engine Suite
 
 ### **ExecutionEngine™** - Interactive Build Command Center
+
 The product. Everything else is infrastructure.
 
 **What It Does:**
+
 - ✅ Guides non-technical founders through building apps step-by-step
 - ✅ Explains every action in child-readable language
 - ✅ Never loses state, never lies, never silently fails
@@ -97,10 +164,10 @@ The product. Everything else is infrastructure.
 - ✅ Gracefully degrades if engines are missing
 
 ```typescript
-import { ExecutionEngine } from '@qbos/execution-engine-core';
+import { ExecutionEngine } from "@qbos/execution-engine-core";
 
 const engine = new ExecutionEngine();
-const sessionId = await engine.createBuildSession('MyApp', ['auth', 'ai']);
+const sessionId = await engine.createBuildSession("MyApp", ["auth", "ai"]);
 
 const nextStep = await engine.getNextStep(sessionId);
 console.log(nextStep.data.explanation); // Child-readable
@@ -114,6 +181,7 @@ const receipts = await engine.getReceipts(sessionId); // Audit bundle
 ### **IdentityEngine™** - Users, Organizations, Sessions, RBAC
 
 **What It Does:**
+
 - ✅ User management (create, authenticate, delete)
 - ✅ Organization management with membership roles
 - ✅ Session tokens with 24h expiry
@@ -121,10 +189,13 @@ const receipts = await engine.getReceipts(sessionId); // Audit bundle
 - ✅ Database migration with RLS policies
 
 ```typescript
-import { IdentityEngine } from '@qbos/identity-engine-core';
+import { IdentityEngine } from "@qbos/identity-engine-core";
 
 const engine = new IdentityEngine();
-const user = await engine.createUser({ email: 'founder@qbos.dev', name: 'Founder' });
+const user = await engine.createUser({
+  email: "founder@qbos.dev",
+  name: "Founder",
+});
 const session = await engine.createSession(user.id);
 console.log(session.token); // 24h session token
 ```
@@ -134,21 +205,22 @@ console.log(session.token); // 24h session token
 ### **CharterEngine™** - Consent Management & GDPR Compliance
 
 **What It Does:**
+
 - ✅ Track user consent by purpose (AI, analytics, marketing, essential)
 - ✅ Consent expiry and withdrawal
 - ✅ GDPR data rights (access, deletion, portability, rectification)
 - ✅ IP address and user agent logging
 
 ```typescript
-import { CharterEngine } from '@qbos/charter-engine-core';
+import { CharterEngine } from "@qbos/charter-engine-core";
 
 const engine = new CharterEngine();
-const consent = await engine.grantConsent('user_123', 'ai', {
-  ipAddress: '127.0.0.1',
-  expiresInDays: 365
+const consent = await engine.grantConsent("user_123", "ai", {
+  ipAddress: "127.0.0.1",
+  expiresInDays: 365,
 });
 
-const check = await engine.checkConsent('user_123', 'ai');
+const check = await engine.checkConsent("user_123", "ai");
 console.log(check.allowed); // true/false
 ```
 
@@ -157,20 +229,25 @@ console.log(check.allowed); // true/false
 ### **ConfigEngine™** - Feature Flags & Configuration
 
 **What It Does:**
+
 - ✅ Feature flags (enabled, disabled, conditional)
 - ✅ Conditional targeting (user, org, percentage, date)
 - ✅ Configuration values with scopes (global, user, org)
 - ✅ Type-safe config inference
 
 ```typescript
-import { ConfigEngine } from '@qbos/config-engine-core';
+import { ConfigEngine } from "@qbos/config-engine-core";
 
 const engine = new ConfigEngine();
-await engine.setFlag('new_dashboard', 'conditional', {
-  conditions: [{ type: 'user', operator: 'in', value: ['beta_user_1', 'beta_user_2'] }]
+await engine.setFlag("new_dashboard", "conditional", {
+  conditions: [
+    { type: "user", operator: "in", value: ["beta_user_1", "beta_user_2"] },
+  ],
 });
 
-const result = await engine.isEnabled('new_dashboard', { userId: 'beta_user_1' });
+const result = await engine.isEnabled("new_dashboard", {
+  userId: "beta_user_1",
+});
 console.log(result.enabled); // true
 ```
 
@@ -179,18 +256,21 @@ console.log(result.enabled); // true
 ### **PaywallEngine™** - Pricing, Entitlements, Billing
 
 **What It Does:**
+
 - ✅ Pricing plans with limits (maxUsers, maxProjects, maxAIRequests)
 - ✅ Subscription management with trials
 - ✅ Entitlement checks
 - ✅ Usage tracking and limit enforcement
 
 ```typescript
-import { PaywallEngine } from '@qbos/paywall-engine-core';
+import { PaywallEngine } from "@qbos/paywall-engine-core";
 
 const engine = new PaywallEngine();
-const sub = await engine.createSubscription('user_123', 'pro', { trialDays: 14 });
+const sub = await engine.createSubscription("user_123", "pro", {
+  trialDays: 14,
+});
 
-const check = await engine.checkEntitlement('user_123', 'priority_support');
+const check = await engine.checkEntitlement("user_123", "priority_support");
 console.log(check.allowed); // true if in plan
 ```
 
@@ -199,20 +279,21 @@ console.log(check.allowed); // true if in plan
 ### **NotificationsEngine™** - Email, SMS, Push Queue
 
 **What It Does:**
+
 - ✅ Send notifications with priority and scheduling
 - ✅ Template system with variable substitution
 - ✅ User preferences per channel (email, sms, push)
 - ✅ Queue processing with retry logic
 
 ```typescript
-import { NotificationsEngine } from '@qbos/notifications-engine-core';
+import { NotificationsEngine } from "@qbos/notifications-engine-core";
 
 const engine = new NotificationsEngine();
 const notif = await engine.send({
-  userId: 'user_123',
-  channel: 'email',
-  subject: 'Welcome to QBos',
-  body: 'Your build is ready!'
+  userId: "user_123",
+  channel: "email",
+  subject: "Welcome to QBos",
+  body: "Your build is ready!",
 });
 
 console.log(notif.status); // 'queued' | 'sending' | 'sent'
@@ -225,17 +306,18 @@ console.log(notif.status); // 'queued' | 'sending' | 'sent'
 Enforces investor-grade visual quality across all brand assets.
 
 **What It Does:**
+
 - ✅ Validates visual assets against tier requirements (A: Investor-grade, B: Product-grade, C: Internal)
 - ✅ Rejects AI-looking outputs, flat lighting, and low-quality visuals
 - ✅ Generates AI prompts with embedded quality standards
 - ✅ Enforces logo requirements (16px readable, 8K scalable)
 
 ```typescript
-import { validateAsset, generatePromptHeader } from '@qbos/sight-engine';
+import { validateAsset, generatePromptHeader } from "@qbos/sight-engine";
 
-const result = validateAsset(assetSpec, 'hero-image', 'A');
+const result = validateAsset(assetSpec, "hero-image", "A");
 console.log(result.passed); // true/false
-console.log(result.score);  // 0-100
+console.log(result.score); // 0-100
 ```
 
 ---
@@ -245,6 +327,7 @@ console.log(result.score);  // 0-100
 Routes AI requests to the best model based on capabilities, cost, latency, and availability.
 
 **What It Does:**
+
 - ✅ Capability-based routing (vision, tool use, reasoning, cost, latency)
 - ✅ Circuit breaker with automatic fallback
 - ✅ Safety checks (PII detection, jailbreak prevention)
@@ -252,18 +335,18 @@ Routes AI requests to the best model based on capabilities, cost, latency, and a
 - ✅ Cost tracking and optimization
 
 ```typescript
-import { SilentEngine } from '@qbos/silent-engine-core';
+import { SilentEngine } from "@qbos/silent-engine-core";
 
 const result = await silentEngine.generate({
-  messages: [{ role: 'user', content: 'Explain quantum computing' }],
+  messages: [{ role: "user", content: "Explain quantum computing" }],
   maxCost: 0.001,
   maxLatency: 3000,
-  preferredCapabilities: ['low_cost', 'fast_latency']
+  preferredCapabilities: ["low_cost", "fast_latency"],
 });
 
 console.log(result.response.text);
-console.log('Cost:', result.actualCost);
-console.log('Provider:', result.provider);
+console.log("Cost:", result.actualCost);
+console.log("Provider:", result.provider);
 ```
 
 **Read more:** [packages/silent-engine/core/README.md](packages/silent-engine/core/README.md)
@@ -429,6 +512,7 @@ Full test suite: [docs/PROOF_GATES.md](docs/PROOF_GATES.md)
 **Follow the integration guide:** [docs/FULL_INTEGRATION_GUIDE.md](docs/FULL_INTEGRATION_GUIDE.md)
 
 Steps:
+
 1. **Supabase** - Database + auth (see [docs/SUPABASE_INTEGRATION_STEPS.md](docs/SUPABASE_INTEGRATION_STEPS.md))
 2. **Vercel** - Deployment with env vars
 3. **AI Providers** - OpenAI or Anthropic API keys
@@ -448,7 +532,8 @@ Steps:
 See [docs/INVESTOR_TRUTH_SHEET.md](docs/INVESTOR_TRUTH_SHEET.md) for verified status of all engines
 
 | Engine | Status | Lines | Production Code |
-|--------|--------|-------|----------------|
+| ------ | ------ | ----- | --------------- |
+
 | ExecutionEngSystem Works
 
 ```
@@ -557,14 +642,17 @@ npm run build:adapters
 
 ```typescript
 // Visual quality validation
-import { validateAsset, generatePromptHeader } from '@qbos/sight-engine';
+import { validateAsset, generatePromptHeader } from "@qbos/sight-engine";
 
 // AI routing
-import { SilentEngine } from '@qbos/silent-engine-core';
-import { AnthropicProvider } from '@qbos/silent-engine-core/dist/providers/anthropic-provider';
+import { SilentEngine } from "@qbos/silent-engine-core";
+import { AnthropicProvider } from "@qbos/silent-engine-core/dist/providers/anthropic-provider";
 
 // Next.js API adapters
-import { createSilentEngineRoute, createSightEngineValidateRoute } from '@qbos/nextjs-adapter';
+import {
+  createSilentEngineRoute,
+  createSightEngineValidateRoute,
+} from "@qbos/nextjs-adapter";
 ```
 
 ---
@@ -573,120 +661,97 @@ import { createSilentEngineRoute, createSightEngineValidateRoute } from '@qbos/n
 
 ### SightEngine™ Tier A Requirements
 
-| Standard | Value |
-|----------|-------|
-| Resolution | 4K minimum (3840×2160) |
-| Camera | ARRI Alexa 65 / RED V-Raptor 8K |
-| Lens | Prime lenses (50mm/65mm/80mm) |
-| Aperture | f/2.8 - f/4.0 |
+| Standard    | Value                                  |
+| ----------- | -------------------------------------- |
+| Resolution  | 4K minimum (3840×2160)                 |
+| Camera      | ARRI Alexa 65 / RED V-Raptor 8K        |
+| Lens        | Prime lenses (50mm/65mm/80mm)          |
+| Aperture    | f/2.8 - f/4.0                          |
 | Color Space | ACEScg (master), Display P3 (delivery) |
-| Bit Depth | 16-bit |
-| Lighting | Cinematic three-point or Rembrandt |
+| Bit Depth   | 16-bit                                 |
+| Lighting    | Cinematic three-point or Rembrandt     |
 
 ### SilentEngine™ Capabilities
 
-| Capability | Description |
-|------------|-------------|
+| Capability     | Description         |
+| -------------- | ------------------- |
 | `long_context` | 100K+ token context |
-| `tool_use` | Function calling |
-| `vision` | Image understanding |
-| `streaming` | Streaming responses |
-| `code_generation` | Code-focused models |
-| `strong_reasoning` | Complex reasoning (Claude Opus, o1) |
-| `low_cost` | Cost-optimized |
-| `fast_latency` | Low latency |
+| `tool_use`     | Function calling    |
 
----
+QuietBuild OS™ V3 — simple guide
 
-## 🧪 Example Integration
+Hello! This is the big Robby project. It helps build apps and proves that work really happened.
 
-```typescript
-import { SilentEngine } from '@qbos/silent-engine-core';
-import { validateAsset, generatePromptHeader } from '@qbos/sight-engine';
+What this repo has (short):
 
-// Initialize SilentEngine
-const silentEngine = new SilentEngine({
-  providers: [anthropic, openai, google],
-  policies: [costOptimized, qualityFirst],
-  defaultPolicyKey: 'cost_optimized'
-});
+- A demo app you can run locally (proof-harness)
+- A small UI for Robby (rob-ui)
+- Several "engines" that do jobs (identity, paywall, silent AI router, sight quality checks, etc.)
+- TruthSerum: a system that makes receipts (proofs) and checks them before doing things
+- CI workflows that check receipts and stop merges if proofs are missing
 
-// Generate visual with SightEngine standards
-const prompt = `
-${generatePromptHeader('A')}
+If you want the super-short, kid-friendly steps:
 
-Create a logo for CharterEngine - a legal governance system.
-Style: Engineered, precise, minimal
-Colors: Deep blue, white
-`;
+1. Copy the code to your computer.
+   - Run:
+     ```bash
+     git clone https://github.com/rsemeah/QBos---Master-Founder-Repo.git
+     cd QBos---Master-Founder-Repo
+     npm install
+     ```
+2. Start the backend demo (proof harness).
+   - Run:
+     ```bash
+     cd apps/proof-harness
+     npm run dev
+     # open http://localhost:3000 in your browser
+     ```
+3. Start the Robby UI (in another terminal).
+   - Run:
+     ```bash
+     cd apps/rob-ui
+     npm run dev
+     # open http://localhost:3001
+     ```
+4. Try Robby: say "I consent" then ask for help. Robby will check for proofs
+   (receipts). If proofs are missing it says it can't do it yet.
 
-const result = await silentEngine.generate({
-  messages: [{ role: 'user', content: prompt }],
-  preferredCapabilities: ['vision', 'high_quality']
-});
+How receipts (proofs) work — very simply:
 
-console.log('Generated visual description:', result.response.text);
+- People or CI create little files that say "Yes, this is true" (these are receipts).
+- The system looks at receipts before doing important things.
+- If a proof is missing, the system stops and asks a human (Noor) to approve.
 
-// Validate the generated visual (in production, this would be the actual image)
-const validation = validateAsset(visualSpec, 'logo', 'A');
-console.log('Passes SightEngine standards:', validation.passed);
-```
+How to add signed receipts (safe way):
 
----
+1. Put unsigned payloads in `.robby/pending/` (JSON files describing the proof).
+2. A maintainer runs the GitHub Action "Sign and publish Robby receipts" (Actions → Sign and publish Robby receipts).
+3. The action signs payloads, writes signed receipts to `.robby/receipts/`, and commits them.
 
-## 🎨 Philosophy
+Developer quick notes:
 
-### SightEngine™
-**Ensures you look professional.**
+- The TruthSerum code is in `packages/truthserum`.
+- The guard that checks receipts runs before adapters and engines execute actions.
+- CI will run `robby-receipts-ci.yml` on PRs that touch `.robby/**` and will fail if proofs aren't valid.
 
-Visual excellence is non-negotiable for trust-based products. SightEngine™ enforces standards that separate investor-grade brands from amateur outputs.
+What I'll do next (automatic plan):
 
-### SilentEngine™
-**Makes intelligent decisions so you don't have to.**
+1. Add unit tests for the runtime guard so the system reliably blocks unapproved actions.
+2. Wire remaining engines (SilentEngine and others) to call the guard before they act.
+3. Add more CI tests and small integration tests to prove the full flow works.
 
-AI routing should be deterministic, observable, and explainable. SilentEngine™ ensures every request uses the best model for the job.
+If you want me to do something else first, tell me now. Otherwise I'll start on step 1 (unit tests for the guard).
 
-### Together
-**Foundation of Trust for QuietBuild OS™**
+Files you might open next:
 
-- **Visual Trust** - Investor-grade visuals
-- **Operational Trust** - Intelligent AI routing
-- **Architectural Trust** - Composable, replaceable, auditable
+- `packages/truthserum/README.md` — how receipts are made and checked
+- `apps/proof-harness` — demo backend to try things locally
+- `apps/rob-ui` — the Robby UI
 
----
+Thanks — Robby will keep building until everything is done, and I will keep working on the steps above now.
 
-## 📝 Success Criteria
+License: MIT
 
-✅ **An experienced engineer would say:** "This could run a serious AI platform"
-✅ **An investor would say:** "This is real infrastructure"
-✅ **Future-you can:** Add a brand-new LLM in minutes, not days
-
----
-
-## 🔮 Roadmap
-
-### Completed ✅
-- [x] SightEngine™ - Visual quality standards
-- [x] SilentEngine™ - AI routing engine
-- [x] Supabase migrations for both engines
-- [x] Provider implementations (Anthropic, OpenAI, Google)
-- [x] Next.js API adapters
-- [x] Full-featured demo application
-- [x] Monorepo setup with workspaces
-- [x] **Rob the QuietBuilder** - State machine + API routes
-- [x] **TruthSerum** - Constitutional enforcement system
-- [x] **CI TruthGate** - Automated validation (5 scripts)
-- [x] **Receipt System** - Immutable audit trail
-- [x] **CharterEngine™** - Consent enforcement (integrated in Rob)
-
-### In Progress 🔄
-- [ ] Supabase production deployment
-- [ ] Real authentication (Supabase Auth)
-- [ ] Billing enforcement (schema ready, API wiring needed)
-
-### Upcoming 📋
-- [ ] AI generation integration (Rob + SilentEngine)
-- [ ] GitHub integration (code push)
 - [ ] Vercel deployment automation
 - [ ] Multi-engine orchestration dashboard
 - [ ] Real-time observability
@@ -700,6 +765,7 @@ AI routing should be deterministic, observable, and explainable. SilentEngine™
 ### ✨ December 2025 - Constitutional Infrastructure
 
 **Rob the QuietBuilder (Vertical Slice)**
+
 - Complete state machine with 13 states
 - API routes: session init + message handler with consent gate
 - Supabase-ready with mock mode fallback
@@ -708,6 +774,7 @@ AI routing should be deterministic, observable, and explainable. SilentEngine™
 - Database schema: 9 tables with RLS policies
 
 **TruthSerum & Constitutional Enforcement**
+
 - Automated CI validation (GitHub Actions)
 - 5 validation scripts: routes, engine pages, dead-ends, receipts, TypeScript
 - Receipt system with parent-child chaining
@@ -715,6 +782,7 @@ AI routing should be deterministic, observable, and explainable. SilentEngine™
 - Comprehensive audit documentation
 
 **Database & Infrastructure**
+
 - Rob tables migration ready (408 lines SQL)
 - Supabase client integration (`@supabase/supabase-js`)
 - CharterEngine consent gate operational
@@ -724,12 +792,14 @@ AI routing should be deterministic, observable, and explainable. SilentEngine™
 ### ✨ Previous Additions
 
 **Provider Implementations**
+
 - Full Anthropic SDK integration (Claude 3.5, Opus, Haiku)
 - Complete OpenAI support (GPT-4, GPT-4o, GPT-3.5)
 - Google AI integration (Gemini 1.5 Pro/Flash)
 - Cost calculation and health checks
 
 **Next.js Adapters**
+
 - `@qbos/nextjs-adapter` package
 - Type-safe API route creators
 - Built-in auth support
@@ -737,6 +807,7 @@ AI routing should be deterministic, observable, and explainable. SilentEngine™
 - Automatic error handling
 
 **Database Migrations**
+
 - Complete Supabase schema for SightEngine
 - Complete Supabase schema for SilentEngine
 - Rob tables with RLS and helper functions
@@ -744,6 +815,7 @@ AI routing should be deterministic, observable, and explainable. SilentEngine™
 - Circuit breaker state tracking
 
 **Demo Application**
+
 - Full-featured Next.js 14 app
 - Rob vertical slice at `/rob`
 - Interactive SilentEngine demo
@@ -752,6 +824,7 @@ AI routing should be deterministic, observable, and explainable. SilentEngine™
 - Real-time validation
 
 **Monorepo**
+
 - npm workspaces configuration
 - Unified build scripts
 - Shared dependencies
@@ -762,11 +835,13 @@ AI routing should be deterministic, observable, and explainable. SilentEngine™
 ## � Quick Start - Run Rob UI Locally
 
 ### Prerequisites
+
 - Node.js 18+
 - npm or yarn
 - Git
 
 ### 1. Clone & Install
+
 ```bash
 git clone https://github.com/rsemeah/QBos---Master-Founder-Repo.git
 cd QBos---Master-Founder-Repo
@@ -774,21 +849,26 @@ npm install
 ```
 
 ### 2. Start Backend (Terminal 1)
+
 ```bash
 cd apps/proof-harness
 npm run dev
 ```
+
 Wait for: `ready started server on 0.0.0.0:3000`
 
 ### 3. Start UI (Terminal 2)
+
 ```bash
 cd apps/rob-ui
 npm install  # First time only
 npm run dev
 ```
+
 Wait for: `Local: http://localhost:3001/`
 
 ### 4. Test Rob
+
 1. Visit http://localhost:3001/rob
 2. Type: `I consent`
 3. Type: `help`
@@ -826,5 +906,4 @@ QuietBuild OS™ determines whether your product is **average** or **inevitable*
 
 **For founders:** Build with confidence. Every step verified.
 **For investors:** See real progress, not promises.
-**For engineers:** No lies, no mocks, no "trust me." 
- 
+**For engineers:** No lies, no mocks, no "trust me."
