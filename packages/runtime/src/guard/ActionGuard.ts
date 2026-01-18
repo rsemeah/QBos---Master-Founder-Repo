@@ -3,7 +3,9 @@ import path from "path";
 import { ApprovalVerifier } from "./ApprovalVerifier";
 import { PolicyEnforcer } from "./PolicyEnforcer";
 
-const REPO_ROOT = path.resolve(__dirname, "../../../../..");
+// Prefer workspace process current working directory so tests and
+// runtime resolve the repository root consistently.
+const REPO_ROOT = process.cwd();
 const ROBBY_DIR = path.join(REPO_ROOT, ".robby");
 const RECEIPTS_DIR = path.join(ROBBY_DIR, "receipts");
 

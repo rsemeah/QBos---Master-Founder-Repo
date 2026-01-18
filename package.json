@@ -22,7 +22,7 @@
     "dev": "npm run dev --workspaces",
     "clean": "npm run clean --workspaces && rm -rf node_modules",
     "install:all": "npm install",
-    "test": "echo \"Tests coming soon\" && exit 0",
+    "test": "jest --config jest.config.cjs --runInBand",
     "truthgate": "ts-node scripts/truthgate.ts",
     "smoke:truthserum": "ts-node scripts/smoke-truthserum.ts",
     "smoke:truthserum:js": "node scripts/smoke-truthserum.js",
@@ -54,7 +54,9 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "@types/jest": "^29.5.3",
-    "@types/node": "^20.19.27"
+    "@types/node": "^20.19.27",
+    "jest": "^29.6.1",
+    "ts-jest": "^29.1.1"
   },
   "engines": {
     "node": ">=18.0.0",

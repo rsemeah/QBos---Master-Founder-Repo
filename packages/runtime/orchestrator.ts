@@ -3,16 +3,15 @@
  * Emits receipts, evaluates intents, sanitizes responses
  */
 
+import { MockProvider, SilentEngine } from "@qbos/silent-engine-core";
 import {
-  TruthSerum,
-  Receipt,
-  IntentEvaluation,
-  TruthState,
-  getIntent,
+    IntentEvaluation,
+    Receipt,
+    TruthSerum,
+    TruthState,
+    getIntent,
 } from "@qbos/truthserum";
 import { RuntimeContext } from "./context";
-import { ReceiptWriter } from "@qbos/truthserum";
-import { SilentEngine, MockProvider } from "@qbos/silent-engine-core";
 
 type ReceiptWriterLike = Pick<ReceiptWriter, "writeReceipt" | "readReceipts">;
 
@@ -33,10 +32,22 @@ export interface ProcessResult {
 export class OrchestrationEngine {
   private receiptWriter: ReceiptWriterLike;
   private silentEngine: SilentEngine;
+  private serum: any;
 
-  constructor(receiptWriter: ReceiptWriterLike, silentEngine?: SilentEngine) {
+  constructor(
+    receiptWriter: ReceiptWriterLike,
+    silentEngine?: SilentEngine,
+    serum?: any,
+  ) {
     this.receiptWriter = receiptWriter;
     this.silentEngine = silentEngine ?? this.createDefaultSilentEngine();
+    // Allow injecting a TruthSerum-like object for tests; fall back
+    // to the package export when not provided.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const pkg: any = require("@qbos/truthserum");
+    this.serum =
+      (serum ?? (TruthSerum as any) ?? pkg.TruthSerum) ||
+      pkg.default?.TruthSerum;
   }
 
   /**
@@ -45,7 +56,7 @@ export class OrchestrationEngine {
    */
   async processAIMessage(
     message: AIMessage,
-    context: RuntimeContext
+    context: RuntimeContext,
   ): Promise<ProcessResult> {
     const newReceipts: Receipt[] = [];
 
@@ -60,7 +71,9 @@ export class OrchestrationEngine {
     }
 
     // Step 2: Read all receipts for this session
-    const allReceipts = await this.receiptWriter.readReceipts(context.sessionId);
+    const allReceipts = await this.receiptWriter.readReceipts(
+      context.sessionId,
+    );
 
     // Step 3: Evaluate session.ready intent
     const sessionReadyIntent = getIntent("session.ready");
@@ -68,7 +81,14 @@ export class OrchestrationEngine {
       throw new Error("session.ready intent not found in registry");
     }
 
-    const sessionEval = TruthSerum.evaluateIntent(sessionReadyIntent, allReceipts);
+    // Support environments where `TruthSerum` may be a named import
+    // or only available on the package default; fall back to the
+    // runtime package export when necessary.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const sessionEval = this.serum.evaluateIntent(
+      sessionReadyIntent,
+      allReceipts,
+    );
 
     // Step 4: If not Verified, return truthful response + missing proof list
     if (sessionEval.state !== "Verified") {
@@ -85,8 +105,13 @@ export class OrchestrationEngine {
     // Step 5: Evaluate rob.ready intent (billing caps, safety)
     const robReadyIntent = getIntent("rob.ready");
     const robEval = robReadyIntent
-      ? TruthSerum.evaluateIntent(robReadyIntent, allReceipts)
-      : { state: "Unknown" as TruthState, missingProofs: [], foundProofs: [], nextSteps: [] };
+      ? this.serum.evaluateIntent(robReadyIntent, allReceipts)
+      : {
+          state: "Unknown" as TruthState,
+          missingProofs: [],
+          foundProofs: [],
+          nextSteps: [],
+        };
 
     if (robEval.state === "Blocked") {
       const blockReceipt = await this.receiptWriter.writeReceipt({
@@ -97,7 +122,8 @@ export class OrchestrationEngine {
       newReceipts.push(blockReceipt);
 
       return {
-        response: "I can't help with that right now. Your session is safe, but this request was blocked.",
+        response:
+          "I can't help with that right now. Your session is safe, but this request was blocked.",
         truthState: "Blocked",
         evaluations: [sessionEval, robEval],
         newReceipts,
@@ -131,8 +157,8 @@ export class OrchestrationEngine {
     const genReceipt = await this.receiptWriter.writeReceipt({
       sessionId: context.sessionId,
       type: "silent.generated",
-      details: { 
-        prompt: message.content, 
+      details: {
+        prompt: message.content,
         response: draftResponse,
         provider: draftGeneration.provider,
         model: draftGeneration.model,
@@ -149,8 +175,12 @@ export class OrchestrationEngine {
     const updatedReceipts = [...allReceipts, ...newReceipts];
 
     // Step 8: Sanitize claims with TruthSerum
-    const overallState = TruthSerum.computeOverallState([sessionEval, robEval]);
-    const verdict = TruthSerum.sanitizeClaims(draftResponse, updatedReceipts, overallState);
+    const overallState = this.serum.computeOverallState([sessionEval, robEval]);
+    const verdict = this.serum.sanitizeClaims(
+      draftResponse,
+      updatedReceipts,
+      overallState,
+    );
 
     const finalResponse = verdict.sanitizedText || draftResponse;
     const wasSanitized = Boolean(verdict.sanitizedText);
@@ -194,8 +224,12 @@ export class OrchestrationEngine {
   /**
    * Generate a friendly response for Unknown state
    */
-  private generateFriendlyUnknownResponse(evaluation: IntentEvaluation): string {
-    const missing = evaluation.missingProofs.map((p) => p.description).join(", ");
+  private generateFriendlyUnknownResponse(
+    evaluation: IntentEvaluation,
+  ): string {
+    const missing = evaluation.missingProofs
+      .map((p) => p.description)
+      .join(", ");
     return `I'm not quite ready yet. I need: ${missing}. Let's get that sorted first!`;
   }
 
@@ -204,7 +238,7 @@ export class OrchestrationEngine {
    */
   private async generateDraftResponse(
     message: AIMessage,
-    context: RuntimeContext
+    context: RuntimeContext,
   ): Promise<{
     text: string;
     provider: string;
@@ -273,7 +307,7 @@ export class OrchestrationEngine {
   async emitReceipt(
     sessionId: string,
     type: string,
-    details: Record<string, any>
+    details: Record<string, any>,
   ): Promise<Receipt> {
     return this.receiptWriter.writeReceipt({
       sessionId,

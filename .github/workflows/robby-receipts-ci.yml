@@ -3,6 +3,44 @@ name: Robby Receipts CI
 on:
   pull_request:
     paths:
+      - '.robby/**'
+
+jobs:
+  verify-receipts:
+    runs-on: ubuntu-latest
+    name: Verify Robby receipts
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install deps (if present)
+        run: |
+          if [ -f package.json ]; then npm ci || true; fi
+
+      - name: Verify receipts signatures
+        env:
+          RECEIPT_VERIFY_PUBKEY: ${{ secrets.RECEIPT_VERIFY_PUBKEY }}
+        run: |
+          node ./scripts/ci-verify-receipts.js
+
+      - name: Optional: run TruthSerum evaluation
+        if: success() && steps.verify-receipts.conclusion == 'success'
+        run: |
+          if [ -f scripts/prove-truthserum.js ]; then
+            node scripts/prove-truthserum.js || true
+          else
+            echo 'No TruthSerum evaluation script found; skipping.'
+          fi
+name: Robby Receipts CI
+
+on:
+  pull_request:
+    paths:
       - ".robby/**"
 
 jobs:

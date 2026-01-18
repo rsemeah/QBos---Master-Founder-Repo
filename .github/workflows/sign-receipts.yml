@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       message:
-        description: 'Commit message for signed receipts'
+        description: "Commit message for signed receipts"
         required: false
-        default: 'ci: add signed receipts'
+        default: "ci: add signed receipts"
 
 permissions:
   contents: write
@@ -22,7 +22,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Sign pending receipts
         env:

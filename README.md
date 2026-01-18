@@ -1,10 +1,8 @@
-QBos - Master Founder Repo
-=================================
+# QBos - Master Founder Repo
 
 This repository contains the QBos platform components: runtime, orchestrator, SilentEngine, Robby tooling, Brainsmart (constitutional) checks, and TruthSerum proof/evaluation tooling.
 
-Recent Upgrades (summary)
--------------------------
+## Recent Upgrades (summary)
 
 - SilentEngine: routing and AI generation improvements, clearer routing metadata, and deterministic test hooks.
 - Robby (.robby): runtime receipt registry and verification; receipts live under `.robby/receipts` and CI includes signing/verification tooling.
@@ -13,8 +11,7 @@ Recent Upgrades (summary)
 - Testing & Mocks: manual mocks consolidated under `apps/proof-harness/__mocks__` (keep only `.js` mocks); orchestrator accepts an injectable `serum` for tests.
 - CI: GitHub Actions to verify Noor-signed receipts and enforce approvals before guarded merges.
 
-Running tests (runtime-focused)
-------------------------------
+## Running tests (runtime-focused)
 
 1. Install dependencies:
 
@@ -28,27 +25,25 @@ Running tests (runtime-focused)
    pnpm -w exec jest packages/runtime --config jest.config.cjs --runInBand
    ```
 
-Developer notes
----------------
+## Developer notes
 
 - `packages/runtime/orchestrator.ts` now supports injecting a `serum` dependency for deterministic unit tests.
 - `packages/runtime/src/guard/ActionGuard.ts` resolves `.robby` relative to `process.cwd()` to match test setups that write `.robby/REGISTRY` into the repo root.
 - Manual mocks: ensure duplicate `.ts` mock copies are removed from `apps/proof-harness/__mocks__` to avoid jest-haste-map warnings.
 - CI secrets required for verification: `RECEIPT_SIGNING_KEY`, `RECEIPT_VERIFY_PUBKEY`.
 
-Where to look
--------------
+## Where to look
 
 - Runtime guard: `packages/runtime/src/guard/ActionGuard.ts`
 - Orchestrator: `packages/runtime/orchestrator.ts`
 - TruthSerum manual mocks: `apps/proof-harness/__mocks__/@qbos/truthserum.js`
 - CI workflows: `.github/workflows/`
 
-Next steps
-----------
+## Next steps
 
 - Stabilize broader monorepo tests beyond `packages/runtime`.
 - Finalize CI secret setup for receipt signing/verification.
+
 # QuietBuild OS™ V3 - Master Founder Repository
 
 **Complete 8-Engine Platform + TruthSerum™ Verification System**

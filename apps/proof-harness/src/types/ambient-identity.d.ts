@@ -1,1 +1,1 @@
-declare module '@qbos/identity-engine-core';
+declare module "@qbos/identity-engine-core";

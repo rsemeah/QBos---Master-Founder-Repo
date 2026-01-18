@@ -1,49 +1,196 @@
 #!/usr/bin/env node
-const fs = require("fs");
-const path = require("path");
-const TS = require("../packages/truthserum/dist");
+const fs = require('fs')
+const path = require('path')
+const crypto = require('crypto')
 
-function readReceiptsFromDir(dir) {
-  if (!fs.existsSync(dir)) return [];
-  const files = fs.readdirSync(dir).filter((f) => f.endsWith(".json"));
-  const receipts = [];
-  for (const f of files) {
+function stableStringify(obj) {
+  if (obj === null || typeof obj !== 'object') return JSON.stringify(obj)
+  if (Array.isArray(obj)) return '[' + obj.map(stableStringify).join(',') + ']'
+  const keys = Object.keys(obj).sort()
+  return '{' + keys.map(k => JSON.stringify(k) + ':' + stableStringify(obj[k])).join(',') + '}'
+}
+
+function verifyReceiptFile(fp, pubkeyPem) {
+  const data = JSON.parse(fs.readFileSync(fp, 'utf8'))
+  if (!data.payload || !data.signature) throw new Error('missing payload or signature')
+  const payloadString = stableStringify(data.payload)
+  const payloadBuf = Buffer.from(payloadString, 'utf8')
+  const sigBuf = Buffer.from(data.signature, 'base64')
+  const publicKey = crypto.createPublicKey(pubkeyPem)
+  const ok = crypto.verify(null, payloadBuf, publicKey, sigBuf)
+  return ok
+}
+
+function main() {
+  const receiptsDir = path.resolve('.robby/receipts')
+  if (!fs.existsSync(receiptsDir)) {
+    console.error('No receipts directory found at .robby/receipts')
+    process.exit(1)
+  }
+
+  const pubkey = process.env.RECEIPT_VERIFY_PUBKEY
+  if (!pubkey) {
+    console.error('Missing RECEIPT_VERIFY_PUBKEY env secret (set in Actions secrets)')
+    process.exit(2)
+  }
+
+  const files = fs.readdirSync(receiptsDir).filter(f => f.endsWith('.json'))
+  if (files.length === 0) {
+    console.error('No receipt JSON files found in .robby/receipts')
+    process.exit(1)
+  }
+
+  let failed = false
+
+  for (const file of files) {
+    const fp = path.join(receiptsDir, file)
     try {
-      const p = path.join(dir, f);
-      const j = JSON.parse(fs.readFileSync(p, "utf8"));
-      receipts.push(j);
-    } catch (e) {
-      console.error("failed to parse", f, e.message);
+      const ok = verifyReceiptFile(fp, pubkey)
+      if (!ok) {
+        console.error(`${file}: signature verification FAILED`)
+        failed = true
+      } else {
+        console.log(`${file}: signature verified`)
+      }
+    } catch (err) {
+      console.error(`${file}: verification error:`, err.message)
+      failed = true
     }
   }
-  return receipts;
+
+  if (failed) process.exit(1)
+  console.log('All receipts verified')
 }
 
-async function run() {
-  const dir = path.join(process.cwd(), ".robby", "receipts");
-  const receipts = readReceiptsFromDir(dir);
-  if (!receipts.length) {
-    console.error("No receipts found in .robby/receipts");
-    process.exit(1);
-  }
-  const intent = TS.getIntent("rob.ready");
-  if (!intent) {
-    console.error("No rob.ready intent registered");
-    process.exit(1);
-  }
-  const ev = TS.TruthSerum.evaluateIntent(intent, receipts);
-  console.log("rob.ready state:", ev.state);
-  if (ev.state !== "Verified") {
-    console.error(
-      "rob.ready not Verified. missing:",
-      ev.missingProofs.map((m) => m.type).join(", "),
-    );
-    process.exit(1);
-  }
-  console.log("rob.ready Verified");
+main()
+#!/usr/bin/env node
+const fs = require('fs')
+const path = require('path')
+const crypto = require('crypto')
+
+function stableStringify(obj) {
+  if (obj === null || typeof obj !== 'object') return JSON.stringify(obj)
+  if (Array.isArray(obj)) return '[' + obj.map(stableStringify).join(',') + ']'
+  const keys = Object.keys(obj).sort()
+  return '{' + keys.map(k => JSON.stringify(k) + ':' + stableStringify(obj[k])).join(',') + '}'
 }
 
-run().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+function verifyReceiptFile(fp, pubkeyPem) {
+  const data = JSON.parse(fs.readFileSync(fp, 'utf8'))
+  if (!data.payload || !data.signature) throw new Error('missing payload or signature')
+  const payloadString = stableStringify(data.payload)
+  const payloadBuf = Buffer.from(payloadString, 'utf8')
+  const sigBuf = Buffer.from(data.signature, 'base64')
+  const publicKey = crypto.createPublicKey(pubkeyPem)
+  const ok = crypto.verify(null, payloadBuf, publicKey, sigBuf)
+  return ok
+}
+
+function main() {
+  const receiptsDir = path.resolve('.robby/receipts')
+  if (!fs.existsSync(receiptsDir)) {
+    console.error('No receipts directory found at .robby/receipts')
+    process.exit(1)
+  }
+
+  const pubkey = process.env.RECEIPT_VERIFY_PUBKEY
+  if (!pubkey) {
+    console.error('Missing RECEIPT_VERIFY_PUBKEY env secret (set in Actions secrets)')
+    process.exit(2)
+  }
+
+  const files = fs.readdirSync(receiptsDir).filter(f => f.endsWith('.json'))
+  if (files.length === 0) {
+    console.error('No receipt JSON files found in .robby/receipts')
+    process.exit(1)
+  }
+
+  let failed = false
+
+  for (const file of files) {
+    const fp = path.join(receiptsDir, file)
+    try {
+      const ok = verifyReceiptFile(fp, pubkey)
+      if (!ok) {
+        console.error(`${file}: signature verification FAILED`)
+        failed = true
+      } else {
+        console.log(`${file}: signature verified`)
+      }
+    } catch (err) {
+      console.error(`${file}: verification error:`, err.message)
+      failed = true
+    }
+  }
+
+  if (failed) process.exit(1)
+  console.log('All receipts verified')
+}
+
+main()
+#!/usr/bin/env node
+const fs = require('fs')
+const path = require('path')
+const crypto = require('crypto')
+
+function stableStringify(obj) {
+  if (obj === null || typeof obj !== 'object') return JSON.stringify(obj)
+  if (Array.isArray(obj)) return '[' + obj.map(stableStringify).join(',') + ']'
+  const keys = Object.keys(obj).sort()
+  return '{' + keys.map(k => JSON.stringify(k) + ':' + stableStringify(obj[k])).join(',') + '}'
+}
+
+function verifyReceiptFile(fp, pubkeyPem) {
+  const data = JSON.parse(fs.readFileSync(fp, 'utf8'))
+  if (!data.payload || !data.signature) throw new Error('missing payload or signature')
+  const payloadString = stableStringify(data.payload)
+  const payloadBuf = Buffer.from(payloadString, 'utf8')
+  const sigBuf = Buffer.from(data.signature, 'base64')
+  const publicKey = crypto.createPublicKey(pubkeyPem)
+  const ok = crypto.verify(null, payloadBuf, publicKey, sigBuf)
+  return ok
+}
+
+function main() {
+  const receiptsDir = path.resolve('.robby/receipts')
+  if (!fs.existsSync(receiptsDir)) {
+    console.error('No receipts directory found at .robby/receipts')
+    process.exit(1)
+  }
+
+  const pubkey = process.env.RECEIPT_VERIFY_PUBKEY
+  if (!pubkey) {
+    console.error('Missing RECEIPT_VERIFY_PUBKEY env secret (set in Actions secrets)')
+    process.exit(2)
+  }
+
+  const files = fs.readdirSync(receiptsDir).filter(f => f.endsWith('.json'))
+  if (files.length === 0) {
+    console.error('No receipt JSON files found in .robby/receipts')
+    process.exit(1)
+  }
+
+  let failed = false
+
+  for (const file of files) {
+    const fp = path.join(receiptsDir, file)
+    try {
+      const ok = verifyReceiptFile(fp, pubkey)
+      if (!ok) {
+        console.error(`${file}: signature verification FAILED`)
+        failed = true
+      } else {
+        console.log(`${file}: signature verified`)
+      }
+    } catch (err) {
+      console.error(`${file}: verification error:`, err.message)
+      failed = true
+    }
+  }
+
+  if (failed) process.exit(1)
+  console.log('All receipts verified')
+}
+
+main()
+

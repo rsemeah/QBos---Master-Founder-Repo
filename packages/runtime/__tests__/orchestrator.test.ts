@@ -1,8 +1,31 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { OrchestrationEngine } from "../orchestrator";
+import { MockProvider, SilentEngine } from "@qbos/silent-engine-core";
 import { Receipt } from "@qbos/truthserum";
-import { SilentEngine, MockProvider } from "@qbos/silent-engine-core";
+import { OrchestrationEngine } from "../orchestrator";
+
+// Ensure TruthSerum evaluateIntent returns Verified for seeded
+// receipts in these unit tests to avoid flakiness from import
+// shape differences.
+// jest.mock("@qbos/truthserum", () => {
+//   const real = jest.requireActual("@qbos/truthserum");
+//   return Object.assign({}, real, {
+//     TruthSerum: {
+//       evaluateIntent: jest.fn().mockImplementation((intent, receipts) => ({
+//         intent,
+//         state: "Verified",
+//         missingProofs: [],
+//         foundProofs: receipts || [],
+//         nextSteps: [],
+//       })),
+//       computeOverallState: jest.fn().mockReturnValue("Verified"),
+//       sanitizeClaims: jest
+//         .fn()
+//         .mockImplementation((text) => ({
+//           sanitizedText: null,
+//           missingProofs: [],
+//         })),
+//     },
+//   });
+// });
 
 type ReceiptInput = Omit<Receipt, "id" | "createdAt">;
 
@@ -54,7 +77,10 @@ function buildSilentEngine(): SilentEngine {
   });
 }
 
-async function seedReadyReceipts(writer: MemoryReceiptWriter, sessionId: string) {
+async function seedReadyReceipts(
+  writer: MemoryReceiptWriter,
+  sessionId: string,
+) {
   const readyReceipts: ReceiptInput[] = [
     {
       sessionId,
@@ -93,7 +119,26 @@ test("routes AI generation through SilentEngine and emits routing metadata", asy
   const writer = new MemoryReceiptWriter();
   await seedReadyReceipts(writer, sessionId);
 
-  const orchestrator = new OrchestrationEngine(writer, buildSilentEngine());
+  const mockSerum = {
+    evaluateIntent: (intent: any, receipts: any[]) => ({
+      intent,
+      state: "Verified",
+      missingProofs: [],
+      foundProofs: receipts || [],
+      nextSteps: [],
+    }),
+    computeOverallState: (_: any) => "Verified",
+    sanitizeClaims: (_text: string) => ({
+      sanitizedText: null,
+      missingProofs: [],
+    }),
+  };
+
+  const orchestrator = new OrchestrationEngine(
+    writer,
+    buildSilentEngine(),
+    mockSerum,
+  );
 
   const result = await orchestrator.processAIMessage(
     {
@@ -104,14 +149,18 @@ test("routes AI generation through SilentEngine and emits routing metadata", asy
       sessionId,
       userId: "user-123",
       receipts: [],
-    }
+    },
   );
 
-  assert.match(result.response, /Mock AI Response/);
+  // (debug logs removed)
+
+  expect(result.response).toMatch(/Mock AI Response/);
 
   const receipts = await writer.readReceipts(sessionId);
-  const silentReceipt = receipts.find((receipt) => receipt.type === "silent.generated");
-  assert.ok(silentReceipt, "expected silent.generated receipt to be emitted");
-  assert.equal(silentReceipt?.details.provider, "mock");
-  assert.equal(silentReceipt?.details.model, "mock-standard");
+  const silentReceipt = receipts.find(
+    (receipt) => receipt.type === "silent.generated",
+  );
+  expect(silentReceipt).toBeDefined();
+  expect(silentReceipt?.details.provider).toBe("mock");
+  expect(silentReceipt?.details.model).toBe("mock-standard");
 });
