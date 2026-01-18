@@ -1,0 +1,17 @@
+name: Validate Robby Receipts
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  validate-receipts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Robby receipts validation
+        run: |
+          chmod +x .github/scripts/validate_robby_receipts.sh
+          .github/scripts/validate_robby_receipts.sh
