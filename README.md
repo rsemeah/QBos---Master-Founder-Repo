@@ -828,3 +828,24 @@ QuietBuild OS™ determines whether your product is **average** or **inevitable*
 **For investors:** See real progress, not promises.
 **For engineers:** No lies, no mocks, no "trust me." 
  
+
+## Engines (summary)
+
+The repository contains multiple modular engines. Ensure you set these up as needed:
+
+- QuietBuild OS
+- Robby PA
+- Rob the Builder
+- BrainSmart — AI reasoning layer used for policy-aware suggestions and orchestration
+- TruthSerum
+- SilentEngine
+- JourneysEngine
+- IdentityEngine
+- SafetyEngine
+- NotificationsEngine
+- EthosEngine
+- SightEngine
+- ConfigEngine
+- CharterEngine
+- PaywallEngine
+
