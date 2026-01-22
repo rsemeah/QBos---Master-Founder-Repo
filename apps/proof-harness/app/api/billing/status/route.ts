@@ -8,10 +8,6 @@ import { ReceiptWriter, TruthState } from '@qbos/truthserum';
 
 export const dynamic = 'force-dynamic';
 
-const receiptWriter = new ReceiptWriter({
-  localFallbackPath: './proof/local_receipts.jsonl',
-});
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -25,7 +21,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Read receipts
-    const receipts = await receiptWriter.readReceipts(sessionId);
+    const receipts = await ReceiptWriter.readReceipts(sessionId);
 
     // Find billing proofs
     const billingActive = receipts.find(r => r.type === 'billing.active');

@@ -3,12 +3,13 @@ import { calibrate } from './core/calibration.js';
 import { rotateKey } from './core/key-rotation.js';
 import { certify, verify } from './core/verification.js';
 import { retro } from './workflows/retro.js';
+import { buildCommand } from './commands/build.js';
 
 async function main() {
   const cwd = process.cwd();
   const cmd = process.argv[2];
   if (!cmd) {
-    console.error('Usage: calibrate|verify|certify|retro|rotate-key|war-room');
+    console.error('Usage: calibrate|verify|certify|retro|rotate-key|war-room|build');
     process.exit(2);
   }
   try {
@@ -45,6 +46,11 @@ async function main() {
       warRoom.on('close', (code) => {
         process.exit(code || 0);
       });
+      return;
+    }
+    if (cmd === 'build') {
+      const buildArgs = process.argv.slice(3);
+      await buildCommand(buildArgs);
       return;
     }
     console.error('Unknown command', cmd);

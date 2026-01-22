@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "QBOS_APP_NAME",
+    "slug": "qbos-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.qbos.BUNDLE_ID",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app requires camera access.",
+        "NSPhotoLibraryUsageDescription": "This app requires photo library access.",
+        "NSLocationWhenInUseUsageDescription": "This app requires location access.",
+        "NSMicrophoneUsageDescription": "This app requires microphone access."
+      }
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "scheme": "qbos-app",
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
+      }
+    }
+  }
+}
