@@ -1,6 +1,7 @@
 // packages/war-room/src/health/index.ts
 import { HealthStatus, Severity, EngineHealth, RobbyHealth, CostHealth } from '../types'
 import { ReceiptWriter } from '@qbos/truthserum'
+import { dataSources } from '../datasources'
 
 export class HealthMonitor {
   async getStatus(): Promise<HealthStatus> {
@@ -101,7 +102,7 @@ export class HealthMonitor {
       autonomy_level: autonomyLevel,
       blocked_actions_24h: blocked,
       human_interrupts_24h: interrupts,
-      confidence_delta: 0, // Placeholder
+      confidence_delta: await dataSources.getRobbyConfidenceDelta(),
       in_scope: blocked < 50
     }
   }
@@ -135,15 +136,36 @@ export class HealthMonitor {
     return 'green'
   }
 
-  // Placeholder methods - implement with actual data sources
-  private async getRecentReceipts(hours: number): Promise<any[]> { return [] }
-  private async getUnverifiedAttempts(hours: number): Promise<number> { return 0 }
-  private calculateDrift(receipts: any[]): number { return 0 }
-  private async getEngineMetrics(engine: string): Promise<any> {
-    return { last_success: new Date().toISOString(), error_rate: 0, fallback_rate: 0 }
+  // Data source methods - connected to live systems
+  private async getRecentReceipts(hours: number): Promise<any[]> {
+    return dataSources.getRecentReceipts(hours)
   }
-  private async getRobbyBlockedActions(hours: number): Promise<number> { return 0 }
-  private async getRobbyInterrupts(hours: number): Promise<number> { return 0 }
-  private async getRobbyAutonomyLevel(): Promise<number> { return 2 }
-  private async getCurrentSpendRate(): Promise<number> { return 0.5 }
+
+  private async getUnverifiedAttempts(hours: number): Promise<number> {
+    return dataSources.getUnverifiedAttempts(hours)
+  }
+
+  private calculateDrift(receipts: any[]): number {
+    return dataSources.calculateDrift(receipts)
+  }
+
+  private async getEngineMetrics(engine: string): Promise<any> {
+    return dataSources.getEngineMetrics(engine)
+  }
+
+  private async getRobbyBlockedActions(hours: number): Promise<number> {
+    return dataSources.getRobbyBlockedActions(hours)
+  }
+
+  private async getRobbyInterrupts(hours: number): Promise<number> {
+    return dataSources.getRobbyInterrupts(hours)
+  }
+
+  private async getRobbyAutonomyLevel(): Promise<number> {
+    return dataSources.getRobbyAutonomyLevel()
+  }
+
+  private async getCurrentSpendRate(): Promise<number> {
+    return dataSources.getCurrentSpendRate()
+  }
 }

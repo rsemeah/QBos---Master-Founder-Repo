@@ -1,0 +1,175 @@
+name: War Room Nightly Regression
+
+on:
+  schedule:
+    # Run every night at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build TruthSerum
+        run: pnpm -C packages/truthserum build
+
+      - name: Build War Room
+        run: pnpm -C packages/war-room build
+
+      - name: Run health check
+        run: pnpm -C packages/war-room node dist/cli/index.js health
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+      - name: Run all regression tests
+        id: regression
+        run: pnpm -C packages/war-room node dist/cli/index.js regress
+        continue-on-error: true
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+      - name: Check regression status
+        run: pnpm -C packages/war-room node dist/cli/index.js status
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+      - name: Create issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '🚨 Nightly Regression Failed';
+            const body = `
+            ## War Room Nightly Regression Failed
+
+            **Date:** ${new Date().toISOString()}
+            **Workflow:** ${{ github.workflow }}
+            **Run:** ${{ github.run_id }}
+
+            The nightly regression tests have failed. This indicates potential drift or degradation in system behavior.
+
+            ### Next Steps
+            1. Review the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            2. Run \`war-room regress\` locally to investigate
+            3. Check recent commits for breaking changes
+            4. Review TruthSerum receipts for anomalies
+
+            ### Quick Commands
+            \`\`\`bash
+            war-room status
+            war-room health
+            war-room regress
+            \`\`\`
+
+            cc: @rsemeah
+            `;
+
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['war-room', 'regression', 'urgent']
+            });
+
+      - name: Notify success
+        if: success()
+        run: |
+          echo "✅ Nightly regression passed successfully"
+          echo "System health: GREEN"
+
+  cost-check:
+    runs-on: ubuntu-latest
+    needs: regression
+    if: always()
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: |
+          pnpm -C packages/truthserum build
+          pnpm -C packages/war-room build
+
+      - name: Check cost thresholds
+        id: cost
+        run: pnpm -C packages/war-room node dist/cli/index.js cost status
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+      - name: Create issue if at risk
+        if: contains(steps.cost.outputs.stdout, 'At risk: ⚠️  YES')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '💰 War Room Cost Alert';
+            const body = `
+            ## Cost Budget At Risk
+
+            **Date:** ${new Date().toISOString()}
+
+            The current spend rate is approaching budget limits. Immediate action may be required.
+
+            ### Actions Available
+            \`\`\`bash
+            # Check cost status
+            war-room cost status
+
+            # Set budget cap
+            war-room cost set-cap 1000
+
+            # Force cheaper model
+            war-room cost override gpt-3.5-turbo "Cost reduction"
+
+            # Emergency freeze
+            war-room freeze emergency "Budget exceeded"
+            \`\`\`
+
+            cc: @rsemeah
+            `;
+
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['war-room', 'cost', 'urgent']
+            });

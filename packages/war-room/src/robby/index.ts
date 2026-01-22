@@ -1,6 +1,7 @@
 // packages/war-room/src/robby/index.ts
 import { RobbyHealth, Severity } from '../types'
 import { ReceiptWriter } from '@qbos/truthserum'
+import { dataSources } from '../datasources'
 
 export type AutonomyLevel = 0 | 1 | 2 | 3 | 4
 
@@ -109,17 +110,14 @@ export class RobbyMonitor {
   }
 
   private async getBlockedActions(hours: number): Promise<number> {
-    // TODO: Query actual blocked actions from Robby PA
-    return 0
+    return dataSources.getRobbyBlockedActions(hours)
   }
 
   private async getHumanInterrupts(hours: number): Promise<number> {
-    // TODO: Query actual interrupts from Robby PA
-    return 0
+    return dataSources.getRobbyInterrupts(hours)
   }
 
   private async getConfidenceDelta(): Promise<number> {
-    // TODO: Calculate confidence delta from recent actions
-    return 0
+    return dataSources.getRobbyConfidenceDelta()
   }
 }

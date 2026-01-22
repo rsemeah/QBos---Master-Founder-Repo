@@ -6,6 +6,9 @@ import { regressCommand } from './commands/regress'
 import { robbyCommand } from './commands/robby'
 import { costCommand } from './commands/cost'
 import { freezeCommand } from './commands/freeze'
+import { impactCommand } from './commands/impact'
+import { driftCommand } from './commands/drift'
+import { runbooksCommand } from './commands/runbooks'
 
 async function main() {
   const args = process.argv.slice(2)
@@ -42,6 +45,18 @@ async function main() {
         await freezeCommand(args[1], ...args.slice(2))
         break
 
+      case 'impact':
+        await impactCommand(args[1], ...args.slice(2))
+        break
+
+      case 'drift':
+        await driftCommand(args[1], ...args.slice(2))
+        break
+
+      case 'runbooks':
+        await runbooksCommand(args[1], ...args.slice(2))
+        break
+
       case 'help':
       case '--help':
       case '-h':
@@ -72,6 +87,9 @@ Commands:
   robby <action>      Manage Robby PA autonomy
   cost <action>       Manage cost and routing
   freeze <action>     Freeze/unfreeze system operations
+  impact <action>     Analyze commit impact and correlate degradations
+  drift <action>      Detect behavioral drift from baseline
+  runbooks <action>   Execute automated remediation runbooks
 
 Examples:
   war-room status
@@ -83,6 +101,9 @@ Examples:
   war-room cost set-cap 1000
   war-room freeze freeze "Deployment in progress"
   war-room freeze unfreeze
+  war-room impact analyze abc123
+  war-room drift detect
+  war-room runbooks list
 
 For detailed help on a specific command:
   war-room <command> --help

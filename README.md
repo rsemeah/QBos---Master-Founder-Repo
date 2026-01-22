@@ -20,12 +20,13 @@ Built for founders who need investor-grade demos with proof artifacts, not promi
 - ✅ Next.js Backend API (29 routes) - port 3000
 - ✅ Constitutional state machine (13 states)
 - ✅ CharterEngine consent enforcement
-- ✅ Supabase migrations ready (13 migration files, ~1,500 lines SQL)
+- ✅ Supabase migrations ready (14 migration files, ~3,000 lines SQL)
 - ✅ OpenAI GPT-4 integration (requires API key)
 - ✅ GitHub OAuth + repo creation (requires OAuth setup)
 - ✅ Token tracking and cost logging
 - ✅ Robby CLI tool with verification commands
-- ✅ 11 CI/CD workflows with TruthGate enforcement
+- ✅ War Room Operations Control Plane (health, costs, drift, runbooks)
+- ✅ 12 CI/CD workflows with TruthGate enforcement + nightly regression
 
 **What's Configurable (Choose What You Need):**
 - ⚡ **OpenAI API Key** → Real AI code generation
@@ -122,6 +123,102 @@ await ReceiptWriter.write({
 - `server.ts` - Standalone verification server
 
 **Read more:** [packages/truthserum/README.md](packages/truthserum/README.md)
+
+---
+
+## 🏛️ War Room - Operations Control Plane
+
+**Location:** `packages/war-room/`
+**Size:** ~2,500 lines of TypeScript (Phase 1 + Phase 2)
+**Status:** OPERATIONAL - Ready for production
+
+**What It Does:**
+- ✅ Real-time system health monitoring (constitutional, engines, Robby PA, costs)
+- ✅ Automated regression testing with golden bundle comparison
+- ✅ Cost controls with budget caps and routing overrides
+- ✅ Robby PA autonomy management (levels 0-4, kill-switch)
+- ✅ Emergency controls (system freeze, emergency stop)
+- ✅ Change impact analysis (correlate commits with degradations)
+- ✅ Drift detection (behavioral baseline monitoring)
+- ✅ Automated remediation runbooks (4 built-in, auto-execute)
+- ✅ Nightly regression GitHub Action
+- ✅ Operator-only, receipt-backed, CLI-first
+
+**Philosophy:**
+- **Operator-Only:** Never exposed to end users
+- **Read-First:** Observability before control
+- **Receipt-Backed:** Every operation emits TruthSerum receipt
+- **CLI-First:** Terminal-native experience
+- **Local-First:** Works without Supabase (local receipt fallback)
+
+**Implementation:**
+```bash
+# System status
+war-room status              # Overall health dashboard
+war-room health              # Detailed health check
+war-room regress [profile]   # Run regression tests
+
+# Robby PA management
+war-room robby status
+war-room robby downgrade 1 "High error rate"
+war-room robby kill "Emergency"
+
+# Cost management
+war-room cost status
+war-room cost set-cap 1000
+war-room cost override gpt-3.5-turbo "Cost reduction"
+
+# Emergency controls
+war-room freeze freeze "Deployment in progress"
+war-room freeze unfreeze
+war-room freeze emergency "Critical security issue"
+
+# Phase 2: Advanced features
+war-room impact analyze <commit-sha>   # Analyze commit impact
+war-room drift detect                  # Detect behavioral drift
+war-room runbooks list                 # List automated runbooks
+war-room runbooks check                # Check triggers & auto-execute
+```
+
+**Key Components:**
+- `src/health/` - Constitutional, engine, Robby PA, cost health monitoring
+- `src/regression/` - Golden bundle comparison and drift detection
+- `src/cost/` - Budget caps, routing overrides, spend tracking
+- `src/robby/` - Autonomy level management and scope enforcement
+- `src/controls/` - System freeze, unfreeze, emergency stop
+- `src/datasources/` - Live data integration (TruthSerum, engines)
+- `src/impact/` - Change impact analysis and commit correlation
+- `src/drift/` - Behavioral drift detection from baseline
+- `src/runbooks/` - Automated remediation workflows
+- `cli/` - War Room CLI with 9 commands
+- `supabase/migrations/20260121000000_create_war_room_tables.sql` - Database schema
+
+**Built-in Runbooks:**
+1. **high-error-rate** (auto-execute): Respond to error spikes
+2. **cost-emergency** (auto-execute): Emergency budget response at 95%
+3. **health-degraded** (manual): Respond to system health degradation
+4. **emergency-freeze** (manual): Immediate system freeze
+
+**Nightly Regression:**
+- Automated GitHub Action runs at 2 AM UTC daily
+- Health check → Run all tests → Status report
+- Auto-creates GitHub issues on failure
+- Cost threshold monitoring
+- Slack/email notification ready
+
+**Database Schema:**
+- `war_room_events` - Operational event stream
+- `war_room_health_snapshots` - Periodic health checks
+- `war_room_regression_results` - Regression test results
+- `war_room_freeze_log` - Freeze/unfreeze audit trail
+- `war_room_cost_caps` - Budget configurations
+- `war_room_routing_overrides` - Model routing overrides
+- `war_room_robby_autonomy_log` - Autonomy level changes
+
+**Read more:**
+- [packages/war-room/README.md](packages/war-room/README.md) - Complete documentation
+- [packages/war-room/DEPLOYMENT.md](packages/war-room/DEPLOYMENT.md) - Deployment guide
+- [.github/workflows/war-room-nightly.yml](.github/workflows/war-room-nightly.yml) - Nightly regression workflow
 
 ---
 
