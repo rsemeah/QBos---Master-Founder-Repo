@@ -179,7 +179,7 @@ describe('Delivery Kernel - Complete Build Workflow', () => {
 
       // Try to add feature after lock (should be blocked)
       const check = await ethosEngine.validateOperation(
-        'add_feature: Real-time collaboration',
+        'add-feature: Real-time collaboration',
         {
           scope_locked: true,
           cost_estimate: plan.cost_estimate.estimated_cost,
@@ -190,7 +190,7 @@ describe('Delivery Kernel - Complete Build Workflow', () => {
       )
 
       expect(check.passed).toBe(false)
-      expect(check.violations).toContain('Scope is locked - cannot add features')
+      expect(check.violations).toContain('Scope lock violation: Cannot add features after scope is locked')
     })
 
     it('should enforce cost limits', async () => {

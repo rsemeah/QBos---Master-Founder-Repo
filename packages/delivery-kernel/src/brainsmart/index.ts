@@ -23,7 +23,8 @@ import type {
   Sprint,
   GroqConfig,
   CostEstimate,
-  Timeline
+  Timeline,
+  IOSArchetype
 } from '../types.js'
 
 export class BrainSmart {
@@ -531,6 +532,35 @@ Provide refined plan in the same JSON format as before.`
   }
 
   /**
+   * Detect iOS archetype based on intent keywords
+   */
+  private detectIOSArchetype(intent: UserIntent): IOSArchetype {
+    const description = intent.description.toLowerCase()
+    const features = (intent.features || []).join(' ').toLowerCase()
+    const text = `${description} ${features}`
+
+    // Check for archetype keywords
+    if (text.includes('photo') || text.includes('feed') || text.includes('social') || text.includes('instagram')) {
+      return 'auth-content-app'
+    }
+    if (text.includes('saas') || text.includes('companion') || text.includes('dashboard')) {
+      return 'saas-companion'
+    }
+    if (text.includes('marketplace') || text.includes('buy') || text.includes('sell') || text.includes('payment')) {
+      return 'marketplace-lite'
+    }
+    if (text.includes('sensor') || text.includes('camera') || text.includes('location') || text.includes('ar')) {
+      return 'sensor-app'
+    }
+    if (text.includes('subscription') || text.includes('media') || text.includes('video') || text.includes('streaming')) {
+      return 'subscription-media'
+    }
+
+    // Default to auth-content-app
+    return 'auth-content-app'
+  }
+
+  /**
    * Deterministic fallback when Groq unavailable
    */
   private deterministicFallback(intent: UserIntent): ReasoningResult {
@@ -541,6 +571,7 @@ Provide refined plan in the same JSON format as before.`
       intent,
       architecture: {
         type: intent.type,
+        archetype: intent.type === 'ios-app' ? this.detectIOSArchetype(intent) : undefined,
         tech_stack: this.getDefaultTechStack(intent.type),
         engines_required: ['ExecutionEngine', 'IdentityEngine'],
         capabilities: []
