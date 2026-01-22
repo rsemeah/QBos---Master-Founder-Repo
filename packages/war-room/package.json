@@ -1,0 +1,35 @@
+{
+  "name": "@qbos/war-room",
+  "version": "0.1.0",
+  "description": "QuietBuild OS War Room - Internal Operations Control Plane",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "war-room": "./dist/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "qbos",
+    "war-room",
+    "operations",
+    "monitoring",
+    "health-check"
+  ],
+  "author": "QuietBuild OS",
+  "license": "MIT",
+  "dependencies": {
+    "@qbos/truthserum": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "@types/node": "^18.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

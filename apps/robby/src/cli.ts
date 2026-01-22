@@ -8,7 +8,7 @@ async function main() {
   const cwd = process.cwd();
   const cmd = process.argv[2];
   if (!cmd) {
-    console.error('Usage: calibrate|verify|certify|retro|rotate-key');
+    console.error('Usage: calibrate|verify|certify|retro|rotate-key|war-room');
     process.exit(2);
   }
   try {
@@ -36,6 +36,16 @@ async function main() {
       const r = await rotateKey();
       console.log(JSON.stringify(r, null, 2));
       process.exit(0);
+    }
+    if (cmd === 'war-room') {
+      // Delegate to War Room CLI
+      const { spawn } = await import('child_process');
+      const warRoomArgs = process.argv.slice(3);
+      const warRoom = spawn('war-room', warRoomArgs, { stdio: 'inherit' });
+      warRoom.on('close', (code) => {
+        process.exit(code || 0);
+      });
+      return;
     }
     console.error('Unknown command', cmd);
     process.exit(2);
