@@ -1,6 +1,7 @@
 // packages/war-room/src/cost/index.ts
 import { CostHealth, Severity } from '../types'
 import { ReceiptWriter } from '@qbos/truthserum'
+import { dataSources } from '../datasources'
 
 export interface CostCap {
   monthly_budget: number
@@ -118,8 +119,6 @@ export class CostMonitor {
   }
 
   private async getCurrentSpendRate(): Promise<number> {
-    // TODO: Query actual spend from SilentEngine metrics
-    // For now, return mock value
-    return 0.5 // $0.50/hour
+    return dataSources.getCurrentSpendRate()
   }
 }
