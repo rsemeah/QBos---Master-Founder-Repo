@@ -1,0 +1,84 @@
+name: robby-pr
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch name Robby should create/update"
+        required: true
+        default: "robby/autonomy-patch"
+      title:
+        description: "PR title"
+        required: true
+        default: "Robby: autonomy scaffolding"
+      body:
+        description: "PR body"
+        required: true
+        default: "Autonomy scaffolding: tasks, docs, workflows."
+      base:
+        description: "Base branch"
+        required: true
+        default: "main"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create installation token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.ROBBY_APP_ID }}
+          private-key: ${{ secrets.ROBBY_APP_PRIVATE_KEY }}
+
+      - name: Configure git identity
+        run: |
+          git config user.name "RobbyPA[bot]"
+          git config user.email "robbypa-bot@users.noreply.github.com"
+
+      - name: Kill switch check (repo variable)
+        env:
+          ROBBY_KILL_SWITCH: ${{ vars.ROBBY_KILL_SWITCH }}
+        run: |
+          if [ "$ROBBY_KILL_SWITCH" = "1" ]; then
+            echo "ROBBY_KILL_SWITCH=1 — refusing to proceed."
+            exit 99
+          fi
+
+      - name: Create / checkout branch
+        run: |
+          git fetch origin
+          git checkout -B "${{ inputs.branch }}" "origin/${{ inputs.base }}" || git checkout -B "${{ inputs.branch }}"
+
+      - name: Commit any current changes (noop-safe)
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit -m "Robby: autonomy patch"
+          else
+            echo "No changes to commit."
+          fi
+
+      - name: Push branch
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          git push -u origin "${{ inputs.branch }}" --force-with-lease
+
+      - name: Create PR (or noop if exists)
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh pr create \
+            --title "${{ inputs.title }}" \
+            --body "${{ inputs.body }}" \
+            --head "${{ inputs.branch }}" \
+            --base "${{ inputs.base }}" \
+          || echo "PR may already exist (or insufficient permissions)."
