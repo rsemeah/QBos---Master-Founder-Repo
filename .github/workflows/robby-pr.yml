@@ -4,6 +4,77 @@ on:
   workflow_dispatch:
     inputs:
       branch:
+        required: true
+        default: "robby/autonomy-patch"
+      title:
+        required: true
+        default: "Robby: autonomy scaffolding (test locked)"
+      body:
+        required: false
+        default: "Kill-switch proof run"
+      base:
+        required: true
+        default: "main"
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  workflows: read
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Kill switch check
+        env:
+          ROBBY_KILL_SWITCH: ${{ vars.ROBBY_KILL_SWITCH }}
+        run: |
+          if [ "$ROBBY_KILL_SWITCH" = "1" ]; then
+            echo "ROBBY_KILL_SWITCH=1 — refusing to proceed."
+            exit 99
+          fi
+
+      - name: Create installation token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.ROBBY_APP_ID }}
+          private-key: ${{ secrets.ROBBY_APP_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create branch and open PR (gh)
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          BRANCH: ${{ github.event.inputs.branch }}
+          TITLE: ${{ github.event.inputs.title }}
+          BODY: ${{ github.event.inputs.body }}
+          BASE: ${{ github.event.inputs.base }}
+          REPO: ${{ github.repository }}
+        run: |
+          git config user.name "RobbyPA[bot]"
+          git config user.email "robbypa-bot@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
+          git fetch origin $BASE || true
+          git checkout -b "$BRANCH" || git switch -c "$BRANCH"
+          # create an empty commit to ensure PR has content
+          git commit --allow-empty -m "chore: robby test commit" || true
+          git push origin "$BRANCH" --force-with-lease
+
+          # create PR using gh
+          gh auth status || true
+          gh pr create --repo "$REPO" --title "$TITLE" --body "$BODY" --base "$BASE" --head "$BRANCH" || true
+name: robby-pr
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
         description: "Branch name Robby should create/update"
         required: true
         default: "robby/autonomy-patch"
