@@ -333,6 +333,22 @@ importers:
 
   packages/shared/qbos-run: {}
 
+  packages/shared/safety-middleware:
+    dependencies:
+      '@qbos/truthserum':
+        specifier: workspace:*
+        version: link:../../truthserum
+    devDependencies:
+      '@types/node':
+        specifier: ^20.11.0
+        version: 20.19.28
+      typescript:
+        specifier: ^5.3.0
+        version: 5.9.3
+      vitest:
+        specifier: ^1.2.0
+        version: 1.6.1(@types/node@20.19.28)(jsdom@20.0.3)
+
   packages/sight-engine:
     devDependencies:
       '@types/jest':
