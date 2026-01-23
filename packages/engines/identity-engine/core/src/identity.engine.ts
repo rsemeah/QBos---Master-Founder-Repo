@@ -1,7 +1,9 @@
 /**
  * IdentityEngine™ - Real Implementation
+ * Now with TruthSerum receipt emission
  */
 
+import { ReceiptWriter } from '@qbos/truthserum';
 import type {
   User,
   Org,
@@ -34,7 +36,7 @@ export class IdentityEngine {
     this.initialized = false;
   }
 
-  createUser(params: CreateUserParams): IdentityEngineResult<User> {
+  async createUser(params: CreateUserParams): Promise<IdentityEngineResult<User>> {
     if (!this.initialized) {
       return { ok: false, error: 'IdentityEngine not initialized' };
     }
@@ -56,6 +58,17 @@ export class IdentityEngine {
 
     this.users.set(user.id, user);
     this.usersByEmail.set(user.email, user);
+
+    // Emit TruthSerum receipt
+    await ReceiptWriter.writeReceipt({
+      sessionId: user.id,
+      type: 'identity.user.created',
+      details: {
+        user_id: user.id,
+        email: params.email,
+        email_verified: user.emailVerified
+      }
+    });
 
     return { ok: true, data: user };
   }
