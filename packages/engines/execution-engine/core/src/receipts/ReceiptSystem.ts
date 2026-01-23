@@ -1,11 +1,16 @@
 /**
  * ReceiptSystem™ - TruthSerum-Grade Receipt Management
- * 
+ *
+ * MIGRATED: Now uses TruthSerum EdDSA signing
+ *
  * TRUTH REQUIREMENTS:
  * - Every engine invocation produces a receipt
  * - Every receipt is immutable and timestamped
  * - Receipts prove coordination, not just activity
+ * - All receipts cryptographically signed with EdDSA
  */
+
+import { ReceiptWriter } from '@qbos/truthserum';
 
 export type ReceiptActor = 'user' | 'rob' | string; // engine names allowed
 export type ReceiptOutcome = 'success' | 'blocked' | 'error' | 'unknown';
@@ -45,26 +50,38 @@ export interface GateCheckReceipt extends Receipt {
 }
 
 export class ReceiptSystem {
-  private receipts: Map<string, Receipt> = new Map();
-  private receiptsBySession: Map<string, Receipt[]> = new Map();
-
   /**
    * Emit a receipt (immutable once created)
+   * Now uses TruthSerum EdDSA signing
    */
-  emit(receipt: Omit<Receipt, 'receipt_id' | 'timestamp'>): Receipt {
+  async emit(receipt: Omit<Receipt, 'receipt_id' | 'timestamp'>): Promise<Receipt> {
+    // Use TruthSerum to create signed receipt
+    const truthSerumReceipt = await ReceiptWriter.writeReceipt({
+      sessionId: receipt.session_id,
+      type: receipt.action_type,
+      parentReceiptId: receipt.parent_receipt_id,
+      details: {
+        actor: receipt.actor,
+        outcome: receipt.outcome,
+        evidence_refs: receipt.evidence_refs,
+        truth_state: receipt.truth_state,
+        ...receipt.metadata
+      }
+    });
+
+    // Map back to ExecutionEngine format
     const fullReceipt: Receipt = {
-      ...receipt,
-      receipt_id: this.generateReceiptId(),
-      timestamp: new Date().toISOString(),
+      receipt_id: truthSerumReceipt.id,
+      session_id: truthSerumReceipt.sessionId || receipt.session_id,
+      timestamp: truthSerumReceipt.createdAt,
+      actor: receipt.actor,
+      action_type: receipt.action_type,
+      outcome: receipt.outcome,
+      evidence_refs: receipt.evidence_refs,
+      truth_state: receipt.truth_state,
+      metadata: receipt.metadata,
+      parent_receipt_id: receipt.parent_receipt_id
     };
-
-    this.receipts.set(fullReceipt.receipt_id, fullReceipt);
-
-    // Index by session
-    if (!this.receiptsBySession.has(fullReceipt.session_id)) {
-      this.receiptsBySession.set(fullReceipt.session_id, []);
-    }
-    this.receiptsBySession.get(fullReceipt.session_id)!.push(fullReceipt);
 
     return fullReceipt;
   }
@@ -72,8 +89,8 @@ export class ReceiptSystem {
   /**
    * Emit session created receipt
    */
-  emitSessionCreated(sessionId: string, appName: string, goals: string[]): Receipt {
-    return this.emit({
+  async emitSessionCreated(sessionId: string, appName: string, goals: string[]): Promise<Receipt> {
+    return await this.emit({
       session_id: sessionId,
       actor: 'user',
       action_type: 'session_created',
@@ -87,8 +104,8 @@ export class ReceiptSystem {
   /**
    * Emit user input received
    */
-  emitUserInput(sessionId: string, input: unknown): Receipt {
-    return this.emit({
+  async emitUserInput(sessionId: string, input: unknown): Promise<Receipt> {
+    return await this.emit({
       session_id: sessionId,
       actor: 'user',
       action_type: 'user_input_received',
@@ -102,14 +119,14 @@ export class ReceiptSystem {
   /**
    * Emit engine invocation
    */
-  emitEngineInvoked(
+  async emitEngineInvoked(
     sessionId: string,
     engineName: string,
     durationMs: number,
     outcome: ReceiptOutcome,
     parentReceiptId?: string
-  ): EngineInvocationReceipt {
-    return this.emit({
+  ): Promise<EngineInvocationReceipt> {
+    return await this.emit({
       session_id: sessionId,
       actor: engineName,
       action_type: 'engine_invoked',
@@ -127,15 +144,15 @@ export class ReceiptSystem {
   /**
    * Emit gate check (config/paywall/charter)
    */
-  emitGateCheck(
+  async emitGateCheck(
     sessionId: string,
     gateType: 'config' | 'paywall' | 'charter',
     gateKey: string,
     allowed: boolean,
     reason?: string,
     parentReceiptId?: string
-  ): GateCheckReceipt {
-    return this.emit({
+  ): Promise<GateCheckReceipt> {
+    return await this.emit({
       session_id: sessionId,
       actor: gateType + 'Engine',
       action_type: 'gate_checked',
@@ -155,15 +172,15 @@ export class ReceiptSystem {
   /**
    * Emit action executed
    */
-  emitActionExecuted(
+  async emitActionExecuted(
     sessionId: string,
     actor: ReceiptActor,
     action: string,
     outcome: ReceiptOutcome,
     evidenceRefs: string[],
     parentReceiptId?: string
-  ): Receipt {
-    return this.emit({
+  ): Promise<Receipt> {
+    return await this.emit({
       session_id: sessionId,
       actor,
       action_type: 'action_executed',
@@ -176,30 +193,60 @@ export class ReceiptSystem {
   }
 
   /**
-   * Get all receipts for a session
+   * Get all receipts for a session from TruthSerum
    */
-  getReceiptsForSession(sessionId: string): Receipt[] {
-    return this.receiptsBySession.get(sessionId) || [];
+  async getReceiptsForSession(sessionId: string): Promise<Receipt[]> {
+    const truthSerumReceipts = await ReceiptWriter.readReceipts(sessionId);
+
+    return truthSerumReceipts.map(r => ({
+      receipt_id: r.id,
+      session_id: r.sessionId || sessionId,
+      timestamp: r.createdAt,
+      actor: r.details.actor || 'system',
+      action_type: r.type,
+      outcome: r.details.outcome || 'unknown',
+      evidence_refs: r.details.evidence_refs || [],
+      truth_state: r.details.truth_state || 'Unknown',
+      metadata: r.details,
+      parent_receipt_id: r.parentReceiptId
+    }));
   }
 
   /**
-   * Get receipt by ID
+   * Get receipt by ID from TruthSerum
    */
-  getReceipt(receiptId: string): Receipt | undefined {
-    return this.receipts.get(receiptId);
+  async getReceipt(receiptId: string): Promise<Receipt | undefined> {
+    // Read all receipts and find by ID (inefficient, but works)
+    const allReceipts = await ReceiptWriter.readReceipts();
+    const truthSerumReceipt = allReceipts.find(r => r.id === receiptId);
+
+    if (!truthSerumReceipt) return undefined;
+
+    return {
+      receipt_id: truthSerumReceipt.id,
+      session_id: truthSerumReceipt.sessionId || '',
+      timestamp: truthSerumReceipt.createdAt,
+      actor: truthSerumReceipt.details.actor || 'system',
+      action_type: truthSerumReceipt.type,
+      outcome: truthSerumReceipt.details.outcome || 'unknown',
+      evidence_refs: truthSerumReceipt.details.evidence_refs || [],
+      truth_state: truthSerumReceipt.details.truth_state || 'Unknown',
+      metadata: truthSerumReceipt.details,
+      parent_receipt_id: truthSerumReceipt.parentReceiptId
+    };
   }
 
   /**
    * Get receipt chain (follow parent_receipt_id)
    */
-  getReceiptChain(receiptId: string): Receipt[] {
+  async getReceiptChain(receiptId: string): Promise<Receipt[]> {
     const chain: Receipt[] = [];
-    let current = this.getReceipt(receiptId);
+    let current = await this.getReceipt(receiptId);
 
     while (current) {
       chain.push(current);
       if (current.parent_receipt_id) {
-        current = this.getReceipt(current.parent_receipt_id);
+        current = await this.getReceipt(current.parent_receipt_id);
       } else {
         break;
       }
@@ -211,12 +258,12 @@ export class ReceiptSystem {
   /**
    * Validate session receipts for completeness
    */
-  validateSession(sessionId: string): {
+  async validateSession(sessionId: string): Promise<{
     valid: boolean;
     issues: string[];
     receipts: Receipt[];
-  } {
-    const receipts = this.getReceiptsForSession(sessionId);
+  }> {
+    const receipts = await this.getReceiptsForSession(sessionId);
     const issues: string[] = [];
 
     if (receipts.length === 0) {
@@ -240,14 +287,17 @@ export class ReceiptSystem {
       issues.push(`${blocked.length} receipts show blocked/error outcomes`);
     }
 
+    // Verify receipt chain using TruthSerum
+    const truthSerumReceipts = await ReceiptWriter.readReceipts(sessionId);
+    const chainValidation = await ReceiptWriter.verifyReceiptChain(truthSerumReceipts);
+    if (!chainValidation.valid) {
+      issues.push(...chainValidation.errors);
+    }
+
     return {
       valid: issues.length === 0,
       issues,
       receipts,
     };
-  }
-
-  private generateReceiptId(): string {
-    return `receipt_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
   }
 }

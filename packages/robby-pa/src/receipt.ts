@@ -1,4 +1,11 @@
-import { createHash, createHmac } from 'crypto';
+/**
+ * Robby PA Receipt System
+ *
+ * MIGRATED: Now uses TruthSerum EdDSA signing instead of HMAC
+ * Provides backward-compatible interface for Robby PA
+ */
+
+import { ReceiptWriter } from '@qbos/truthserum';
 
 export interface Receipt {
   id: string;
@@ -8,9 +15,9 @@ export interface Receipt {
   type: string;
   payload: any;
   artifactRefs?: any[] | null;
-  macKeyId: string;
-  hash: string;
-  mac: string;
+  macKeyId: string;        // Now maps to signerKeyId (EdDSA)
+  hash: string;            // Now maps to verification_hash
+  mac: string;             // Now maps to signature (EdDSA)
   createdAt: string;
 }
 
@@ -25,87 +32,88 @@ export interface CreateReceiptParams {
   };
 }
 
-const ENV_MAC_SECRET = process.env.ROBBY_RECEIPT_MAC_SECRET;
-if (!ENV_MAC_SECRET) {
-  // Don't throw here — allow library import; functions will throw at runtime if secret missing.
-}
-
 export const DEFAULT_MAC_KEY_ID = process.env.ROBBY_RECEIPT_MAC_KEY_ID || 'robby-v1-primary';
 
+/**
+ * Create receipt using TruthSerum EdDSA signing
+ * Maintains backward-compatible interface
+ */
 export async function createReceipt(params: CreateReceiptParams): Promise<Receipt> {
-  const { sessionId, type, payload, artifactRefs, store } = params;
+  const { sessionId, type, payload, artifactRefs } = params;
 
-  if (!process.env.ROBBY_RECEIPT_MAC_SECRET) {
-    throw new Error('ROBBY_RECEIPT_MAC_SECRET not configured');
-  }
-
-  const prev = await store.getLastReceiptForSession(sessionId);
-  const seq = prev ? prev.seq + 1 : 0;
-  const prevHash = prev ? prev.hash : null;
-
-  const baseReceipt = {
-    id: generateId(),
+  // Use TruthSerum to create signed receipt
+  const truthSerumReceipt = await ReceiptWriter.writeReceipt({
     sessionId,
-    seq,
-    prevHash,
     type,
-    payload,
-    artifactRefs: artifactRefs || null,
-    macKeyId: DEFAULT_MAC_KEY_ID,
-    createdAt: new Date().toISOString()
-  } as any;
-
-  // Hash of receipt (excluding mac)
-  const hash = createHash('sha256').update(JSON.stringify(baseReceipt)).digest('hex');
-
-  const mac = createHmac('sha256', process.env.ROBBY_RECEIPT_MAC_SECRET as string)
-    .update(hash)
-    .digest('hex');
-
-  const signed = {
-    ...baseReceipt,
-    hash,
-    mac
-  } as Receipt;
-
-  // Persist
-  await store.insertReceipt(signed as any);
-
-  return signed;
-}
-
-export async function verifyReceipt(receipt: Receipt): Promise<boolean> {
-  if (!process.env.ROBBY_RECEIPT_MAC_SECRET) throw new Error('ROBBY_RECEIPT_MAC_SECRET not configured');
-
-  const { mac, hash, ...receiptWithoutMac } = receipt as any;
-
-  const computedHash = createHash('sha256').update(JSON.stringify(receiptWithoutMac)).digest('hex');
-  if (computedHash !== hash) return false;
-
-  const expectedMac = createHmac('sha256', process.env.ROBBY_RECEIPT_MAC_SECRET as string)
-    .update(hash)
-    .digest('hex');
-
-  return mac === expectedMac;
-}
-
-export async function verifyReceiptChain(receipts: Receipt[]): Promise<boolean> {
-  // receipts should be ordered ascending by seq
-  for (let i = 0; i < receipts.length; i++) {
-    const r = receipts[i];
-    const ok = await verifyReceipt(r);
-    if (!ok) return false;
-
-    if (i === 0) {
-      if (r.prevHash !== null) return false;
-      if (r.seq !== 0) return false;
-    } else {
-      const prev = receipts[i - 1];
-      if (r.prevHash !== prev.hash) return false;
-      if (r.seq !== prev.seq + 1) return false;
+    details: {
+      ...payload,
+      artifactRefs: artifactRefs || null
     }
-  }
-  return true;
+  });
+
+  // Map TruthSerum receipt to Robby PA format
+  const robbyReceipt: Receipt = {
+    id: truthSerumReceipt.id,
+    sessionId: truthSerumReceipt.sessionId || sessionId,
+    seq: truthSerumReceipt.seq ?? 0,
+    prevHash: truthSerumReceipt.prevHash || null,
+    type: truthSerumReceipt.type,
+    payload: truthSerumReceipt.details,
+    artifactRefs: truthSerumReceipt.details.artifactRefs || null,
+    macKeyId: truthSerumReceipt.signerKeyId || 'unknown',
+    hash: truthSerumReceipt.verification_hash || '',
+    mac: truthSerumReceipt.signature || '',
+    createdAt: truthSerumReceipt.createdAt
+  };
+
+  return robbyReceipt;
+}
+
+/**
+ * Verify receipt using TruthSerum EdDSA verification
+ */
+export async function verifyReceipt(receipt: Receipt): Promise<boolean> {
+  // Map Robby PA receipt to TruthSerum format
+  const truthSerumReceipt = {
+    id: receipt.id,
+    createdAt: receipt.createdAt,
+    sessionId: receipt.sessionId,
+    seq: receipt.seq,
+    prevHash: receipt.prevHash,
+    type: receipt.type,
+    details: receipt.payload,
+    signerKeyId: receipt.macKeyId,
+    signature: receipt.mac,
+    verification_hash: receipt.hash,
+    algo: 'Ed25519' as const,
+    nonce: '' // Not used in old receipts
+  };
+
+  return await ReceiptWriter.verifyReceipt(truthSerumReceipt);
+}
+
+/**
+ * Verify receipt chain using TruthSerum chain validation
+ */
+export async function verifyReceiptChain(receipts: Receipt[]): Promise<boolean> {
+  // Map to TruthSerum format
+  const truthSerumReceipts = receipts.map(r => ({
+    id: r.id,
+    createdAt: r.createdAt,
+    sessionId: r.sessionId,
+    seq: r.seq,
+    prevHash: r.prevHash,
+    type: r.type,
+    details: r.payload,
+    signerKeyId: r.macKeyId,
+    signature: r.mac,
+    verification_hash: r.hash,
+    algo: 'Ed25519' as const,
+    nonce: ''
+  }));
+
+  const result = await ReceiptWriter.verifyReceiptChain(truthSerumReceipts);
+  return result.valid;
 }
 
 function generateId(): string {

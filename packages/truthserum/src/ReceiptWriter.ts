@@ -9,6 +9,8 @@ interface Receipt {
   id: string;
   createdAt: string;
   sessionId?: string | null;
+  seq?: number | null;           // NEW: Sequential number for chain ordering
+  prevHash?: string | null;       // NEW: Hash of previous receipt for chain continuity
   type: string;
   details: Record<string, any>;
   parentReceiptId?: string | null;
@@ -99,13 +101,67 @@ class ReceiptWriterImpl {
     }
   }
 
+  async getLastReceiptForSession(sessionId: string): Promise<Receipt | null> {
+    if (this.useSupabase && this.supabase) {
+      try {
+        const { data, error } = await this.supabase
+          .from("build_receipts")
+          .select("*")
+          .eq("session_id", sessionId)
+          .order("seq", { ascending: false })
+          .limit(1)
+          .single();
+
+        if (error) {
+          if (error.code === "PGRST116") return null; // No rows found
+          throw error;
+        }
+
+        return {
+          id: data.id,
+          createdAt: data.created_at,
+          sessionId: data.session_id,
+          seq: data.seq,
+          prevHash: data.prev_hash,
+          type: data.type,
+          details: data.details,
+          parentReceiptId: data.parent_receipt_id || undefined,
+          signerKeyId: data.signer_key_id || undefined,
+          signature: data.signature || undefined,
+          algo: data.algo || undefined,
+          nonce: data.nonce || undefined,
+          verification_hash: data.verification_hash || undefined,
+        };
+      } catch (e) {
+        console.error("[ReceiptWriter] getLastReceiptForSession error", e);
+        return this.getLastReceiptFromLocalFile(sessionId);
+      }
+    }
+    return this.getLastReceiptFromLocalFile(sessionId);
+  }
+
+  private getLastReceiptFromLocalFile(sessionId: string): Receipt | null {
+    const receipts = this.readFromLocalFile(sessionId);
+    if (receipts.length === 0) return null;
+    return receipts[receipts.length - 1];
+  }
+
   async writeReceipt(
     receipt: Omit<Receipt, "id" | "createdAt">
   ): Promise<Receipt> {
+    const sessionId = receipt.sessionId || null;
+
+    // Get last receipt for chain continuity
+    const lastReceipt = sessionId ? await this.getLastReceiptForSession(sessionId) : null;
+    const seq = lastReceipt ? (lastReceipt.seq ?? 0) + 1 : 0;
+    const prevHash = lastReceipt ? lastReceipt.verification_hash || null : null;
+
     const full: Receipt = {
       id: this.generateId(),
       createdAt: new Date().toISOString(),
       ...receipt,
+      seq,
+      prevHash,
     } as any;
 
     const verification_hash = crypto
@@ -118,6 +174,8 @@ class ReceiptWriterImpl {
       id: full.id,
       createdAt: full.createdAt,
       sessionId: full.sessionId || null,
+      seq: full.seq,
+      prevHash: full.prevHash || null,
       type: full.type,
       verification_hash,
       parentReceiptId: full.parentReceiptId || null,
@@ -160,6 +218,8 @@ class ReceiptWriterImpl {
         id: receipt.id,
         createdAt: receipt.createdAt,
         sessionId: receipt.sessionId || null,
+        seq: receipt.seq,
+        prevHash: receipt.prevHash || null,
         type: receipt.type,
         verification_hash: receipt.verification_hash,
         parentReceiptId: receipt.parentReceiptId || null,
@@ -178,6 +238,60 @@ class ReceiptWriterImpl {
     }
   }
 
+  async verifyReceiptChain(receipts: Receipt[]): Promise<{
+    valid: boolean;
+    errors: string[];
+  }> {
+    const errors: string[] = [];
+
+    if (receipts.length === 0) {
+      return { valid: true, errors: [] };
+    }
+
+    // Sort by seq to ensure proper order
+    const sorted = [...receipts].sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0));
+
+    for (let i = 0; i < sorted.length; i++) {
+      const receipt = sorted[i];
+
+      // Verify signature
+      const signatureValid = await this.verifyReceipt(receipt);
+      if (!signatureValid) {
+        errors.push(`Receipt ${receipt.id} has invalid signature`);
+      }
+
+      // First receipt must have seq=0 and prevHash=null
+      if (i === 0) {
+        if (receipt.seq !== 0) {
+          errors.push(`First receipt ${receipt.id} must have seq=0, got ${receipt.seq}`);
+        }
+        if (receipt.prevHash !== null) {
+          errors.push(`First receipt ${receipt.id} must have prevHash=null`);
+        }
+      } else {
+        // Subsequent receipts must chain correctly
+        const prev = sorted[i - 1];
+
+        if (receipt.seq !== (prev.seq ?? 0) + 1) {
+          errors.push(
+            `Receipt ${receipt.id} seq ${receipt.seq} should be ${(prev.seq ?? 0) + 1}`
+          );
+        }
+
+        if (receipt.prevHash !== prev.verification_hash) {
+          errors.push(
+            `Receipt ${receipt.id} prevHash doesn't match previous receipt hash`
+          );
+        }
+      }
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors,
+    };
+  }
+
   private async writeToSupabase(receipt: Receipt): Promise<void> {
     if (!this.supabase) return this.writeToLocalFile(receipt);
     try {
@@ -185,6 +299,8 @@ class ReceiptWriterImpl {
         id: receipt.id,
         created_at: receipt.createdAt,
         session_id: receipt.sessionId || null,
+        seq: receipt.seq ?? null,
+        prev_hash: receipt.prevHash || null,
         type: receipt.type,
         details: receipt.details,
         verification_hash: receipt.verification_hash || null,
@@ -227,6 +343,8 @@ class ReceiptWriterImpl {
           id: r.id,
           createdAt: r.created_at,
           sessionId: r.session_id,
+          seq: r.seq ?? undefined,
+          prevHash: r.prev_hash || undefined,
           type: r.type,
           details: r.details,
           parentReceiptId: r.parent_receipt_id || undefined,
