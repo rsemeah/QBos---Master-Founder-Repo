@@ -1,0 +1,16 @@
+{
+  "session_id": "autonomy-measurement-1737596400000",
+  "intent": "Simple todo app with user authentication",
+  "autonomy_level": 2,
+  "timestamp": "2026-01-23T02:15:00.000Z",
+  "total_steps": 15,
+  "autonomous_steps": 12,
+  "human_interventions": 3,
+  "autonomy_percentage": 80,
+  "receipts_analyzed": 0,
+  "test_duration_seconds": 45,
+  "build_result": "success",
+  "methodology": "Mock measurement - demonstrates measurement process",
+  "measurement_status": "Unknown (no actual receipts)",
+  "reason": "Full Robby PA integration not yet wired - awaiting API + DB receipts completion"
+}
