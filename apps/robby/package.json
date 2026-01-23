@@ -15,7 +15,8 @@
   "dependencies": {
     "execa": "^7.0.0",
     "zod": "^3.22.4",
-    "@qbos/truthserum": "file:../../packages/truthserum"
+    "@qbos/truthserum": "file:../../packages/truthserum",
+    "@qbos/robby-pa": "file:../../packages/robby-pa"
   },
   "devDependencies": {
     "tsx": "^3.12.7",

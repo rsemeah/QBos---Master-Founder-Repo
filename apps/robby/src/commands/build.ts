@@ -5,7 +5,7 @@
  * Entry point for autonomous builds
  */
 
-import { BuildWorkflow, type BuildIntent } from '../workflows/build.js'
+import { BuildWorkflow, type BuildIntent } from '../workflows/build-integrated.js'
 import { autonomyGuard, type AutonomyLevel } from '../policy/autonomy.js'
 
 export async function buildCommand(args: string[]) {
