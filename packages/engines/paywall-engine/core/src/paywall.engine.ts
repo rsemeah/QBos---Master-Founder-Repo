@@ -2,6 +2,7 @@
  * PaywallEngine™ - Pricing, Entitlements, and Billing
  */
 
+import { ReceiptWriter } from '@qbos/truthserum';
 import type {
   PricingPlan,
   PlanTier,
@@ -52,6 +53,7 @@ export class PaywallEngine {
     options?: {
       orgId?: string;
       trialDays?: number;
+      sessionId?: string;
     }
   ): Promise<Subscription> {
     const plan = this.plans.get(planId);
@@ -76,6 +78,22 @@ export class PaywallEngine {
 
     const key = options?.orgId || userId;
     this.subscriptions.set(key, subscription);
+
+    // Emit TruthSerum receipt
+    await ReceiptWriter.writeReceipt({
+      sessionId: options?.sessionId || userId,
+      type: 'paywall.subscription.created',
+      details: {
+        subscription_id: subscription.id,
+        user_id: userId,
+        org_id: options?.orgId,
+        plan_id: planId,
+        plan_tier: plan.tier,
+        has_trial: !!trialEndsAt,
+        trial_days: trialDays
+      }
+    });
+
     return subscription;
   }
 
@@ -108,47 +126,108 @@ export class PaywallEngine {
    */
   async checkEntitlement(
     userIdOrOrgId: string,
-    feature: string
+    feature: string,
+    options?: {
+      sessionId?: string;
+    }
   ): Promise<EntitlementCheck> {
     const subscription = this.subscriptions.get(userIdOrOrgId);
 
     if (!subscription) {
-      return {
+      const result = {
         allowed: false,
         feature,
         reason: 'No active subscription',
       };
+
+      await ReceiptWriter.writeReceipt({
+        sessionId: options?.sessionId || userIdOrOrgId,
+        type: 'paywall.entitlement.checked',
+        details: {
+          user_or_org_id: userIdOrOrgId,
+          feature,
+          allowed: false,
+          reason: 'No active subscription'
+        }
+      });
+
+      return result;
     }
 
     if (subscription.status !== 'active') {
-      return {
+      const result = {
         allowed: false,
         feature,
         subscription,
         reason: `Subscription is ${subscription.status}`,
       };
+
+      await ReceiptWriter.writeReceipt({
+        sessionId: options?.sessionId || userIdOrOrgId,
+        type: 'paywall.entitlement.checked',
+        details: {
+          user_or_org_id: userIdOrOrgId,
+          feature,
+          allowed: false,
+          subscription_id: subscription.id,
+          subscription_status: subscription.status,
+          reason: `Subscription is ${subscription.status}`
+        }
+      });
+
+      return result;
     }
 
     const plan = this.plans.get(subscription.planId);
     if (!plan) {
-      return {
+      const result = {
         allowed: false,
         feature,
         subscription,
         reason: 'Plan not found',
       };
+
+      await ReceiptWriter.writeReceipt({
+        sessionId: options?.sessionId || userIdOrOrgId,
+        type: 'paywall.entitlement.checked',
+        details: {
+          user_or_org_id: userIdOrOrgId,
+          feature,
+          allowed: false,
+          subscription_id: subscription.id,
+          reason: 'Plan not found'
+        }
+      });
+
+      return result;
     }
 
     // Check if feature is in plan
     const hasFeature = plan.features.includes(feature);
 
-    return {
+    const result = {
       allowed: hasFeature,
       feature,
       subscription,
       plan,
       reason: hasFeature ? undefined : 'Feature not in plan',
     };
+
+    await ReceiptWriter.writeReceipt({
+      sessionId: options?.sessionId || userIdOrOrgId,
+      type: 'paywall.entitlement.checked',
+      details: {
+        user_or_org_id: userIdOrOrgId,
+        feature,
+        allowed: hasFeature,
+        subscription_id: subscription.id,
+        plan_id: plan.id,
+        plan_tier: plan.tier,
+        reason: hasFeature ? undefined : 'Feature not in plan'
+      }
+    });
+
+    return result;
   }
 
   /**
@@ -209,7 +288,10 @@ export class PaywallEngine {
   async recordUsage(
     userIdOrOrgId: string,
     resourceType: string,
-    quantity: number
+    quantity: number,
+    options?: {
+      sessionId?: string;
+    }
   ): Promise<UsageRecord> {
     const record: UsageRecord = {
       id: `usage_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
@@ -222,6 +304,19 @@ export class PaywallEngine {
     const key = `${userIdOrOrgId}:${resourceType}`;
     const existing = this.usage.get(key) || [];
     this.usage.set(key, [...existing, record]);
+
+    // Emit TruthSerum receipt
+    await ReceiptWriter.writeReceipt({
+      sessionId: options?.sessionId || userIdOrOrgId,
+      type: 'paywall.usage.recorded',
+      details: {
+        usage_id: record.id,
+        user_or_org_id: userIdOrOrgId,
+        resource_type: resourceType,
+        quantity,
+        total_usage: existing.length + 1
+      }
+    });
 
     return record;
   }

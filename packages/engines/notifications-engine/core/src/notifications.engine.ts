@@ -2,6 +2,7 @@
  * NotificationsEngine™ - Email, SMS, and Push Notifications
  */
 
+import { ReceiptWriter } from '@qbos/truthserum';
 import type {
   Notification,
   NotificationChannel,
@@ -20,7 +21,7 @@ export class NotificationsEngine {
   /**
    * Send notification
    */
-  async send(params: SendNotificationParams): Promise<Notification> {
+  async send(params: SendNotificationParams & { sessionId?: string }): Promise<Notification> {
     // Check user preferences
     const prefs = this.preferences.get(params.userId);
     if (prefs && !this.isChannelEnabled(prefs, params.channel)) {
@@ -63,9 +64,23 @@ export class NotificationsEngine {
       this.queue.push(notification.id);
     }
 
+    // Emit TruthSerum receipt for notification sent
+    await ReceiptWriter.writeReceipt({
+      sessionId: params.sessionId || params.userId,
+      type: 'notifications.sent',
+      details: {
+        notification_id: notification.id,
+        user_id: params.userId,
+        channel: params.channel,
+        priority: params.priority || 'normal',
+        has_template: !!params.templateId,
+        scheduled: !!params.scheduledFor
+      }
+    });
+
     // In real implementation, would trigger actual sending
     // For now, simulate immediate success
-    this.simulateSend(notification.id);
+    this.simulateSend(notification.id, params.sessionId);
 
     return notification;
   }
@@ -121,6 +136,7 @@ export class NotificationsEngine {
     type: string;
     to: string;
     payload: Record<string, unknown>;
+    sessionId?: string;
   }): Promise<void> {
     // Simple queueing without sending
     const notification: Notification = {
@@ -136,6 +152,19 @@ export class NotificationsEngine {
 
     this.notifications.set(notification.id, notification);
     this.queue.push(notification.id);
+
+    // Emit TruthSerum receipt
+    await ReceiptWriter.writeReceipt({
+      sessionId: params.sessionId || params.to,
+      type: 'notifications.enqueued',
+      details: {
+        notification_id: notification.id,
+        user_id: params.to,
+        notification_type: params.type,
+        channel: 'email',
+        queue_size: this.queue.length
+      }
+    });
   }
 
   /**
@@ -202,9 +231,9 @@ export class NotificationsEngine {
     return result;
   }
 
-  private async simulateSend(notificationId: string): Promise<void> {
+  private async simulateSend(notificationId: string, sessionId?: string): Promise<void> {
     // Simulate async sending
-    setTimeout(() => {
+    setTimeout(async () => {
       const notification = this.notifications.get(notificationId);
       if (notification) {
         const updated: Notification = {
@@ -213,6 +242,18 @@ export class NotificationsEngine {
           sentAt: new Date().toISOString(),
         };
         this.notifications.set(notificationId, updated);
+
+        // Emit delivery receipt
+        await ReceiptWriter.writeReceipt({
+          sessionId: sessionId || notification.userId,
+          type: 'notifications.delivered',
+          details: {
+            notification_id: notificationId,
+            user_id: notification.userId,
+            channel: notification.channel,
+            delivered_at: updated.sentAt
+          }
+        });
       }
     }, 100);
   }

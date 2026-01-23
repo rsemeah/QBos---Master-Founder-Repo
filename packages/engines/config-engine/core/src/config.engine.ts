@@ -2,6 +2,7 @@
  * ConfigEngine™ - Feature Flags and Configuration Management
  */
 
+import { ReceiptWriter } from '@qbos/truthserum';
 import type {
   FeatureFlag,
   FeatureFlagStatus,
@@ -23,6 +24,7 @@ export class ConfigEngine {
     options?: {
       description?: string;
       conditions?: FlagCondition[];
+      sessionId?: string;
     }
   ): Promise<FeatureFlag> {
     const existing = this.flags.get(key);
@@ -38,6 +40,20 @@ export class ConfigEngine {
     };
 
     this.flags.set(key, flag);
+
+    // Emit TruthSerum receipt
+    await ReceiptWriter.writeReceipt({
+      sessionId: options?.sessionId || key,
+      type: 'config.flag.updated',
+      details: {
+        flag_key: key,
+        status,
+        is_new: !existing,
+        description: options?.description,
+        has_conditions: !!options?.conditions
+      }
+    });
+
     return flag;
   }
 
@@ -56,54 +72,127 @@ export class ConfigEngine {
     context?: {
       userId?: string;
       orgId?: string;
+      sessionId?: string;
       [key: string]: unknown;
     }
   ): Promise<FeatureFlagEvaluation> {
     const flag = this.flags.get(key);
 
     if (!flag) {
-      return {
+      const result = {
         key,
         enabled: false,
         reason: 'Flag not found',
       };
+
+      // Emit receipt
+      await ReceiptWriter.writeReceipt({
+        sessionId: context?.sessionId || context?.userId || key,
+        type: 'config.flag.evaluated',
+        details: {
+          flag_key: key,
+          enabled: false,
+          reason: 'Flag not found',
+          context_user_id: context?.userId,
+          context_org_id: context?.orgId
+        }
+      });
+
+      return result;
     }
 
     if (flag.status === 'disabled') {
-      return {
+      const result = {
         key,
         enabled: false,
         reason: 'Flag is disabled',
       };
+
+      await ReceiptWriter.writeReceipt({
+        sessionId: context?.sessionId || context?.userId || key,
+        type: 'config.flag.evaluated',
+        details: {
+          flag_key: key,
+          enabled: false,
+          reason: 'Flag is disabled',
+          context_user_id: context?.userId,
+          context_org_id: context?.orgId
+        }
+      });
+
+      return result;
     }
 
     if (flag.status === 'enabled') {
-      return {
+      const result = {
         key,
         enabled: true,
         reason: 'Flag is globally enabled',
       };
+
+      await ReceiptWriter.writeReceipt({
+        sessionId: context?.sessionId || context?.userId || key,
+        type: 'config.flag.evaluated',
+        details: {
+          flag_key: key,
+          enabled: true,
+          reason: 'Flag is globally enabled',
+          context_user_id: context?.userId,
+          context_org_id: context?.orgId
+        }
+      });
+
+      return result;
     }
 
     // Conditional evaluation
     if (flag.status === 'conditional' && flag.conditions) {
       for (const condition of flag.conditions) {
         if (this.evaluateCondition(condition, context)) {
-          return {
+          const result = {
             key,
             enabled: true,
             reason: 'Condition matched',
             matchedCondition: condition,
           };
+
+          await ReceiptWriter.writeReceipt({
+            sessionId: context?.sessionId || context?.userId || key,
+            type: 'config.flag.evaluated',
+            details: {
+              flag_key: key,
+              enabled: true,
+              reason: 'Condition matched',
+              matched_condition: condition,
+              context_user_id: context?.userId,
+              context_org_id: context?.orgId
+            }
+          });
+
+          return result;
         }
       }
     }
 
-    return {
+    const result = {
       key,
       enabled: false,
       reason: 'No conditions matched',
     };
+
+    await ReceiptWriter.writeReceipt({
+      sessionId: context?.sessionId || context?.userId || key,
+      type: 'config.flag.evaluated',
+      details: {
+        flag_key: key,
+        enabled: false,
+        reason: 'No conditions matched',
+        context_user_id: context?.userId,
+        context_org_id: context?.orgId
+      }
+    });
+
+    return result;
   }
 
   /**
@@ -115,9 +204,11 @@ export class ConfigEngine {
     options?: {
       scope?: ConfigValue['scope'];
       scopeId?: string;
+      sessionId?: string;
     }
   ): Promise<ConfigValue> {
     const configKey = options?.scopeId ? `${key}:${options.scope}:${options.scopeId}` : key;
+    const existing = this.configs.get(configKey);
 
     const config: ConfigValue = {
       key,
@@ -129,6 +220,20 @@ export class ConfigEngine {
     };
 
     this.configs.set(configKey, config);
+
+    // Emit TruthSerum receipt
+    await ReceiptWriter.writeReceipt({
+      sessionId: options?.sessionId || options?.scopeId || key,
+      type: 'config.value.set',
+      details: {
+        config_key: key,
+        value_type: config.type,
+        scope: config.scope,
+        scope_id: config.scopeId,
+        is_new: !existing
+      }
+    });
+
     return config;
   }
 
