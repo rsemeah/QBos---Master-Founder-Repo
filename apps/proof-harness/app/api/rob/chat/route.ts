@@ -17,6 +17,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { RobEngine, SupabaseRobPersistence } from '@qbos/execution-engine-core';
 import { SilentEngine, MockProvider } from '@qbos/silent-engine-core';
+import { autonomyGuard } from '../../../../../apps/robby/src/policy/autonomy.js';
 
 export async function POST(request: NextRequest) {
   try {
@@ -63,8 +64,63 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO: Step 2 - Billing cap enforcement
-    // For now, skipping
+    // Step 2: Billing cap enforcement (L2 Autonomy)
+    const budgetCap = autonomyGuard.getBudgetCap(); // $5 for L2
+
+    // Get current AI usage cost for this session
+    const aiUsage = await persistence.getAIUsageForSession(session_id);
+    const currentSpend = aiUsage.reduce((sum, usage) => sum + usage.cost_usd, 0);
+
+    // Check if budget exceeded
+    if (currentSpend >= budgetCap) {
+      // Emit budget exceeded receipt
+      await persistence.addReceipt({
+        session_id,
+        actor: 'system',
+        action_type: 'budget.exceeded',
+        outcome: 'blocked',
+        evidence_refs: [],
+        truth_state: 'Verified',
+        metadata: {
+          current_spend: currentSpend,
+          budget_cap: budgetCap,
+          usage_count: aiUsage.length,
+        },
+      });
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'Budget cap exceeded',
+          budget_status: {
+            current: currentSpend,
+            cap: budgetCap,
+            percentage: Math.round((currentSpend / budgetCap) * 100),
+          },
+        },
+        { status: 402 } // Payment Required
+      );
+    }
+
+    // Warn if approaching budget (80% threshold)
+    const budgetPercentage = (currentSpend / budgetCap) * 100;
+    if (budgetPercentage >= 80 && budgetPercentage < 100) {
+      // Emit warning receipt
+      await persistence.addReceipt({
+        session_id,
+        actor: 'system',
+        action_type: 'budget.warning',
+        outcome: 'success',
+        evidence_refs: [],
+        truth_state: 'Verified',
+        metadata: {
+          current_spend: currentSpend,
+          budget_cap: budgetCap,
+          percentage: Math.round(budgetPercentage),
+          threshold: 80,
+        },
+      });
+    }
 
     // Step 3: Persist user message
     const userMessage = await persistence.addMessage({

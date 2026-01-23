@@ -288,6 +288,27 @@ export class SupabaseRobPersistence implements RobEnginePersistence {
     if (error) throw new Error(`Failed to record AI usage: ${error.message}`);
   }
 
+  async getAIUsageForSession(sessionId: string): Promise<AIUsageRecord[]> {
+    const { data, error } = await this.supabase
+      .from('rob_ai_usage')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw new Error(`Failed to get AI usage: ${error.message}`);
+
+    return data.map((row) => ({
+      session_id: row.session_id,
+      triggered_by_message_id: row.triggered_by_message_id,
+      provider: row.provider,
+      model: row.model,
+      tokens_in: row.tokens_in,
+      tokens_out: row.tokens_out,
+      cost_usd: row.cost_usd,
+      latency_ms: row.latency_ms,
+    }));
+  }
+
   async getAIUsageToday(userId: string): Promise<{
     messages_today: number;
     tokens_used: number;

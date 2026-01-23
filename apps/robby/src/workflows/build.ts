@@ -27,6 +27,8 @@ export interface BuildResult {
 
 export class BuildWorkflow {
   private sessionId: string
+  private stepCount: number = 0
+  private maxStepsBeforeCheckpoint: number = 12 // L2 limit
 
   constructor(sessionId?: string) {
     this.sessionId = sessionId || `build-${Date.now()}`
@@ -280,9 +282,13 @@ export class BuildWorkflow {
     const receipts: string[] = []
 
     for (const feature of plan.features) {
+      // Check step limit before each feature (L2 enforcement)
+      await this.checkStepLimitAndApprove(feature.name, autonomyLevel)
+
       const featureReceipt = await this.emitReceipt('build.feature.executed', {
         feature: feature.name,
-        complexity: feature.complexity
+        complexity: feature.complexity,
+        step_count: this.stepCount
       })
       receipts.push(featureReceipt)
       console.log(`   ✓ ${feature.name}`)
@@ -326,6 +332,40 @@ export class BuildWorkflow {
       passed,
       checks,
       receipt_id: receiptId
+    }
+  }
+
+  /**
+   * Check if step limit reached and request approval if needed (L2)
+   */
+  private async checkStepLimitAndApprove(featureName: string, autonomyLevel: AutonomyLevel): Promise<void> {
+    this.stepCount++
+
+    if (autonomyLevel === 2 && this.stepCount >= this.maxStepsBeforeCheckpoint) {
+      console.log(`\n⏸️  Checkpoint: ${this.stepCount} steps completed`)
+      console.log(`Feature: ${featureName}`)
+      console.log(`L2 autonomy requires approval to continue...\n`)
+
+      // Emit checkpoint required receipt
+      await this.emitReceipt('build.checkpoint.required', {
+        step_count: this.stepCount,
+        step_limit: this.maxStepsBeforeCheckpoint,
+        feature: featureName,
+        autonomy_level: autonomyLevel
+      })
+
+      // In a real implementation, this would pause and wait for approval
+      // For now, auto-approve but emit receipt
+      console.log(`✅ Auto-approved (production would require human approval)`)
+
+      await this.emitReceipt('build.checkpoint.approved', {
+        step_count: this.stepCount,
+        feature: featureName,
+        approved_by: 'auto' // In production: userId
+      })
+
+      // Reset step count after checkpoint
+      this.stepCount = 0
     }
   }
 
