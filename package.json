@@ -22,7 +22,7 @@
     "dev": "npm run dev --workspaces",
     "clean": "npm run clean --workspaces && rm -rf node_modules",
     "install:all": "npm install",
-    "test": "echo \"Tests coming soon\" && exit 0",
+    "test": "echo \"⚠️  No tests configured yet. See REBUILD_ROADMAP.md Week 2\" && exit 1",
     "truthgate": "ts-node scripts/truthgate.ts",
     "smoke:truthserum": "ts-node scripts/smoke-truthserum.ts",
     "smoke:truthserum:js": "node scripts/smoke-truthserum.js",
